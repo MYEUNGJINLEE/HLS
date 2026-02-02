@@ -278,7 +278,8 @@ void BW_CNN_Accelerator::store_output_tile(
                 
                 // Pack and write to AXI channel
                 axi_data_t data = 0;
-                data.set_slc(0, (ac_int<8,true>)output_buf[oc][row][col]);
+                // Extract raw bits from ac_fixed using slc<> template
+                data.set_slc(0, output_buf[oc][row][col].template slc<8>(0));
                 output_fm.write(data);
             }
         }
