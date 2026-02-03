@@ -37,17 +37,25 @@ CCS_MAIN(int argc, char *argv[]) {
     
     std::cout << "Generating test input data..." << std::endl;
     
-    // Input feature map: IC x H x W
-    // NOTE: The DUT streams the full input feature map once for each output
-    // channel tile (oc_tile). To avoid underflow assertions on the channel,
-    // provide enough copies of the feature map for all oc_tiles.
-    int input_elements = config.input_ch * config.input_size * config.input_size;
-    int num_oc_tiles   = (config.output_ch + OUTPUT_CH_TILE - 1) / OUTPUT_CH_TILE;
-    for (int t = 0; t < num_oc_tiles; t++) {
-        for (int i = 0; i < input_elements; i++) {
-            axi_data_t data = (i % 256);  // Simple test pattern
-            input_fm.write(data);
-        }
+    // Input feature map stream
+    // The DUT reads an input tile for every (oc_tile, row_tile, col_tile, ic_tile).
+    // Total reads = num_oc_tiles * num_row_tiles * num_col_tiles *
+    //               num_ic_tiles * INPUT_CH_TILE * tile_h * tile_w
+    int padded_size  = config.input_size + 2 * config.padding;
+    int output_size  = (padded_size - config.kernel_size) / config.stride + 1;
+    int num_oc_tiles = (config.output_ch + OUTPUT_CH_TILE - 1) / OUTPUT_CH_TILE;
+    int num_ic_tiles = (config.input_ch + INPUT_CH_TILE - 1) / INPUT_CH_TILE;
+    int num_row_tiles = (output_size + INPUT_TILE_SIZE - 1) / INPUT_TILE_SIZE;
+    int num_col_tiles = (output_size + INPUT_TILE_SIZE - 1) / INPUT_TILE_SIZE;
+    int tile_h = INPUT_TILE_SIZE + config.kernel_size - 1;
+    int tile_w = INPUT_TILE_SIZE + config.kernel_size - 1;
+
+    long long total_reads = (long long)num_oc_tiles * num_row_tiles * num_col_tiles *
+                            num_ic_tiles * INPUT_CH_TILE * tile_h * tile_w;
+
+    for (long long i = 0; i < total_reads; i++) {
+        axi_data_t data = (i % 256);  // Simple test pattern
+        input_fm.write(data);
     }
     
     // Binary weights: OC x IC x KH x KW
