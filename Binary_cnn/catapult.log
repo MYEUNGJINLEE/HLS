@@ -1,0 +1,51 @@
+//  Catapult Ultra Synthesis 2025.2_1/1197638 (Production Release) Thu Jun 12 00:48:01 PDT 2025
+//  
+//          Copyright (c) Siemens EDA, 1996-2025, All Rights Reserved.
+//                        UNPUBLISHED, LICENSED SOFTWARE.
+//             CONFIDENTIAL AND PROPRIETARY INFORMATION WHICH IS THE
+//                   PROPERTY OF SIEMENS EDA OR ITS LICENSORS.
+//  
+//  Running on Linux soc_lab_LMJ@ssu_soc_lab:326522 3.10.0-1160.108.1.el7.x86_64 x86_64 aol
+//  
+//  Package information: SIFLIBS v28.2_1.0, HLS_PKGS v28.2_1.0, 
+//                       SIF_TOOLKITS v28.2_1.0, SIF_XILINX v28.2_1.0, 
+//                       SIF_ALTERA v28.2_1.0, CCS_LIBS v28.2_1.0, 
+//                       CDS_PPRO v2025.1, CDS_DesignChecker v2025.1_1, 
+//                       CDS_OASYS v21.1_3.1, CDS_PSR v25.1_0.14, 
+//                       DesignPad v2.78_1.0, DesignAnalyzer 2025.2/1187690
+//  
+//  Start time Mon Feb  2 19:30:03 2026
+# -------------------------------------------------
+# Logging session transcript to file "/tmp/log326522342a5fba.0"
+# Loading options from '$HOME/.catapult/2025.2_1-1197638.aol.reg'.
+project new -name bin_cnn
+solution file add ./src/bw_cnn_accelerator.h
+# /INPUTFILES/1
+solution file add ./tb/bw_cnn_tb.cpp -exclude true
+# /INPUTFILES/2
+go analyze
+# Info: Starting transformation 'analyze' on solution 'solution.v1' (SOL-8)
+# Creating project directory '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/bin_cnn/'. (PRJ-1)
+# Moving session transcript to file "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/catapult.log"
+# Front End called with arguments: -- /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/bw_cnn_accelerator.h (CIN-69)
+# Edison Design Group C++/C Front End - Version 6.6 (CIN-1)
+# Source file analysis completed (CIN-68)
+# Info: Completed transformation 'analyze' on solution 'solution.v1': elapsed time 2.65 seconds, memory usage 1565060kB, peak memory usage 1565060kB (SOL-9)
+go new
+solution file add ./src/bw_cnn_accelerator.cpp
+# Info: Branching solution 'solution.v2' at state 'new' (PRJ-2)
+# /INPUTFILES/3
+go analyze
+# Info: Starting transformation 'analyze' on solution 'solution.v2' (SOL-8)
+# Front End called with arguments: -- /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/bw_cnn_accelerator.cpp /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/bw_cnn_accelerator.h (CIN-69)
+# Edison Design Group C++/C Front End - Version 6.6 (CIN-1)
+# Error: $PROJECT_HOME/src/bw_cnn_accelerator.cpp(281): no suitable user-defined conversion from "out_act_t" (aka "ac_fixed<8, 4, true, AC_TRN, AC_WRAP>") to "ac_int<8, true>" exists (CRD-312)
+# Error: $PROJECT_HOME/src/bw_cnn_accelerator.cpp(281): no instance of overloaded function "ac_int<W, S>::set_slc [with W=128, S=false]" matches the argument list (CRD-304)
+# Error: $PROJECT_HOME/src/bw_cnn_accelerator.cpp(281):             argument types are: (int, <error-type>) (CRD-304)
+# Error: $PROJECT_HOME/src/bw_cnn_accelerator.cpp(281):             object type is: axi_data_t (CRD-304)
+# Error: $PROJECT_HOME/src/bw_cnn_accelerator.cpp(281): "/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include/ac_int.h", line 2984 (col. 18): note #3327-D: candidate function template "ac_int<W, S>::set_slc(unsigned int, const ac_int<W2, S2> &) [with W=128, S=false]" failed deduction (CRD-304)
+# Error: $PROJECT_HOME/src/bw_cnn_accelerator.cpp(281): "/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include/ac_int.h", line 2971 (col. 18): note #3327-D: candidate function template "ac_int<W, S>::set_slc(signed int, const ac_int<W2, S2> &) [with W=128, S=false]" failed deduction (CRD-304)
+# Error: $PROJECT_HOME/src/bw_cnn_accelerator.cpp(281): "/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include/ac_int.h", line 2958 (col. 18): note #3327-D: candidate function template "ac_int<W, S>::set_slc(ac_int<WX, SX>, const ac_int<W2, S2> &) [with W=128, S=false]" failed deduction (CRD-304)
+# Error: Compilation aborted (CIN-5)
+# Info: Completed transformation 'new' on solution 'solution.v2': elapsed time 3.53 seconds, memory usage 1761668kB, peak memory usage 1761668kB (SOL-9)
+# Error: go analyze: Failed analyze
