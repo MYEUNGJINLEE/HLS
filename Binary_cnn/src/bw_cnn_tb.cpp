@@ -68,9 +68,12 @@ CCS_MAIN(int argc, char *argv[]) {
         input_fm.write(data);
     }
     
-    // Binary weights: OC x IC x KH x KW
-    long long weight_elements = (long long)output_ch * input_ch * 
-                                kernel_size * kernel_size;
+    // Binary weights stream
+    // The DUT reloads weights for each (oc_tile, row_tile, col_tile, ic_tile),
+    // so multiply by spatial tiles as well.
+    long long weight_elements = (long long)output_ch * input_ch *
+                                kernel_size * kernel_size *
+                                num_row_tiles * num_col_tiles;
     // Over-provision weights similarly
     long long weight_elements_safe = weight_elements + (weight_elements >> 3);
     for (long long i = 0; i < weight_elements_safe; i++) {
