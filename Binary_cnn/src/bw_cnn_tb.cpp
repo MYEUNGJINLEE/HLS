@@ -41,14 +41,21 @@ CCS_MAIN(int argc, char *argv[]) {
     // The DUT reads an input tile for every (oc_tile, row_tile, col_tile, ic_tile).
     // Total reads = num_oc_tiles * num_row_tiles * num_col_tiles *
     //               num_ic_tiles * INPUT_CH_TILE * tile_h * tile_w
-    int padded_size  = config.input_size + 2 * config.padding;
-    int output_size  = (padded_size - config.kernel_size) / config.stride + 1;
-    int num_oc_tiles = (config.output_ch + OUTPUT_CH_TILE - 1) / OUTPUT_CH_TILE;
-    int num_ic_tiles = (config.input_ch + INPUT_CH_TILE - 1) / INPUT_CH_TILE;
+    int input_ch    = config.input_ch.to_int();
+    int output_ch   = config.output_ch.to_int();
+    int input_size  = config.input_size.to_int();
+    int kernel_size = config.kernel_size.to_int();
+    int padding     = config.padding.to_int();
+    int stride      = config.stride.to_int();
+
+    int padded_size  = input_size + 2 * padding;
+    int output_size  = (padded_size - kernel_size) / stride + 1;
+    int num_oc_tiles = (output_ch + OUTPUT_CH_TILE - 1) / OUTPUT_CH_TILE;
+    int num_ic_tiles = (input_ch + INPUT_CH_TILE - 1) / INPUT_CH_TILE;
     int num_row_tiles = (output_size + INPUT_TILE_SIZE - 1) / INPUT_TILE_SIZE;
     int num_col_tiles = (output_size + INPUT_TILE_SIZE - 1) / INPUT_TILE_SIZE;
-    int tile_h = INPUT_TILE_SIZE + config.kernel_size - 1;
-    int tile_w = INPUT_TILE_SIZE + config.kernel_size - 1;
+    int tile_h = INPUT_TILE_SIZE + kernel_size - 1;
+    int tile_w = INPUT_TILE_SIZE + kernel_size - 1;
 
     long long total_reads = (long long)num_oc_tiles * num_row_tiles * num_col_tiles *
                             num_ic_tiles * INPUT_CH_TILE * tile_h * tile_w;
@@ -62,8 +69,8 @@ CCS_MAIN(int argc, char *argv[]) {
     }
     
     // Binary weights: OC x IC x KH x KW
-    long long weight_elements = (long long)config.output_ch * config.input_ch * 
-                                config.kernel_size * config.kernel_size;
+    long long weight_elements = (long long)output_ch * input_ch * 
+                                kernel_size * kernel_size;
     // Over-provision weights similarly
     long long weight_elements_safe = weight_elements + (weight_elements >> 3);
     for (long long i = 0; i < weight_elements_safe; i++) {
