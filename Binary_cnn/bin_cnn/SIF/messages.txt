@@ -5,16 +5,13 @@
 # Messages from "go analyze"
 
 # Info: Branching solution 'solution.v2' at state 'new' (PRJ-2)
+solution file add ./src/bw_cnn_tb.cpp -exclude true
 /INPUTFILES/3
 go analyze
 # Info: Starting transformation 'analyze' on solution 'solution.v2' (SOL-8)
-Front End called with arguments: -- /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/bw_cnn_accelerator.cpp /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/bw_cnn_accelerator.h (CIN-69)
+Front End called with arguments: -- /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/bw_cnn_accelerator.cpp (CIN-69)
 Edison Design Group C++/C Front End - Version 6.6 (CIN-1)
-# Error: no suitable user-defined conversion from "out_act_t" (aka "ac_fixed<8, 4, true, AC_TRN, AC_WRAP>") to "ac_int<8, true>" exists (CRD-312)
-# Error: no instance of overloaded function "ac_int<W, S>::set_slc [with W=128, S=false]" matches the argument list (CRD-304)
-# Error:             argument types are: (int, <error-type>) (CRD-304)
-# Error:             object type is: axi_data_t (CRD-304)
-# Error: "/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include/ac_int.h", line 2984 (col. 18): note #3327-D: candidate function template "ac_int<W, S>::set_slc(unsigned int, const ac_int<W2, S2> &) [with W=128, S=false]" failed deduction (CRD-304)
-# Error: "/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include/ac_int.h", line 2971 (col. 18): note #3327-D: candidate function template "ac_int<W, S>::set_slc(signed int, const ac_int<W2, S2> &) [with W=128, S=false]" failed deduction (CRD-304)
-# Error: "/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include/ac_int.h", line 2958 (col. 18): note #3327-D: candidate function template "ac_int<W, S>::set_slc(ac_int<WX, SX>, const ac_int<W2, S2> &) [with W=128, S=false]" failed deduction (CRD-304)
-# Error: Compilation aborted (CIN-5)
+Pragma 'hls_design<top>' detected on class 'BW_CNN_Accelerator' (CIN-6)
+Pragma 'hls_design<top>' detected on class 'BW_CNN_Accelerator' (CIN-6)
+Source file analysis completed (CIN-68)
+# Info: Completed transformation 'analyze' on solution 'solution.v2': elapsed time 2.38 seconds, memory usage 1892740kB, peak memory usage 1892740kB (SOL-9)
