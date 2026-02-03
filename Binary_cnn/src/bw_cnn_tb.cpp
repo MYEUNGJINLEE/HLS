@@ -38,10 +38,16 @@ CCS_MAIN(int argc, char *argv[]) {
     std::cout << "Generating test input data..." << std::endl;
     
     // Input feature map: IC x H x W
+    // NOTE: The DUT streams the full input feature map once for each output
+    // channel tile (oc_tile). To avoid underflow assertions on the channel,
+    // provide enough copies of the feature map for all oc_tiles.
     int input_elements = config.input_ch * config.input_size * config.input_size;
-    for (int i = 0; i < input_elements; i++) {
-        axi_data_t data = (i % 256);  // Simple test pattern
-        input_fm.write(data);
+    int num_oc_tiles   = (config.output_ch + OUTPUT_CH_TILE - 1) / OUTPUT_CH_TILE;
+    for (int t = 0; t < num_oc_tiles; t++) {
+        for (int i = 0; i < input_elements; i++) {
+            axi_data_t data = (i % 256);  // Simple test pattern
+            input_fm.write(data);
+        }
     }
     
     // Binary weights: OC x IC x KH x KW
