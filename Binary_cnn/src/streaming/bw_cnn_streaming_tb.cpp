@@ -338,9 +338,12 @@ CCS_MAIN(int argc, char *argv[]) {
         config.kernel_size = 3;
         config.stride = 1;
         config.padding = 1;
+        config.op_mode = OP_MODE_CONV_3x3;
         config.use_batch_norm = true;
         config.use_relu = true;
         config.has_shortcut = false;
+        config.shortcut_add = false;
+        config.use_shift_bn = false;
 
         // Initialize DRAM
         init_dram_input(16, 16, 64);
@@ -395,9 +398,12 @@ CCS_MAIN(int argc, char *argv[]) {
         config.kernel_size = 1;
         config.stride = 1;
         config.padding = 0;
+        config.op_mode = OP_MODE_CONV_1x1;
         config.use_batch_norm = true;
         config.use_relu = true;
         config.has_shortcut = false;
+        config.shortcut_add = false;
+        config.use_shift_bn = false;
 
         // Initialize DRAM
         init_dram_input(16, 16, 64);
@@ -452,9 +458,12 @@ CCS_MAIN(int argc, char *argv[]) {
         config.kernel_size = 3;
         config.stride = 2;
         config.padding = 1;
+        config.op_mode = OP_MODE_CONV_3x3;
         config.use_batch_norm = true;
         config.use_relu = true;
         config.has_shortcut = false;
+        config.shortcut_add = false;
+        config.use_shift_bn = false;
 
         // Initialize DRAM
         init_dram_input(16, 16, 64);
@@ -494,6 +503,54 @@ CCS_MAIN(int argc, char *argv[]) {
         } else {
             std::cout << "Test 3: FAILED" << std::endl;
         }
+    }
+
+    // Test 4: Depthwise Convolution (placeholder - needs DUT support)
+    std::cout << "\n=== Test 4: Depthwise Convolution ===" << std::endl;
+    {
+        StreamingConvConfig config;
+        config.input_height = 16;
+        config.input_width = 16;
+        config.input_channels = 64;
+        config.output_height = 16;
+        config.output_width = 16;
+        config.output_channels = 64;  // DW: out_ch = in_ch
+        config.kernel_size = 3;
+        config.stride = 1;
+        config.padding = 1;
+        config.op_mode = OP_MODE_CONV_DW;
+        config.use_batch_norm = true;
+        config.use_relu = true;
+        config.has_shortcut = false;
+        config.shortcut_add = false;
+        config.use_shift_bn = false;
+
+        std::cout << "Depthwise Conv test: op_mode configured (DUT integration pending)" << std::endl;
+        std::cout << "Test 4: SKIPPED (DUT not fully integrated)" << std::endl;
+    }
+
+    // Test 5: MaxPool (placeholder - needs DUT support)
+    std::cout << "\n=== Test 5: MaxPool 2x2 ===" << std::endl;
+    {
+        StreamingConvConfig config;
+        config.input_height = 16;
+        config.input_width = 16;
+        config.input_channels = 64;
+        config.output_height = 8;
+        config.output_width = 8;
+        config.output_channels = 64;
+        config.kernel_size = 2;  // 2x2 pool
+        config.stride = 2;
+        config.padding = 0;
+        config.op_mode = OP_MODE_MAXPOOL;
+        config.use_batch_norm = false;
+        config.use_relu = false;
+        config.has_shortcut = false;
+        config.shortcut_add = false;
+        config.use_shift_bn = false;
+
+        std::cout << "MaxPool test: op_mode configured (DUT integration pending)" << std::endl;
+        std::cout << "Test 5: SKIPPED (DUT not fully integrated)" << std::endl;
     }
 
     std::cout << "\n========================================" << std::endl;

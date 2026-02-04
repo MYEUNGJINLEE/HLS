@@ -58,6 +58,17 @@ typedef ac_int<512, false> packed_act_t;
 typedef ac_int<64, false> packed_bw_t;
 
 // ============================================================================
+// PE Operation Mode (통합 PE용)
+// ============================================================================
+
+typedef enum {
+    OP_MODE_CONV_3x3  = 0,  // Standard 3x3 Convolution
+    OP_MODE_CONV_1x1  = 1,  // Pointwise 1x1 Convolution
+    OP_MODE_CONV_DW   = 2,  // Depthwise 3x3 Convolution
+    OP_MODE_MAXPOOL   = 3   // 2x2 Max Pooling
+} op_mode_t;
+
+// ============================================================================
 // Layer Configuration
 // ============================================================================
 
@@ -77,11 +88,15 @@ struct StreamingConvConfig {
     ac_int<2, false>  stride;         // 1 or 2
     ac_int<2, false>  padding;        // 0 or 1
 
+    // PE operation mode
+    ac_int<2, false>  op_mode;        // 0=3x3, 1=1x1, 2=DW, 3=MaxPool
+
     // Layer options
     bool use_batch_norm;
     bool use_relu;
     bool has_shortcut;                // Skip connection
     bool shortcut_add;                // true=add, false=concat
+    bool use_shift_bn;                // true=shift BN, false=multiply BN
 };
 
 // ============================================================================
@@ -107,6 +122,9 @@ class ShortcutBuffer;
 class SRAMController;
 class StreamingWindowGen;
 class ParallelConvUnit;
+class UnifiedBinaryPE;
+class MultiTileConvUnit;
+struct BNShiftParams;
 
 // ============================================================================
 // Line Buffer Class
