@@ -1,0 +1,13 @@
+reloadable_uuid=af1c6ec4-25bc-43f8-9c1b-210bff553caa
+preserved_uuid=81af3b3f-63cc-4824-b705-93c1f647ad7e
+sid=sid5.81af3b3f-63cc-4824-b705-93c1f647ad7e
+name=BW_CNN_Accelerator.v4
+version=v4
+solution_dir=BW_CNN_Accelerator.v4
+state=compile
+branch_sid=sid4.0115727d-7fa3-4b0e-afcd-4004a810614a
+branch_state=new
+xrefboss_uuid=1f84c20f-b0df-4a13-ab79-d1909fc2633f
+datum_uuid=d59211e7-b354-4169-815f-ff73cc5b7c81
+state_order=5
+dependent_solutions=sid1.045c8e8a-1ed6-4b15-84ee-6cf89dd93257,

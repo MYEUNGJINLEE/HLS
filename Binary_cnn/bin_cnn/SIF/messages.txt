@@ -5,13 +5,23 @@
 # Messages from "go analyze"
 
 # Info: Branching solution 'solution.v2' at state 'new' (PRJ-2)
-solution file add ./src/bw_cnn_tb.cpp -exclude true
+solution file remove {$PROJECT_HOME/src/bw_cnn_accelerator.cpp}
+solution file add ./src/streaming/bw_cnn_streaming.cpp
 /INPUTFILES/3
+solution file add ./src/streaming/bw_cnn_streaming_tb.cpp -exclude true
+/INPUTFILES/4
+solution file add ./src/streaming/bw_cnn_streaming.h
+/INPUTFILES/5
 go analyze
 # Info: Starting transformation 'analyze' on solution 'solution.v2' (SOL-8)
-Front End called with arguments: -- /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/bw_cnn_accelerator.cpp (CIN-69)
+Front End called with arguments: -- /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/bw_cnn_streaming.h /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/bw_cnn_streaming.cpp (CIN-69)
 Edison Design Group C++/C Front End - Version 6.6 (CIN-1)
-Pragma 'hls_design<top>' detected on class 'BW_CNN_Accelerator' (CIN-6)
-Pragma 'hls_design<top>' detected on class 'BW_CNN_Accelerator' (CIN-6)
-Source file analysis completed (CIN-68)
-# Info: Completed transformation 'analyze' on solution 'solution.v2': elapsed time 2.38 seconds, memory usage 1892740kB, peak memory usage 1892740kB (SOL-9)
+# Error: identifier "process_conv3x3" is undefined (CRD-20)
+# Error:           detected during compilation of secondary translation unit "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/bw_cnn_streaming.cpp" (CRD-20)
+# Error: identifier "process_conv1x1" is undefined (CRD-20)
+# Error:           detected during compilation of secondary translation unit "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/bw_cnn_streaming.cpp" (CRD-20)
+# Error: class "BW_CNN_Streaming" has no member "process_conv3x3" (CRD-135)
+# Error:           detected during compilation of secondary translation unit "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/bw_cnn_streaming.cpp" (CRD-135)
+# Error: class "BW_CNN_Streaming" has no member "process_conv1x1" (CRD-135)
+# Error:           detected during compilation of secondary translation unit "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/bw_cnn_streaming.cpp" (CRD-135)
+# Error: Compilation aborted (CIN-5)
