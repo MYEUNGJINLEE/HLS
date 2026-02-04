@@ -144,7 +144,7 @@ void BW_CNN_Streaming::process_conv3x3(
             window_gen.push_pixel(pixel);
         }
 
-        // Generate output for this row if possible
+        // Generate output for available rows
         while (window_gen.can_output()) {
             int out_row, out_col;
 
@@ -173,18 +173,15 @@ void BW_CNN_Streaming::process_conv3x3(
                         shortcut_pixel[ch] = (act_t)val;
                     }
 
-                    // Add shortcut
                     ADD_SC:
                     #pragma hls_unroll
                     for (int ch = 0; ch < CH_PARALLEL; ch++) {
                         acc_t sum = (acc_t)bn_out[ch] + (acc_t)shortcut_pixel[ch];
 
-                        // ReLU after add
                         if (config.use_relu && sum < 0) {
                             sum = 0;
                         }
 
-                        // Saturate
                         if (sum > 7.9375) sum = 7.9375;
                         if (sum < -8.0) sum = -8.0;
 
@@ -209,6 +206,68 @@ void BW_CNN_Streaming::process_conv3x3(
 
                 output_stream.write(out_packed);
             }
+        }
+    }
+
+    // Flush remaining output rows (bottom padding region)
+    // 입력이 끝난 후에도 패딩으로 인해 출력해야 할 행이 남아있을 수 있음
+    FLUSH_REMAINING:
+    while (window_gen.can_output()) {
+        int out_row, out_col;
+
+        if (window_gen.get_next_window(window, out_row, out_col)) {
+            conv_unit.compute_3x3_parallel(window, weight_buf, conv_out);
+
+            conv_unit.bn_relu_parallel(
+                conv_out,
+                bn_scale_buf,
+                bn_bias_buf,
+                config.use_batch_norm,
+                config.use_relu,
+                bn_out
+            );
+
+            if (config.has_shortcut) {
+                packed_act_t sc_packed = shortcut_stream.read();
+
+                UNPACK_SC_FLUSH:
+                #pragma hls_unroll
+                for (int ch = 0; ch < CH_PARALLEL; ch++) {
+                    ac_int<8, true> val = sc_packed.slc<8>(ch * 8);
+                    shortcut_pixel[ch] = (act_t)val;
+                }
+
+                ADD_SC_FLUSH:
+                #pragma hls_unroll
+                for (int ch = 0; ch < CH_PARALLEL; ch++) {
+                    acc_t sum = (acc_t)bn_out[ch] + (acc_t)shortcut_pixel[ch];
+
+                    if (config.use_relu && sum < 0) {
+                        sum = 0;
+                    }
+
+                    if (sum > 7.9375) sum = 7.9375;
+                    if (sum < -8.0) sum = -8.0;
+
+                    final_out[ch] = (out_act_t)sum;
+                }
+            } else {
+                COPY_OUT_FLUSH:
+                #pragma hls_unroll
+                for (int ch = 0; ch < CH_PARALLEL; ch++) {
+                    final_out[ch] = bn_out[ch];
+                }
+            }
+
+            packed_act_t out_packed = 0;
+            PACK_OUT_FLUSH:
+            #pragma hls_unroll
+            for (int ch = 0; ch < CH_PARALLEL; ch++) {
+                ac_int<8, true> val = final_out[ch].to_int();
+                out_packed.set_slc(ch * 8, val);
+            }
+
+            output_stream.write(out_packed);
         }
     }
 }
