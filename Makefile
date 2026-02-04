@@ -24,4 +24,11 @@ stream-tb:
 
 # Run Catapult with GUI and keep window open
 stream-gui:
-	cd Binary_cnn && catapult -gui -file scripts/run_streaming_catapult_gui.tcl
+	cd Binary_cnn && PRJ=$$(ls -t bin_cnn_streaming*.ccs 2>/dev/null | head -n 1); \
+	if [ -z "$$PRJ" ]; then \
+		echo "No bin_cnn_streaming*.ccs found. Running batch flow once to create project..."; \
+		catapult -shell -file scripts/run_streaming_catapult.tcl; \
+		PRJ=$$(ls -t bin_cnn_streaming*.ccs 2>/dev/null | head -n 1); \
+	fi; \
+	if [ -z "$$PRJ" ]; then echo "Could not find a streaming .ccs project file."; exit 1; fi; \
+	catapult "$$PRJ"
