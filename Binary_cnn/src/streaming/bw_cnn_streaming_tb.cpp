@@ -14,19 +14,24 @@
 // ============================================================================
 
 // ----------------------------------------------------------------------------
-// DRAM Memory Simulation
+// DRAM Memory Simulation (테스트용 크기 제한)
 // ----------------------------------------------------------------------------
 
+// 테스트벤치용 최대 크기 (링커 에러 방지)
+static const int TB_MAX_HEIGHT   = 64;
+static const int TB_MAX_WIDTH    = 64;
+static const int TB_MAX_CHANNELS = 128;
+
 // Simulated DRAM storage (HWC format)
-act_t dram_input[MAX_HEIGHT][MAX_WIDTH][MAX_CHANNELS];
-out_act_t dram_output[MAX_HEIGHT][MAX_WIDTH][MAX_CHANNELS];
-bw_t dram_weights_3x3[MAX_CHANNELS][MAX_CHANNELS][3][3];
-bw_t dram_weights_1x1[MAX_CHANNELS][MAX_CHANNELS];
-bn_param_t dram_bn_scale[MAX_CHANNELS];
-bn_param_t dram_bn_bias[MAX_CHANNELS];
+act_t dram_input[TB_MAX_HEIGHT][TB_MAX_WIDTH][TB_MAX_CHANNELS];
+out_act_t dram_output[TB_MAX_HEIGHT][TB_MAX_WIDTH][TB_MAX_CHANNELS];
+bw_t dram_weights_3x3[TB_MAX_CHANNELS][TB_MAX_CHANNELS][3][3];
+bw_t dram_weights_1x1[TB_MAX_CHANNELS][TB_MAX_CHANNELS];
+bn_param_t dram_bn_scale[TB_MAX_CHANNELS];
+bn_param_t dram_bn_bias[TB_MAX_CHANNELS];
 
 // Golden reference output
-out_act_t golden_output[MAX_HEIGHT][MAX_WIDTH][MAX_CHANNELS];
+out_act_t golden_output[TB_MAX_HEIGHT][TB_MAX_WIDTH][TB_MAX_CHANNELS];
 
 // ----------------------------------------------------------------------------
 // Initialize DRAM with Test Pattern
