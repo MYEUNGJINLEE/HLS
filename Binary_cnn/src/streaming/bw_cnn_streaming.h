@@ -105,6 +105,8 @@ class WindowGenerator;
 class ConvComputeUnit;
 class ShortcutBuffer;
 class SRAMController;
+class StreamingWindowGen;
+class ParallelConvUnit;
 
 // ============================================================================
 // Line Buffer Class
@@ -296,6 +298,33 @@ private:
         int row,
         const StreamingConvConfig &config,
         ac_channel<packed_act_t> &output_stream
+    );
+
+    // 3x3 convolution processing
+    void process_conv3x3(
+        const StreamingConvConfig &config,
+        ac_channel<packed_act_t> &input_stream,
+        const bw_t weight_buf[CH_PARALLEL][CH_PARALLEL][MAX_KERNEL_SIZE][MAX_KERNEL_SIZE],
+        const bn_param_t bn_scale_buf[CH_PARALLEL],
+        const bn_param_t bn_bias_buf[CH_PARALLEL],
+        ac_channel<packed_act_t> &shortcut_stream,
+        ac_channel<packed_act_t> &output_stream,
+        StreamingWindowGen &window_gen,
+        ParallelConvUnit &conv_unit,
+        SRAMController &sram_ctrl
+    );
+
+    // 1x1 convolution processing
+    void process_conv1x1(
+        const StreamingConvConfig &config,
+        ac_channel<packed_act_t> &input_stream,
+        const bw_t weight_buf[CH_PARALLEL][CH_PARALLEL],
+        const bn_param_t bn_scale_buf[CH_PARALLEL],
+        const bn_param_t bn_bias_buf[CH_PARALLEL],
+        ac_channel<packed_act_t> &shortcut_stream,
+        ac_channel<packed_act_t> &output_stream,
+        ParallelConvUnit &conv_unit,
+        SRAMController &sram_ctrl
     );
 };
 
