@@ -261,7 +261,7 @@ public:
 // Legacy ConvComputeUnit (기존 호환성)
 // ============================================================================
 
-void ConvComputeUnit::compute_3x3(
+inline void ConvComputeUnit::compute_3x3(
     const Window3x3 &input_window,
     const bw_t weights[CH_PARALLEL][CH_PARALLEL][3][3],
     acc_t output[CH_PARALLEL]
@@ -295,7 +295,7 @@ void ConvComputeUnit::compute_3x3(
     }
 }
 
-void ConvComputeUnit::compute_1x1(
+inline void ConvComputeUnit::compute_1x1(
     const act_t input[CH_PARALLEL],
     const bw_t weights[CH_PARALLEL][CH_PARALLEL],
     acc_t output[CH_PARALLEL]
@@ -321,7 +321,7 @@ void ConvComputeUnit::compute_1x1(
     }
 }
 
-void ConvComputeUnit::apply_bn_relu(
+inline void ConvComputeUnit::apply_bn_relu(
     acc_t input[CH_PARALLEL],
     const bn_param_t scale[CH_PARALLEL],
     const bn_param_t bias[CH_PARALLEL],
