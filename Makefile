@@ -1,4 +1,4 @@
-.PHONY: update stream stream-log stream-tb stream-gui block block-log block-gui block-tb
+.PHONY: update stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean clean
 
 # Update local repository to latest origin/dev
 update:
@@ -12,34 +12,45 @@ stream:
 
 # Run Catapult and save full console log
 stream-log:
-	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_streaming_catapult.tcl > logs/catapult_streaming.log 2>&1
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_streaming_catapult.tcl 2>&1 | tee logs/catapult_streaming.log
 
 # Run Catapult batch flow and execute SCVerify testbench simulation
 stream-tb:
-	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_streaming_catapult.tcl > logs/catapult_streaming.log 2>&1
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_streaming_catapult.tcl 2>&1 | tee logs/catapult_streaming.log
 	cd Binary_cnn && SOL_DIR=$$(ls -d bin_cnn_streaming/BW_CNN_Streaming.v* BW_CNN_Streaming.v* 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$SOL_DIR" ]; then echo "No BW_CNN_Streaming.v* solution directory found."; exit 1; fi; \
 	if [ ! -f "$$SOL_DIR/scverify/Makefile" ]; then echo "SCVerify Makefile not found: $$SOL_DIR/scverify/Makefile"; exit 1; fi; \
-	$$(MAKE) -C "$$SOL_DIR/scverify" sim | tee logs/scverify_sim.log
+	$$(MAKE) -C "$$SOL_DIR/scverify" sim 2>&1 | tee logs/scverify_sim.log
 
-# Run block processor Catapult in batch mode
-block:
+# Clean old streaming project
+stream-clean:
+	cd Binary_cnn && rm -rf bin_cnn_streaming bin_cnn_streaming.ccs
+
+# Clean old block processor project
+block-clean:
+	cd Binary_cnn && rm -rf block_processor block_processor.ccs
+
+# Clean all Catapult projects and logs
+clean: stream-clean block-clean
+	cd Binary_cnn && rm -rf logs catapult_pid* .Catapult*
+
+# Run block processor Catapult in batch mode (auto-cleans old project)
+block: block-clean
 	cd Binary_cnn && catapult -shell -file scripts/run_block_processor_catapult.tcl
 
-# Run block processor with log
-block-log:
-	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_block_processor_catapult.tcl > logs/catapult_block_processor.log 2>&1
-
+# Run block processor with log (visible in terminal + saved to file)
+block-log: block-clean
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_block_processor_catapult.tcl 2>&1 | tee logs/catapult_block_processor.log
 
 # Run block processor batch flow and execute SCVerify testbench simulation
-block-tb:
-	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_block_processor_catapult.tcl > logs/catapult_block_processor.log 2>&1
-	cd Binary_cnn && SOL_DIR=$$(ls -d block_processor* 2>/dev/null | sort -V | tail -n 1); \
-	if [ -z "$$SOL_DIR" ]; then echo "No block_processor* project directory found."; exit 1; fi; \
+block-tb: block-clean
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_block_processor_catapult.tcl 2>&1 | tee logs/catapult_block_processor.log
+	cd Binary_cnn && SOL_DIR=$$(ls -d block_processor/FusedBlockProcessor.v* 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SOL_DIR" ]; then echo "No FusedBlockProcessor.v* solution directory found."; exit 1; fi; \
 	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
 	SCV_DIR=$$(dirname "$$SCV_MK"); \
-	$$(MAKE) -C "$$SCV_DIR" sim | tee logs/scverify_block_processor_sim.log
+	$$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_block_processor_sim.log
 
 # Run Catapult with GUI and keep window open
 stream-gui:
@@ -56,12 +67,17 @@ stream-gui:
 		if [ -z "$$PRJ_XML" ]; then echo "Could not find a streaming project (.ccs or SIF/project.xml)."; exit 1; fi; \
 		catapult "$$PRJ_XML" & \
 	fi
+
 # Run block processor with GUI and keep window open
 block-gui:
 	cd Binary_cnn && PRJ=$$(ls -t block_processor*.ccs 2>/dev/null | head -n 1); \
 	if [ -z "$$PRJ" ]; then \
-	  echo "No block_processor*.ccs found. Running GUI flow once to create project..."; \
-	  catapult -gui -file scripts/run_block_processor_catapult_gui.tcl & \
+		echo "No block_processor*.ccs found. Running batch flow once to create project..."; \
+		catapult -shell -file scripts/run_block_processor_catapult.tcl; \
+		PRJ=$$(ls -t block_processor*.ccs 2>/dev/null | head -n 1); \
+	fi; \
+	if [ -n "$$PRJ" ]; then \
+		catapult "$$PRJ" & \
 	else \
-	  catapult "$$PRJ" & \
+		echo "Could not find block_processor*.ccs project file."; exit 1; \
 	fi

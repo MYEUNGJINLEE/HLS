@@ -20,11 +20,13 @@
 //
 // ============================================================================
 
+#pragma hls_design top
 class FusedBlockProcessor {
 public:
     FusedBlockProcessor() {}
 
     // Main entry point
+    #pragma hls_design interface
     void run(
         BlockConfig &config,
         ac_channel<packed_act_t> &input_stream,
