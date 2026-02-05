@@ -1,4 +1,4 @@
-reloadable_uuid=9ee17cf5-802a-4934-8c55-6cdb76bdb559
+reloadable_uuid=720da560-1c5f-4218-b6e9-228bf6f4ad24
 preserved_uuid=07ab8302-a000-4246-af56-672a80601d03
 sid=sid2.07ab8302-a000-4246-af56-672a80601d03
 name=BW_CNN_Streaming.v1
@@ -7,7 +7,7 @@ solution_dir=BW_CNN_Streaming.v1
 state=compile
 branch_sid=sid1.8faeef4b-7f0a-4994-8110-218ffe707c54
 branch_state=initial
-xrefboss_uuid=91c88eba-f967-4d5e-86e9-ba02090aaf8f
+xrefboss_uuid=0fb1e9bb-cf8d-46a7-a6dc-9f2183b2f561
 datum_uuid=a46921ae-c0e8-49f8-8d94-3859414822e0
 state_order=2
 dependent_solutions=sid1.8faeef4b-7f0a-4994-8110-218ffe707c54,

@@ -1,0 +1,13 @@
+reloadable_uuid=fb5e8df5-6d2c-4074-bc93-16d83a215853
+preserved_uuid=09ac7e76-3a28-4bea-8a91-73372e4f975a
+sid=sid2.09ac7e76-3a28-4bea-8a91-73372e4f975a
+name=BW_CNN_Streaming.v1
+version=v1
+solution_dir=BW_CNN_Streaming.v1
+state=compile
+branch_sid=sid1.92ba8b36-aac4-4600-9c3b-7f99ef067fe3
+branch_state=initial
+xrefboss_uuid=06953be1-c827-45cc-8bdc-c4859f0dbb26
+datum_uuid=724934da-98fe-4b3a-8885-52408addc2d9
+state_order=2
+dependent_solutions=sid1.92ba8b36-aac4-4600-9c3b-7f99ef067fe3,

@@ -1,0 +1,24 @@
+//  Catapult Ultra Synthesis 2025.2_1/1197638 (Production Release) Thu Jun 12 00:48:01 PDT 2025
+//  
+//          Copyright (c) Siemens EDA, 1996-2025, All Rights Reserved.
+//                        UNPUBLISHED, LICENSED SOFTWARE.
+//             CONFIDENTIAL AND PROPRIETARY INFORMATION WHICH IS THE
+//                   PROPERTY OF SIEMENS EDA OR ITS LICENSORS.
+//  
+//  Running on Linux soc_lab_LMJ@ssu_soc_lab:261153 3.10.0-1160.108.1.el7.x86_64 x86_64 aol
+//  
+//  Package information: SIFLIBS v28.2_1.0, HLS_PKGS v28.2_1.0, 
+//                       SIF_TOOLKITS v28.2_1.0, SIF_XILINX v28.2_1.0, 
+//                       SIF_ALTERA v28.2_1.0, CCS_LIBS v28.2_1.0, 
+//                       CDS_PPRO v2025.1, CDS_DesignChecker v2025.1_1, 
+//                       CDS_OASYS v21.1_3.1, CDS_PSR v25.1_0.14, 
+//                       DesignPad v2.78_1.0, DesignAnalyzer 2025.2/1187690
+//  
+if {[info script] != {} && [file isdirectory [file rootname [info script]]]} {
+  project load [file rootname [info script]] 2025.2
+} elseif { [file isdirectory /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/bin_cnn_streaming] } {
+  project load /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/bin_cnn_streaming 2025.2
+} else {
+  error {unable to locate project directory 'bin_cnn_streaming'}
+}
+
