@@ -126,6 +126,14 @@ class UnifiedBinaryPE;
 class MultiTileConvUnit;
 struct BNShiftParams;
 
+// Block processor forward declarations
+class WideLineBuffer;
+class TileManager;
+class FusedBlockProcessor;
+struct BlockConfig;
+struct LayerDescriptor;
+struct TileSchedule;
+
 // ============================================================================
 // Line Buffer Class
 // ============================================================================
@@ -343,6 +351,35 @@ private:
         ac_channel<packed_act_t> &output_stream,
         ParallelConvUnit &conv_unit,
         SRAMController &sram_ctrl
+    );
+
+    // ================================================================
+    // Multi-Tile Processing (>64 channel layers)
+    // ================================================================
+
+    // 3x3 convolution with IC/OC tiling
+    // Uses WideLineBuffer for multi-channel line buffering
+    void process_conv3x3_tiled(
+        const StreamingConvConfig &config,
+        int ic_tiles, int oc_tiles,
+        ac_channel<packed_act_t> &input_stream,
+        ac_channel<packed_bw_t> &weight_stream,
+        ac_channel<bn_param_t> &bn_scale_stream,
+        ac_channel<bn_param_t> &bn_bias_stream,
+        ac_channel<packed_act_t> &shortcut_stream,
+        ac_channel<packed_act_t> &output_stream
+    );
+
+    // 1x1 convolution with IC/OC tiling
+    void process_conv1x1_tiled(
+        const StreamingConvConfig &config,
+        int ic_tiles, int oc_tiles,
+        ac_channel<packed_act_t> &input_stream,
+        ac_channel<packed_bw_t> &weight_stream,
+        ac_channel<bn_param_t> &bn_scale_stream,
+        ac_channel<bn_param_t> &bn_bias_stream,
+        ac_channel<packed_act_t> &shortcut_stream,
+        ac_channel<packed_act_t> &output_stream
     );
 };
 

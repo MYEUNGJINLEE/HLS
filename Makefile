@@ -1,4 +1,4 @@
-.PHONY: update stream stream-log stream-tb stream-gui
+.PHONY: update stream stream-log stream-tb stream-gui block block-log
 
 # Update local repository to latest origin/dev
 update:
@@ -21,6 +21,14 @@ stream-tb:
 	if [ -z "$$SOL_DIR" ]; then echo "No BW_CNN_Streaming.v* solution directory found."; exit 1; fi; \
 	if [ ! -f "$$SOL_DIR/scverify/Makefile" ]; then echo "SCVerify Makefile not found: $$SOL_DIR/scverify/Makefile"; exit 1; fi; \
 	$$(MAKE) -C "$$SOL_DIR/scverify" sim | tee logs/scverify_sim.log
+
+# Run block processor Catapult in batch mode
+block:
+	cd Binary_cnn && catapult -shell -file scripts/run_block_processor_catapult.tcl
+
+# Run block processor with log
+block-log:
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_block_processor_catapult.tcl > logs/catapult_block_processor.log 2>&1
 
 # Run Catapult with GUI and keep window open
 stream-gui:

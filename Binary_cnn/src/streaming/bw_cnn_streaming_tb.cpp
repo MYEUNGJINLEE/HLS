@@ -1,4 +1,5 @@
 #include "bw_cnn_streaming.h"
+#include "block_config.h"
 #include "sram_controller.h"
 #include <iostream>
 #include <cmath>
@@ -253,6 +254,131 @@ void stream_bn_to_accelerator(
     for (int c = 0; c < channels && c < CH_PARALLEL; c++) {
         scale_stream.write(dram_bn_scale[c]);
         bias_stream.write(dram_bn_bias[c]);
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Multi-Tile Streaming Helpers (for >64 channel layers)
+// ----------------------------------------------------------------------------
+
+void stream_input_tiled(
+    int height, int width, int channels,
+    ac_channel<packed_act_t> &input_stream
+) {
+    int ch_tiles = (channels + CH_PARALLEL - 1) / CH_PARALLEL;
+
+    for (int h = 0; h < height; h++) {
+        for (int w = 0; w < width; w++) {
+            for (int ct = 0; ct < ch_tiles; ct++) {
+                packed_act_t packed = 0;
+
+                for (int c = 0; c < CH_PARALLEL; c++) {
+                    int ch_idx = ct * CH_PARALLEL + c;
+                    if (ch_idx < channels) {
+                        packed.set_slc(c * 8, dram_input[h][w][ch_idx].slc<8>(0));
+                    }
+                }
+
+                input_stream.write(packed);
+            }
+        }
+    }
+}
+
+void stream_weights_3x3_tiled(
+    int out_ch, int in_ch,
+    ac_channel<packed_bw_t> &weight_stream
+) {
+    int oc_tiles = (out_ch + CH_PARALLEL - 1) / CH_PARALLEL;
+    int ic_tiles = (in_ch + CH_PARALLEL - 1) / CH_PARALLEL;
+
+    for (int oct = 0; oct < oc_tiles; oct++) {
+        for (int ict = 0; ict < ic_tiles; ict++) {
+            for (int oc = 0; oc < CH_PARALLEL; oc++) {
+                for (int ic = 0; ic < CH_PARALLEL; ic++) {
+                    for (int kh = 0; kh < 3; kh++) {
+                        for (int kw = 0; kw < 3; kw++) {
+                            packed_bw_t packed = 0;
+                            int abs_oc = oct * CH_PARALLEL + oc;
+                            int abs_ic = ict * CH_PARALLEL + ic;
+                            if (abs_oc < out_ch && abs_ic < in_ch) {
+                                packed[0] = dram_weights_3x3[abs_oc][abs_ic][kh][kw];
+                            }
+                            weight_stream.write(packed);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void stream_weights_1x1_tiled(
+    int out_ch, int in_ch,
+    ac_channel<packed_bw_t> &weight_stream
+) {
+    int oc_tiles = (out_ch + CH_PARALLEL - 1) / CH_PARALLEL;
+    int ic_tiles = (in_ch + CH_PARALLEL - 1) / CH_PARALLEL;
+
+    for (int oct = 0; oct < oc_tiles; oct++) {
+        for (int ict = 0; ict < ic_tiles; ict++) {
+            for (int oc = 0; oc < CH_PARALLEL; oc++) {
+                packed_bw_t packed = 0;
+
+                for (int ic = 0; ic < CH_PARALLEL; ic++) {
+                    int abs_oc = oct * CH_PARALLEL + oc;
+                    int abs_ic = ict * CH_PARALLEL + ic;
+                    if (abs_oc < out_ch && abs_ic < in_ch) {
+                        packed[ic] = dram_weights_1x1[abs_oc][abs_ic];
+                    }
+                }
+
+                weight_stream.write(packed);
+            }
+        }
+    }
+}
+
+void stream_bn_tiled(
+    int channels,
+    ac_channel<bn_param_t> &scale_stream,
+    ac_channel<bn_param_t> &bias_stream
+) {
+    int ch_tiles = (channels + CH_PARALLEL - 1) / CH_PARALLEL;
+
+    for (int ct = 0; ct < ch_tiles; ct++) {
+        for (int c = 0; c < CH_PARALLEL; c++) {
+            int ch_idx = ct * CH_PARALLEL + c;
+            if (ch_idx < channels) {
+                scale_stream.write(dram_bn_scale[ch_idx]);
+                bias_stream.write(dram_bn_bias[ch_idx]);
+            } else {
+                scale_stream.write((bn_param_t)1.0);
+                bias_stream.write((bn_param_t)0.0);
+            }
+        }
+    }
+}
+
+void receive_output_tiled(
+    int height, int width, int channels,
+    ac_channel<packed_act_t> &output_stream
+) {
+    int ch_tiles = (channels + CH_PARALLEL - 1) / CH_PARALLEL;
+
+    for (int h = 0; h < height; h++) {
+        for (int w = 0; w < width; w++) {
+            for (int ct = 0; ct < ch_tiles; ct++) {
+                packed_act_t packed = output_stream.read();
+
+                for (int c = 0; c < CH_PARALLEL; c++) {
+                    int ch_idx = ct * CH_PARALLEL + c;
+                    if (ch_idx < channels) {
+                        dram_output[h][w][ch_idx].set_slc(0, packed.slc<8>(c * 8));
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -551,6 +677,126 @@ CCS_MAIN(int argc, char *argv[]) {
 
         std::cout << "MaxPool test: op_mode configured (DUT integration pending)" << std::endl;
         std::cout << "Test 5: SKIPPED (DUT not fully integrated)" << std::endl;
+    }
+
+    // Test 6: Multi-tile 3x3 convolution (IC=128, OC=64)
+    std::cout << "\n=== Test 6: Multi-Tile 3x3 Conv (IC=128, OC=64) ===" << std::endl;
+    {
+        StreamingConvConfig config;
+        config.input_height = 16;
+        config.input_width = 16;
+        config.input_channels = 128;
+        config.output_height = 16;
+        config.output_width = 16;
+        config.output_channels = 64;
+        config.kernel_size = 3;
+        config.stride = 1;
+        config.padding = 1;
+        config.op_mode = OP_MODE_CONV_3x3;
+        config.use_batch_norm = true;
+        config.use_relu = true;
+        config.has_shortcut = false;
+        config.shortcut_add = false;
+        config.use_shift_bn = false;
+
+        // Initialize DRAM (128ch input)
+        init_dram_input(16, 16, 128);
+        init_dram_weights_3x3(64, 128);
+        init_dram_bn(64);
+
+        // Compute golden (SW reference with full 128ch input)
+        compute_golden_3x3(16, 16, 128, 16, 16, 64, 1, 1, true, true);
+
+        // Create channels
+        ac_channel<packed_act_t> input_stream;
+        ac_channel<packed_bw_t> weight_stream;
+        ac_channel<bn_param_t> bn_scale_stream;
+        ac_channel<bn_param_t> bn_bias_stream;
+        ac_channel<packed_act_t> shortcut_stream;
+        ac_channel<packed_act_t> output_stream;
+
+        // Stream data (tiled format for multi-tile)
+        stream_input_tiled(16, 16, 128, input_stream);
+        stream_weights_3x3_tiled(64, 128, weight_stream);
+        stream_bn_tiled(64, bn_scale_stream, bn_bias_stream);
+
+        std::cout << "Running accelerator (multi-tile 3x3)..." << std::endl;
+
+        // Run accelerator
+        dut.run(config, input_stream, weight_stream, bn_scale_stream,
+                bn_bias_stream, shortcut_stream, output_stream);
+
+        // Receive output (64ch = single tile output)
+        receive_output_from_accelerator(16, 16, 64, output_stream);
+
+        // Verify
+        int errors = verify_output(16, 16, 64);
+
+        if (errors == 0) {
+            std::cout << "Test 6: PASSED" << std::endl;
+        } else {
+            std::cout << "Test 6: FAILED" << std::endl;
+        }
+    }
+
+    // Test 7: Multi-tile 1x1 convolution (IC=128, OC=128)
+    std::cout << "\n=== Test 7: Multi-Tile 1x1 Conv (IC=128, OC=128) ===" << std::endl;
+    {
+        StreamingConvConfig config;
+        config.input_height = 16;
+        config.input_width = 16;
+        config.input_channels = 128;
+        config.output_height = 16;
+        config.output_width = 16;
+        config.output_channels = 128;
+        config.kernel_size = 1;
+        config.stride = 1;
+        config.padding = 0;
+        config.op_mode = OP_MODE_CONV_1x1;
+        config.use_batch_norm = true;
+        config.use_relu = true;
+        config.has_shortcut = false;
+        config.shortcut_add = false;
+        config.use_shift_bn = false;
+
+        // Initialize DRAM (128ch)
+        init_dram_input(16, 16, 128);
+        init_dram_weights_1x1(128, 128);
+        init_dram_bn(128);
+
+        // Compute golden (SW reference with full 128ch)
+        compute_golden_1x1(16, 16, 128, 16, 16, 128, 1, true, true);
+
+        // Create channels
+        ac_channel<packed_act_t> input_stream;
+        ac_channel<packed_bw_t> weight_stream;
+        ac_channel<bn_param_t> bn_scale_stream;
+        ac_channel<bn_param_t> bn_bias_stream;
+        ac_channel<packed_act_t> shortcut_stream;
+        ac_channel<packed_act_t> output_stream;
+
+        // Stream data (tiled format)
+        stream_input_tiled(16, 16, 128, input_stream);
+        stream_weights_1x1_tiled(128, 128, weight_stream);
+        stream_bn_tiled(128, bn_scale_stream, bn_bias_stream);
+
+        std::cout << "Running accelerator (multi-tile 1x1)..." << std::endl;
+
+        // Run accelerator
+        dut.run(config, input_stream, weight_stream, bn_scale_stream,
+                bn_bias_stream, shortcut_stream, output_stream);
+
+        // Receive output (128ch = 2 tiles)
+        receive_output_tiled(16, 16, 128, output_stream);
+
+        // Verify
+        int errors = verify_output(16, 16, 128);
+
+        if (errors == 0) {
+            std::cout << "Test 7: PASSED" << std::endl;
+        } else {
+            std::cout << "Test 7: FAILED" << std::endl;
+        }
     }
 
     std::cout << "\n========================================" << std::endl;

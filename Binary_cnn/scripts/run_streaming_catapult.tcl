@@ -15,6 +15,9 @@ solution options set /Output/GenerateCycleNetlist false
 
 # Design + testbench files (TB excluded from synthesis)
 solution file add ./src/streaming/bw_cnn_streaming.h -type C++
+solution file add ./src/streaming/block_config.h -type C++
+solution file add ./src/streaming/tile_manager.h -type C++
+solution file add ./src/streaming/inter_layer_buffer.h -type C++
 solution file add ./src/streaming/bw_cnn_streaming.cpp -type C++
 solution file add ./src/streaming/bw_cnn_streaming_tb.cpp -type C++ -exclude true
 
