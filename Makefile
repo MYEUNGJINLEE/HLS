@@ -22,17 +22,17 @@ stream-tb:
 	if [ ! -f "$$SOL_DIR/scverify/Makefile" ]; then echo "SCVerify Makefile not found: $$SOL_DIR/scverify/Makefile"; exit 1; fi; \
 	$$(MAKE) -C "$$SOL_DIR/scverify" sim 2>&1 | tee logs/scverify_sim.log
 
-# Clean old streaming project
+# Clean streaming projects (including numbered variants _1, _2, ...)
 stream-clean:
-	cd Binary_cnn && rm -rf bin_cnn_streaming bin_cnn_streaming.ccs
+	cd Binary_cnn && rm -rf bin_cnn_streaming* bin_cnn_streaming.ccs
 
-# Clean old block processor project
+# Clean block processor projects (including numbered variants _1, _2, ...)
 block-clean:
-	cd Binary_cnn && rm -rf block_processor block_processor.ccs
+	cd Binary_cnn && rm -rf block_processor* block_processor.ccs
 
-# Clean all Catapult projects and logs
+# Clean all Catapult-generated artifacts
 clean: stream-clean block-clean
-	cd Binary_cnn && rm -rf logs catapult_pid* .Catapult*
+	cd Binary_cnn && rm -rf bin_cnn bin_cnn.ccs Catapult Catapult.ccs logs catapult_pid* .Catapult*
 
 # Run block processor Catapult in batch mode (auto-cleans old project)
 block: block-clean
