@@ -84,7 +84,7 @@ public:
         acc_t output[CH_PARALLEL]
     ) {
         CONV3x3_OC:
-        #pragma hls_unroll
+        #pragma hls_pipeline_init_interval 1
         for (int oc = 0; oc < CH_PARALLEL; oc++) {
             acc_t acc = 0;
 
@@ -125,7 +125,7 @@ public:
         acc_t output[CH_PARALLEL]
     ) {
         CONV1x1_OC:
-        #pragma hls_unroll
+        #pragma hls_pipeline_init_interval 1
         for (int oc = 0; oc < CH_PARALLEL; oc++) {
             acc_t acc = 0;
 
@@ -362,7 +362,7 @@ public:
         acc_t output[CH_PARALLEL]
     ) {
         PARALLEL_OC:
-        #pragma hls_unroll
+        #pragma hls_pipeline_init_interval 1
         for (int oc = 0; oc < CH_PARALLEL; oc++) {
             acc_t acc = 0;
 
@@ -398,7 +398,7 @@ public:
         acc_t output[CH_PARALLEL]
     ) {
         PARALLEL_1x1_OC:
-        #pragma hls_unroll
+        #pragma hls_pipeline_init_interval 1
         for (int oc = 0; oc < CH_PARALLEL; oc++) {
             acc_t acc = 0;
 
@@ -548,7 +548,7 @@ public:
         bool is_first_tile
     ) {
         TILED_OC:
-        #pragma hls_unroll
+        #pragma hls_pipeline_init_interval 1
         for (int oc = 0; oc < CH_PARALLEL; oc++) {
             acc_t acc = is_first_tile ? (acc_t)0 : partial_sum[oc];
 
@@ -583,7 +583,7 @@ public:
         acc_t output[CH_PARALLEL]
     ) {
         OC_TILED:
-        #pragma hls_unroll
+        #pragma hls_pipeline_init_interval 1
         for (int oc = 0; oc < CH_PARALLEL; oc++) {
             acc_t acc = 0;
 

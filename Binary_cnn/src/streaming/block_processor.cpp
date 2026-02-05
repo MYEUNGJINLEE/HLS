@@ -159,7 +159,7 @@ void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
                         bool is_first = (ict == 0);
 
                         FUSED_L0_COMP_OC:
-                        #pragma hls_unroll
+                        #pragma hls_pipeline_init_interval 1
                         for (int oc = 0; oc < CH_PARALLEL; oc++) {
                             acc_t acc = is_first ? (acc_t)0 : psum[oc];
 
