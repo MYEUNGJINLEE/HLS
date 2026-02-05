@@ -1,6 +1,9 @@
 #ifndef BLOCK_PROCESSOR_H
 #define BLOCK_PROCESSOR_H
 
+// Prevent BW_CNN_Streaming from being marked as hls_design top
+#define BLOCK_PROCESSOR_TOP
+
 #include "block_config.h"
 #include "tile_manager.h"
 #include "inter_layer_buffer.h"

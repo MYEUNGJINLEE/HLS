@@ -13,9 +13,6 @@ solution options defaults
 solution options set /Flows/Enable-SCVerify yes
 solution options set /Output/GenerateCycleNetlist false
 
-# Specify top design (override BW_CNN_Streaming pragma from include chain)
-solution options set /Input/TopDesignName FusedBlockProcessor
-
 # Design + testbench files
 solution file add ./src/streaming/block_processor.cpp -type C++
 solution file add ./src/streaming/block_processor_tb.cpp -type C++ -exclude true

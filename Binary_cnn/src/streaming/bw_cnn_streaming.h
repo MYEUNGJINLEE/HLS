@@ -275,7 +275,9 @@ private:
 // Streaming CNN Accelerator Top Module
 // ============================================================================
 
+#ifndef BLOCK_PROCESSOR_TOP
 #pragma hls_design top
+#endif
 class BW_CNN_Streaming {
 public:
     BW_CNN_Streaming() {}
