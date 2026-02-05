@@ -204,8 +204,8 @@ void stream_input_to_accelerator(
             packed_act_t packed = 0;
 
             for (int c = 0; c < CH_PARALLEL && c < channels; c++) {
-                ac_int<8, true> val = dram_input[h][w][c].to_int();
-                packed.set_slc(c * 8, val);
+                // 비트 캐스트: ac_fixed 전체 비트를 그대로 전송 (소수부 보존)
+                packed.set_slc(c * 8, dram_input[h][w][c].slc<8>(0));
             }
 
             input_stream.write(packed);
@@ -269,8 +269,8 @@ void receive_output_from_accelerator(
             packed_act_t packed = output_stream.read();
 
             for (int c = 0; c < CH_PARALLEL && c < channels; c++) {
-                ac_int<8, true> val = packed.slc<8>(c * 8);
-                dram_output[h][w][c] = (out_act_t)val;
+                // 비트 캐스트: 비트 패턴을 그대로 ac_fixed로 복원 (소수부 보존)
+                dram_output[h][w][c].set_slc(0, packed.slc<8>(c * 8));
             }
         }
     }

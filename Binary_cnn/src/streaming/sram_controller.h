@@ -132,9 +132,8 @@ public:
                 for (int ch = 0; ch < CH_PARALLEL; ch++) {
                     int abs_ch = ch_tile * CH_PARALLEL + ch;
                     if (abs_ch < channels) {
-                        // Extract 8 bits for each channel
-                        ac_int<8, true> val = packed.slc<8>(ch * 8);
-                        row_buffer[col][ch] = (act_t)val;
+                        // Bit-cast: preserve fractional bits
+                        row_buffer[col][ch].set_slc(0, packed.slc<8>(ch * 8));
                     } else {
                         row_buffer[col][ch] = 0;
                     }
@@ -167,8 +166,8 @@ public:
                 for (int ch = 0; ch < CH_PARALLEL; ch++) {
                     int abs_ch = ch_tile * CH_PARALLEL + ch;
                     if (abs_ch < channels) {
-                        ac_int<8, true> val = row_buffer[col][ch].to_int();
-                        packed.set_slc(ch * 8, val);
+                        // Bit-cast: preserve fractional bits
+                        packed.set_slc(ch * 8, row_buffer[col][ch].slc<8>(0));
                     }
                 }
 
@@ -320,8 +319,8 @@ public:
             packed_act_t packed = 0;
 
             for (int ch = 0; ch < CH_PARALLEL && ch < channels; ch++) {
-                ac_int<8, true> val = input_mem[row][col][ch].to_int();
-                packed.set_slc(ch * 8, val);
+                // Bit-cast: preserve fractional bits
+                packed.set_slc(ch * 8, input_mem[row][col][ch].slc<8>(0));
             }
 
             out_stream.write(packed);

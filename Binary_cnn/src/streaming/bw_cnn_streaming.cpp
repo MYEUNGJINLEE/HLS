@@ -136,8 +136,7 @@ void BW_CNN_Streaming::process_conv3x3(
             UNPACK_IN:
             #pragma hls_unroll
             for (int ch = 0; ch < CH_PARALLEL; ch++) {
-                ac_int<8, true> val = packed.slc<8>(ch * 8);
-                pixel[ch] = (act_t)val;
+                pixel[ch].set_slc(0, packed.slc<8>(ch * 8));
             }
 
             // Push to window generator
@@ -169,8 +168,7 @@ void BW_CNN_Streaming::process_conv3x3(
                     UNPACK_SC:
                     #pragma hls_unroll
                     for (int ch = 0; ch < CH_PARALLEL; ch++) {
-                        ac_int<8, true> val = sc_packed.slc<8>(ch * 8);
-                        shortcut_pixel[ch] = (act_t)val;
+                        shortcut_pixel[ch].set_slc(0, sc_packed.slc<8>(ch * 8));
                     }
 
                     ADD_SC:
@@ -200,8 +198,7 @@ void BW_CNN_Streaming::process_conv3x3(
                 PACK_OUT:
                 #pragma hls_unroll
                 for (int ch = 0; ch < CH_PARALLEL; ch++) {
-                    ac_int<8, true> val = final_out[ch].to_int();
-                    out_packed.set_slc(ch * 8, val);
+                    out_packed.set_slc(ch * 8, final_out[ch].slc<8>(0));
                 }
 
                 output_stream.write(out_packed);
@@ -233,8 +230,7 @@ void BW_CNN_Streaming::process_conv3x3(
                 UNPACK_SC_FLUSH:
                 #pragma hls_unroll
                 for (int ch = 0; ch < CH_PARALLEL; ch++) {
-                    ac_int<8, true> val = sc_packed.slc<8>(ch * 8);
-                    shortcut_pixel[ch] = (act_t)val;
+                    shortcut_pixel[ch].set_slc(0, sc_packed.slc<8>(ch * 8));
                 }
 
                 ADD_SC_FLUSH:
@@ -263,8 +259,7 @@ void BW_CNN_Streaming::process_conv3x3(
             PACK_OUT_FLUSH:
             #pragma hls_unroll
             for (int ch = 0; ch < CH_PARALLEL; ch++) {
-                ac_int<8, true> val = final_out[ch].to_int();
-                out_packed.set_slc(ch * 8, val);
+                out_packed.set_slc(ch * 8, final_out[ch].slc<8>(0));
             }
 
             output_stream.write(out_packed);
@@ -309,8 +304,7 @@ void BW_CNN_Streaming::process_conv1x1(
             UNPACK_1x1:
             #pragma hls_unroll
             for (int ch = 0; ch < CH_PARALLEL; ch++) {
-                ac_int<8, true> val = packed.slc<8>(ch * 8);
-                pixel[ch] = (act_t)val;
+                pixel[ch].set_slc(0, packed.slc<8>(ch * 8));
             }
 
             // Check if this pixel should be output (stride)
@@ -337,8 +331,7 @@ void BW_CNN_Streaming::process_conv1x1(
                     UNPACK_SC_1x1:
                     #pragma hls_unroll
                     for (int ch = 0; ch < CH_PARALLEL; ch++) {
-                        ac_int<8, true> val = sc_packed.slc<8>(ch * 8);
-                        shortcut_pixel[ch] = (act_t)val;
+                        shortcut_pixel[ch].set_slc(0, sc_packed.slc<8>(ch * 8));
                     }
 
                     // Add shortcut
@@ -369,8 +362,7 @@ void BW_CNN_Streaming::process_conv1x1(
                 PACK_OUT_1x1:
                 #pragma hls_unroll
                 for (int ch = 0; ch < CH_PARALLEL; ch++) {
-                    ac_int<8, true> val = final_out[ch].to_int();
-                    out_packed.set_slc(ch * 8, val);
+                    out_packed.set_slc(ch * 8, final_out[ch].slc<8>(0));
                 }
 
                 output_stream.write(out_packed);
