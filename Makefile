@@ -31,9 +31,9 @@ stream-gui:
 		PRJ=$$(ls -t bin_cnn_streaming*.ccs 2>/dev/null | head -n 1); \
 	fi; \
 	if [ -n "$$PRJ" ]; then \
-		catapult "$$PRJ" &; \
+		catapult "$$PRJ" & \
 	else \
 		PRJ_XML=$$(ls -t bin_cnn_streaming*/SIF/project.xml 2>/dev/null | head -n 1); \
 		if [ -z "$$PRJ_XML" ]; then echo "Could not find a streaming project (.ccs or SIF/project.xml)."; exit 1; fi; \
-		catapult "$$PRJ_XML" &; \
+		catapult "$$PRJ_XML" & \
 	fi
