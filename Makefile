@@ -1,4 +1,4 @@
-.PHONY: update stream stream-log stream-tb stream-gui block block-log
+.PHONY: update stream stream-log stream-tb stream-gui block block-log block-gui block-tb
 
 # Update local repository to latest origin/dev
 update:
@@ -30,6 +30,17 @@ block:
 block-log:
 	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_block_processor_catapult.tcl > logs/catapult_block_processor.log 2>&1
 
+
+# Run block processor batch flow and execute SCVerify testbench simulation
+block-tb:
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_block_processor_catapult.tcl > logs/catapult_block_processor.log 2>&1
+	cd Binary_cnn && SOL_DIR=$$(ls -d block_processor* 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SOL_DIR" ]; then echo "No block_processor* project directory found."; exit 1; fi; \
+	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
+	SCV_DIR=$$(dirname "$$SCV_MK"); \
+	$$(MAKE) -C "$$SCV_DIR" sim | tee logs/scverify_block_processor_sim.log
+
 # Run Catapult with GUI and keep window open
 stream-gui:
 	cd Binary_cnn && PRJ=$$(ls -t bin_cnn_streaming*.ccs 2>/dev/null | head -n 1); \
@@ -44,4 +55,13 @@ stream-gui:
 		PRJ_XML=$$(ls -t bin_cnn_streaming*/SIF/project.xml 2>/dev/null | head -n 1); \
 		if [ -z "$$PRJ_XML" ]; then echo "Could not find a streaming project (.ccs or SIF/project.xml)."; exit 1; fi; \
 		catapult "$$PRJ_XML" & \
+	fi
+# Run block processor with GUI and keep window open
+block-gui:
+	cd Binary_cnn && PRJ=$$(ls -t block_processor*.ccs 2>/dev/null | head -n 1); \
+	if [ -z "$$PRJ" ]; then \
+	  echo "No block_processor*.ccs found. Running GUI flow once to create project..."; \
+	  catapult -gui -file scripts/run_block_processor_catapult_gui.tcl & \
+	else \
+	  catapult "$$PRJ" & \
 	fi
