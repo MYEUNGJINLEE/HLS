@@ -5,7 +5,7 @@
 //             CONFIDENTIAL AND PROPRIETARY INFORMATION WHICH IS THE
 //                   PROPERTY OF SIEMENS EDA OR ITS LICENSORS.
 //  
-//  Running on Linux soc_lab_LMJ@ssu_soc_lab:75849 3.10.0-1160.108.1.el7.x86_64 x86_64 aol
+//  Running on Linux soc_lab_LMJ@ssu_soc_lab:82889 3.10.0-1160.108.1.el7.x86_64 x86_64 aol
 //  
 //  Package information: SIFLIBS v28.2_1.0, HLS_PKGS v28.2_1.0, 
 //                       SIF_TOOLKITS v28.2_1.0, SIF_XILINX v28.2_1.0, 
@@ -14,134 +14,184 @@
 //                       CDS_OASYS v21.1_3.1, CDS_PSR v25.1_0.14, 
 //                       DesignPad v2.78_1.0, DesignAnalyzer 2025.2/1187690
 //  
-//  Start time Thu Feb  5 14:34:55 2026
+//  Start time Thu Feb  5 23:14:58 2026
 # -------------------------------------------------
-# Logging session transcript to file "/tmp/log75849702f8c89.0"
+# Logging session transcript to file "/tmp/log82889302ee9a9.0"
 # Loading options from '$HOME/.catapult/2025.2_1-1197638.aol.reg'.
-# Creating project directory '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/bin_cnn_streaming/'. (PRJ-1)
+dofile ./scripts/run_block_processor_catapult.tcl
+# > project new -name block_processor
+# > solution new -state initial
+# Info: Branching solution 'solution.v2' at state 'initial' (PRJ-2)
+# solution.v2
+# > solution options defaults
+# > solution options set /Flows/Enable-SCVerify yes
+# yes
+# > solution options set /Output/GenerateCycleNetlist false
+# false
+# > solution file add ./src/streaming/block_processor.cpp -type C++
+# /INPUTFILES/1
+# > solution file add ./src/streaming/block_processor_tb.cpp -type C++ -exclude true
+# /INPUTFILES/2
+# > go analyze
+# Info: Starting transformation 'analyze' on solution 'solution.v2' (SOL-8)
+# Creating project directory '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/block_processor/'. (PRJ-1)
 # Moving session transcript to file "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/catapult.log"
-flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
-# Making './scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim'
-# Make utility invoked from '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/bin_cnn_streaming/BW_CNN_Streaming.v1'
-#     /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/bin/make -f ./scverify/Verify_orig_cxx_osci.mk SIMTOOL=osci build < "/dev/null" (BASIC-15)
-# make[1]: Entering directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/bin_cnn_streaming/BW_CNN_Streaming.v1'
-# ============================================
-# Compiling C++ file: ../../src/streaming/bw_cnn_streaming.cpp
-# /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/dcs_gcc/usr/bin/g++ -DCCS_DUT_SYSC  -DSC_INCLUDE_DYNAMIC_PROCESSES -DSC_USE_STD_STRING -DCCS_MISMATCHED_OUTPUTS_ONLY -DDEADLOCK_DETECTION -std=gnu++11 -Wall -Wno-unknown-pragmas -Wno-unused-label -g -I. -I../.. -I. -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/hls_pkgs/src -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/siflibs -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/hls_pkgs/mgc_comps_src -DSC_USE_STD_STRING  -c ../../src/streaming/bw_cnn_streaming.cpp -o scverify/orig_cxx_osci/bw_cnn_streaming.cpp.cxxts.o
-# In file included from ../../src/streaming/bw_cnn_streaming.cpp:6:
-# ../../src/streaming/sram_controller.h: In member function ‘void SRAMController::load_weights_3x3(ac_channel<ac_int<64, false> >&, bw_t (*)[64][3][3], int, int)’:
-# ../../src/streaming/sram_controller.h:189:13: warning: unused variable ‘oc_tiles’ [-Wunused-variable]
-#   189 |         int oc_tiles = (out_channels + CH_PARALLEL - 1) / CH_PARALLEL;
-#       |             ^~~~~~~~
-# ../../src/streaming/sram_controller.h:190:13: warning: unused variable ‘ic_tiles’ [-Wunused-variable]
-#   190 |         int ic_tiles = (in_channels + CH_PARALLEL - 1) / CH_PARALLEL;
-#       |             ^~~~~~~~
-# ../../src/streaming/bw_cnn_streaming.cpp: In member function ‘void BW_CNN_Streaming::run(StreamingConvConfig&, ac_channel<ac_int<512, false> >&, ac_channel<ac_int<64, false> >&, ac_channel<ac_fixed<16, 8, true> >&, ac_channel<ac_fixed<16, 8, true> >&, ac_channel<ac_int<512, false> >&, ac_channel<ac_int<512, false> >&)’:
-# ../../src/streaming/bw_cnn_streaming.cpp:27:9: warning: unused variable ‘out_height’ [-Wunused-variable]
-#    27 |     int out_height = config.output_height.to_int();
-#       |         ^~~~~~~~~~
-# ../../src/streaming/bw_cnn_streaming.cpp:28:9: warning: unused variable ‘out_width’ [-Wunused-variable]
-#    28 |     int out_width = config.output_width.to_int();
-#       |         ^~~~~~~~~
-# ../../src/streaming/bw_cnn_streaming.cpp:44:11: warning: unused variable ‘input_row_buf’ [-Wunused-variable]
-#    44 |     act_t input_row_buf[MAX_WIDTH][CH_PARALLEL];
-#       |           ^~~~~~~~~~~~~
-# ../../src/streaming/bw_cnn_streaming.cpp:45:15: warning: unused variable ‘output_row_buf’ [-Wunused-variable]
-#    45 |     out_act_t output_row_buf[MAX_WIDTH][CH_PARALLEL];
-#       |               ^~~~~~~~~~~~~~
-# ../../src/streaming/bw_cnn_streaming.cpp:50:11: warning: unused variable ‘shortcut_pixel’ [-Wunused-variable]
-#    50 |     act_t shortcut_pixel[CH_PARALLEL];
-#       |           ^~~~~~~~~~~~~~
-# ../../src/streaming/bw_cnn_streaming.cpp: In member function ‘void BW_CNN_Streaming::process_conv3x3(const StreamingConvConfig&, ac_channel<ac_int<512, false> >&, const bw_t (*)[64][3][3], const bn_param_t*, const bn_param_t*, ac_channel<ac_int<512, false> >&, ac_channel<ac_int<512, false> >&, StreamingWindowGen&, ParallelConvUnit&, SRAMController&)’:
-# ../../src/streaming/bw_cnn_streaming.cpp:136:9: warning: unused variable ‘out_height’ [-Wunused-variable]
-#   136 |     int out_height = config.output_height.to_int();
-#       |         ^~~~~~~~~~
-# ../../src/streaming/bw_cnn_streaming.cpp:137:9: warning: unused variable ‘out_width’ [-Wunused-variable]
-#   137 |     int out_width = config.output_width.to_int();
-#       |         ^~~~~~~~~
-# ============================================
-# Compiling C++ file: ../../src/streaming/bw_cnn_streaming_tb.cpp
-# /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/dcs_gcc/usr/bin/g++ -DCCS_DUT_SYSC  -DSC_INCLUDE_DYNAMIC_PROCESSES -DSC_USE_STD_STRING -DCCS_MISMATCHED_OUTPUTS_ONLY -DDEADLOCK_DETECTION -std=gnu++11 -Wall -Wno-unknown-pragmas -Wno-unused-label -g -I. -I../.. -I. -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/hls_pkgs/src -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/siflibs -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/hls_pkgs/mgc_comps_src -DSC_USE_STD_STRING  -c ../../src/streaming/bw_cnn_streaming_tb.cpp -o scverify/orig_cxx_osci/bw_cnn_streaming_tb.cpp.cxxts.o
-# In file included from ../../src/streaming/bw_cnn_streaming_tb.cpp:3:
-# ../../src/streaming/sram_controller.h: In member function ‘void SRAMController::load_weights_3x3(ac_channel<ac_int<64, false> >&, bw_t (*)[64][3][3], int, int)’:
-# ../../src/streaming/sram_controller.h:189:13: warning: unused variable ‘oc_tiles’ [-Wunused-variable]
-#   189 |         int oc_tiles = (out_channels + CH_PARALLEL - 1) / CH_PARALLEL;
-#       |             ^~~~~~~~
-# ../../src/streaming/sram_controller.h:190:13: warning: unused variable ‘ic_tiles’ [-Wunused-variable]
-#   190 |         int ic_tiles = (in_channels + CH_PARALLEL - 1) / CH_PARALLEL;
-#       |             ^~~~~~~~
-# ============================================
-# Linking executable
-# /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/dcs_gcc/usr/bin/g++  -static-libstdc++ -L/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/lib/Linux/gcc-10.3.0-64 -L/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/lib -L/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/lib/Linux/gcc-10.3.0-64 scverify/orig_cxx_osci/bw_cnn_streaming.cpp.cxxts.o scverify/orig_cxx_osci/bw_cnn_streaming_tb.cpp.cxxts.o -Wl,-Bstatic -lsystemc -Wl,-Bdynamic -lpthread -o scverify/orig_cxx_osci/scverify_top
-# make[1]: Leaving directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/bin_cnn_streaming/BW_CNN_Streaming.v1'
-#     /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/bin/make -f ./scverify/Verify_orig_cxx_osci.mk SIMTOOL=osci sim (BASIC-14)
-# make[1]: Entering directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/bin_cnn_streaming/BW_CNN_Streaming.v1'
-# ============================================
-# Simulating design
-# cd ../..; ./bin_cnn_streaming/BW_CNN_Streaming.v1/scverify/orig_cxx_osci/scverify_top 
-# ========================================
-# Streaming BW-CNN Accelerator Testbench
-# ========================================
-# 
-# === Test 1: 3x3 Convolution ===
-# Initializing DRAM input: 16x16x64
-# Initializing 3x3 weights: 64x64
-# Initializing BN params: 64 channels
-# Computing golden reference (3x3 conv)...
-# Running accelerator...
-# Max error: 0
-# Total errors: 0 / 16384
-# Test 1: PASSED
-# 
-# === Test 2: 1x1 Convolution ===
-# Initializing DRAM input: 16x16x64
-# Initializing 1x1 weights: 64x64
-# Initializing BN params: 64 channels
-# Computing golden reference (1x1 conv)...
-# Running accelerator...
-# Max error: 0
-# Total errors: 0 / 16384
-# Test 2: PASSED
-# 
-# === Test 3: Stride-2 Downsampling ===
-# Initializing DRAM input: 16x16x64
-# Initializing 3x3 weights: 64x64
-# Initializing BN params: 64 channels
-# Computing golden reference (3x3 conv)...
-# Running accelerator...
-# Max error: 0
-# Total errors: 0 / 4096
-# Test 3: PASSED
-# 
-# === Test 4: Depthwise Convolution ===
-# Depthwise Conv test: op_mode configured (DUT integration pending)
-# Test 4: SKIPPED (DUT not fully integrated)
-# 
-# === Test 5: MaxPool 2x2 ===
-# MaxPool test: op_mode configured (DUT integration pending)
-# Test 5: SKIPPED (DUT not fully integrated)
-# 
-# === Test 6: Multi-Tile 3x3 Conv (IC=128, OC=64) ===
-# Initializing DRAM input: 16x16x128
-# Initializing 3x3 weights: 64x128
-# Initializing BN params: 64 channels
-# Computing golden reference (3x3 conv)...
-# Running accelerator (multi-tile 3x3)...
-# Max error: 0
-# Total errors: 0 / 16384
-# Test 6: PASSED
-# 
-# === Test 7: Multi-Tile 1x1 Conv (IC=128, OC=128) ===
-# Initializing DRAM input: 16x16x128
-# Initializing 1x1 weights: 128x128
-# Initializing BN params: 128 channels
-# Computing golden reference (1x1 conv)...
-# Running accelerator (multi-tile 1x1)...
-# Max error: 0
-# Total errors: 0 / 32768
-# Test 7: PASSED
-# 
-# ========================================
-# All tests completed!
-# ========================================
-# make[1]: Leaving directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/bin_cnn_streaming/BW_CNN_Streaming.v1'
+# Front End called with arguments: -- /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/block_processor.cpp (CIN-69)
+# Edison Design Group C++/C Front End - Version 6.6 (CIN-1)
+# $PROJECT_HOME/src/streaming/block_processor.h(27): Pragma 'hls_design<top>' detected on class 'FusedBlockProcessor' (CIN-6)
+# $PROJECT_HOME/src/streaming/block_processor.h(27): Pragma 'hls_design<top>' detected on class 'FusedBlockProcessor' (CIN-6)
+# Source file analysis completed (CIN-68)
+# Info: Completed transformation 'analyze' on solution 'solution.v2': elapsed time 2.46 seconds, memory usage 1232048kB, peak memory usage 1232048kB (SOL-9)
+# > go compile
+# Info: Starting transformation 'compile' on solution 'FusedBlockProcessor.v1' (SOL-8)
+# Generating synthesis internal form... (CIN-3)
+# $PROJECT_HOME/src/streaming/block_processor.h(27): Found top design routine 'FusedBlockProcessor' specified by directive (CIN-52)
+# Warning: $PROJECT_HOME/src/streaming/bw_cnn_streaming.h(18): Instantiating global variable 'CH_PARALLEL' which may be accessed outside this scope (CIN-18)
+# Warning: $PROJECT_HOME/src/streaming/block_config.h(20): Instantiating global variable 'INTER_BUF_ROWS' which may be accessed outside this scope (CIN-18)
+# $PROJECT_HOME/src/streaming/block_processor.h(29): Inlining member function 'FusedBlockProcessor::FusedBlockProcessor' on object '' (CIN-64)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(7): Synthesizing method 'FusedBlockProcessor::run' (CIN-13)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(7): Inlining member function 'FusedBlockProcessor::run' on object '' (CIN-64)
+# $PROJECT_HOME/src/streaming/block_config.h(85): Inlining routine 'compute_tile_schedule' (CIN-14)
+# $PROJECT_HOME/src/streaming/block_config.h(85): Inlining routine 'compute_tile_schedule' (CIN-14)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(47): Inlining member function 'FusedBlockProcessor::process_fused_conv1x1_conv3x3' on object '' (CIN-64)
+# $PROJECT_HOME/src/streaming/tile_manager.h(21): Inlining member function 'TileManager::TileManager' on object 'tile_mgr' (CIN-64)
+# $PROJECT_HOME/src/streaming/tile_manager.h(124): Inlining member function 'TileManager::load_all_weight_tiles_1x1' on object 'tile_mgr' (CIN-64)
+# $PROJECT_HOME/src/streaming/tile_manager.h(139): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/CACHE_1x1_IC' (CIN-203)
+# $MGC_HOME/shared/include/ac_int.h(3016): Inlining member function 'ac_int<64, false>::ac_bitref::operator ac_int<1, false><1, false>' on object 'bitref' (CIN-64)
+# $PROJECT_HOME/src/streaming/tile_manager.h(151): Inlining member function 'TileManager::load_all_bn_tiles' on object 'tile_mgr' (CIN-64)
+# $PROJECT_HOME/src/streaming/tile_manager.h(161): Pragma 'hls_pipeline_init_interval<1>' detected on '/FusedBlockProcessor/run/CACHE_BN_CH' (CIN-203)
+# $PROJECT_HOME/src/streaming/tile_manager.h(92): Inlining member function 'TileManager::load_all_weight_tiles_3x3' on object 'tile_mgr' (CIN-64)
+# $PROJECT_HOME/src/streaming/tile_manager.h(109): Pragma 'hls_pipeline_init_interval<1>' detected on '/FusedBlockProcessor/run/CACHE_3x3_KW' (CIN-203)
+# $MGC_HOME/shared/include/ac_int.h(3016): Inlining member function 'ac_int<64, false>::ac_bitref::operator ac_int<1, false><1, false>' on object 'bitref' (CIN-64)
+# $PROJECT_HOME/src/streaming/tile_manager.h(151): Inlining member function 'TileManager::load_all_bn_tiles' on object 'tile_mgr' (CIN-64)
+# $PROJECT_HOME/src/streaming/tile_manager.h(161): Pragma 'hls_pipeline_init_interval<1>' detected on '/FusedBlockProcessor/run/CACHE_BN_CH#1' (CIN-203)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(24): Inlining member function 'WideLineBuffer::WideLineBuffer' on object 'inter_buf' (CIN-64)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(142): Inlining member function 'WideLineBuffer::reset' on object 'inter_buf' (CIN-64)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(29): Inlining member function 'WideLineBuffer::configure' on object 'inter_buf' (CIN-64)
+# $PROJECT_HOME/src/streaming/conv_compute.h(542): Inlining member function 'MultiTileConvUnit::MultiTileConvUnit' on object 'conv_tile' (CIN-64)
+# $PROJECT_HOME/src/streaming/conv_compute.h(356): Inlining member function 'ParallelConvUnit::ParallelConvUnit' on object 'conv_unit' (CIN-64)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(137): Inlining member function 'WideLineBuffer::get_out_height' on object 'inter_buf' (CIN-64)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(136): Inlining member function 'WideLineBuffer::get_out_width' on object 'inter_buf' (CIN-64)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(144): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/FUSED_UNPACK' (CIN-203)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(162): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/FUSED_L0_COMP_OC' (CIN-203)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(167): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/FUSED_L0_COMP_IC' (CIN-203)
+# $MGC_HOME/shared/include/ac_int.h(3463): Inlining routine 'operator==<1, false>' (CIN-14)
+# $PROJECT_HOME/src/streaming/conv_compute.h(473): Inlining member function 'ParallelConvUnit::bn_relu_parallel' on object 'conv_unit' (CIN-64)
+# $PROJECT_HOME/src/streaming/conv_compute.h(482): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/PARALLEL_BN' (CIN-203)
+# $MGC_HOME/shared/include/ac_fixed.h(1703): Inlining routine 'operator<<24, 16, true, AC_TRN, AC_WRAP>' (CIN-14)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(188): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/FUSED_L0_TO_INTER' (CIN-203)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(46): Inlining member function 'WideLineBuffer::write_pixel_tile' on object 'inter_buf' (CIN-64)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(50): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/WRITE_TILE_CH' (CIN-203)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(59): Inlining member function 'WideLineBuffer::advance_write' on object 'inter_buf' (CIN-64)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(70): Inlining member function 'WideLineBuffer::can_output_row' on object 'inter_buf' (CIN-64)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(87): Inlining member function 'WideLineBuffer::extract_window_3x3' on object 'inter_buf' (CIN-64)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(95): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/EXTRACT_KR' (CIN-203)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(98): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/EXTRACT_KC' (CIN-203)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(104): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/EXTRACT_CH' (CIN-203)
+# $PROJECT_HOME/src/streaming/conv_compute.h(544): Inlining member function 'MultiTileConvUnit::compute_3x3_ic_tiled' on object 'conv_tile' (CIN-64)
+# $PROJECT_HOME/src/streaming/conv_compute.h(551): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/TILED_OC' (CIN-203)
+# $PROJECT_HOME/src/streaming/conv_compute.h(556): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/TILED_IC' (CIN-203)
+# $PROJECT_HOME/src/streaming/conv_compute.h(559): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/TILED_KR' (CIN-203)
+# $PROJECT_HOME/src/streaming/conv_compute.h(562): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/TILED_KC' (CIN-203)
+# $MGC_HOME/shared/include/ac_int.h(3463): Inlining routine 'operator==<1, false>' (CIN-14)
+# $PROJECT_HOME/src/streaming/conv_compute.h(473): Inlining member function 'ParallelConvUnit::bn_relu_parallel' on object 'conv_unit' (CIN-64)
+# $PROJECT_HOME/src/streaming/conv_compute.h(482): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/PARALLEL_BN#1' (CIN-203)
+# $MGC_HOME/shared/include/ac_fixed.h(1703): Inlining routine 'operator<<24, 16, true, AC_TRN, AC_WRAP>' (CIN-14)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(224): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/FUSED_L1_COPY' (CIN-203)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(232): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/FUSED_L1_PACK' (CIN-203)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(87): Inlining member function 'WideLineBuffer::extract_window_3x3' on object 'inter_buf' (CIN-64)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(95): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/EXTRACT_KR#1' (CIN-203)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(98): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/EXTRACT_KC#1' (CIN-203)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(104): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/EXTRACT_CH#1' (CIN-203)
+# $PROJECT_HOME/src/streaming/conv_compute.h(544): Inlining member function 'MultiTileConvUnit::compute_3x3_ic_tiled' on object 'conv_tile' (CIN-64)
+# $PROJECT_HOME/src/streaming/conv_compute.h(551): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/TILED_OC#1' (CIN-203)
+# $PROJECT_HOME/src/streaming/conv_compute.h(556): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/TILED_IC#1' (CIN-203)
+# $PROJECT_HOME/src/streaming/conv_compute.h(559): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/TILED_KR#1' (CIN-203)
+# $PROJECT_HOME/src/streaming/conv_compute.h(562): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/TILED_KC#1' (CIN-203)
+# $MGC_HOME/shared/include/ac_int.h(3463): Inlining routine 'operator==<1, false>' (CIN-14)
+# $PROJECT_HOME/src/streaming/conv_compute.h(473): Inlining member function 'ParallelConvUnit::bn_relu_parallel' on object 'conv_unit' (CIN-64)
+# $PROJECT_HOME/src/streaming/conv_compute.h(482): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/PARALLEL_BN#2' (CIN-203)
+# $MGC_HOME/shared/include/ac_fixed.h(1703): Inlining routine 'operator<<24, 16, true, AC_TRN, AC_WRAP>' (CIN-14)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(265): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/FUSED_FLUSH:for:for:for#1' (CIN-203)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(272): Pragma 'hls_unroll<yes>' detected on '/FusedBlockProcessor/run/FUSED_FLUSH:for:for:for#2' (CIN-203)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(7): Optimizing block '/FusedBlockProcessor' ... (CIN-4)
+# $PROJECT_HOME/src/streaming/block_config.h(67): INOUT port 'config.num_layers' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(42): INOUT port 'config.layers.input_height' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(43): INOUT port 'config.layers.input_width' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(46): INOUT port 'config.layers.input_channels' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(47): INOUT port 'config.layers.output_channels' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(50): INOUT port 'config.layers.kernel_size' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(51): INOUT port 'config.layers.stride' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(52): INOUT port 'config.layers.padding' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(53): INOUT port 'config.layers.op_mode' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(56): INOUT port 'config.layers.use_batch_norm' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(57): INOUT port 'config.layers.use_relu' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(58): INOUT port 'config.layers.is_last_layer' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(73): INOUT port 'config.has_shortcut' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(74): INOUT port 'config.shortcut_identity' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(77): INOUT port 'config.block_input_height' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_config.h(78): INOUT port 'config.block_input_width' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(9): INOUT port 'input_stream' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(10): INOUT port 'weight_stream' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(11): INOUT port 'bn_scale' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(12): INOUT port 'bn_bias' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(13): INOUT port 'shortcut_stream' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(14): INOUT port 'output_stream' is only used as an output. (OPT-11)
+# Info: $PROJECT_HOME/src/streaming/block_processor.h(29): Partition '/FusedBlockProcessor/constructor' is found empty and is optimized away. (OPT-12)
+# $PROJECT_HOME/src/streaming/tile_manager.h(140): Loop '/FusedBlockProcessor/run/CACHE_1x1_IC' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/tile_manager.h(135): Loop '/FusedBlockProcessor/run/CACHE_1x1_OC' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/tile_manager.h(133): Loop '/FusedBlockProcessor/run/CACHE_1x1_IC_TILE' iterated at most 33 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/tile_manager.h(131): Loop '/FusedBlockProcessor/run/CACHE_1x1_OC_TILE' iterated at most 33 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/tile_manager.h(162): Loop '/FusedBlockProcessor/run/CACHE_BN_CH' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/tile_manager.h(159): Loop '/FusedBlockProcessor/run/CACHE_BN_OC_TILE' iterated at most 33 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/tile_manager.h(110): Loop '/FusedBlockProcessor/run/CACHE_3x3_KW' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/tile_manager.h(107): Loop '/FusedBlockProcessor/run/CACHE_3x3_KH' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/tile_manager.h(105): Loop '/FusedBlockProcessor/run/CACHE_3x3_IC' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/tile_manager.h(103): Loop '/FusedBlockProcessor/run/CACHE_3x3_OC' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/tile_manager.h(101): Loop '/FusedBlockProcessor/run/CACHE_3x3_IC_TILE' iterated at most 33 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/tile_manager.h(99): Loop '/FusedBlockProcessor/run/CACHE_3x3_OC_TILE' iterated at most 33 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/tile_manager.h(162): Loop '/FusedBlockProcessor/run/CACHE_BN_CH#1' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/tile_manager.h(159): Loop '/FusedBlockProcessor/run/CACHE_BN_OC_TILE#1' iterated at most 33 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(145): Loop '/FusedBlockProcessor/run/FUSED_UNPACK' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(140): Loop '/FusedBlockProcessor/run/FUSED_READ_IC' iterated at most 33 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(168): Loop '/FusedBlockProcessor/run/FUSED_L0_COMP_IC' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(163): Loop '/FusedBlockProcessor/run/FUSED_L0_COMP_OC' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(158): Loop '/FusedBlockProcessor/run/FUSED_L0_IC_TILE' iterated at most 33 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/conv_compute.h(483): Loop '/FusedBlockProcessor/run/PARALLEL_BN' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(189): Loop '/FusedBlockProcessor/run/FUSED_L0_TO_INTER' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(51): Loop '/FusedBlockProcessor/run/WRITE_TILE_CH' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(155): Loop '/FusedBlockProcessor/run/FUSED_L0_OC_TILE' iterated at most 33 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(105): Loop '/FusedBlockProcessor/run/EXTRACT_CH' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(99): Loop '/FusedBlockProcessor/run/EXTRACT_KC' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(96): Loop '/FusedBlockProcessor/run/EXTRACT_KR' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/conv_compute.h(563): Loop '/FusedBlockProcessor/run/TILED_KC' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/conv_compute.h(560): Loop '/FusedBlockProcessor/run/TILED_KR' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/conv_compute.h(557): Loop '/FusedBlockProcessor/run/TILED_IC' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/conv_compute.h(552): Loop '/FusedBlockProcessor/run/TILED_OC' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(208): Loop '/FusedBlockProcessor/run/FUSED_L1_IC_TILE' iterated at most 33 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/conv_compute.h(483): Loop '/FusedBlockProcessor/run/PARALLEL_BN#1' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(225): Loop '/FusedBlockProcessor/run/FUSED_L1_COPY' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(233): Loop '/FusedBlockProcessor/run/FUSED_L1_PACK' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(205): Loop '/FusedBlockProcessor/run/FUSED_L1_OC_TILE' iterated at most 33 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(105): Loop '/FusedBlockProcessor/run/EXTRACT_CH#1' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(99): Loop '/FusedBlockProcessor/run/EXTRACT_KC#1' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/inter_layer_buffer.h(96): Loop '/FusedBlockProcessor/run/EXTRACT_KR#1' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/conv_compute.h(563): Loop '/FusedBlockProcessor/run/TILED_KC#1' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/conv_compute.h(560): Loop '/FusedBlockProcessor/run/TILED_KR#1' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/conv_compute.h(557): Loop '/FusedBlockProcessor/run/TILED_IC#1' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/conv_compute.h(552): Loop '/FusedBlockProcessor/run/TILED_OC#1' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(253): Loop '/FusedBlockProcessor/run/FUSED_FLUSH:for:for:for' iterated at most 33 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/conv_compute.h(483): Loop '/FusedBlockProcessor/run/PARALLEL_BN#2' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(266): Loop '/FusedBlockProcessor/run/FUSED_FLUSH:for:for:for#1' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(273): Loop '/FusedBlockProcessor/run/FUSED_FLUSH:for:for:for#2' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/streaming/block_processor.cpp(252): Loop '/FusedBlockProcessor/run/FUSED_FLUSH:for:for' iterated at most 33 times. (LOOP-2)
+# Info: Merged 'inter_buf.can_output_row:select#1' at $PROJECT_HOME/src/streaming/inter_layer_buffer.h(75) to 'inter_buf.can_output_row:sel#1' at $PROJECT_HOME/src/streaming/inter_layer_buffer.h(75). (OPT-16)
+# Design 'FusedBlockProcessor' was read (SOL-1)
+# Makefile for Original Design + Testbench written to file './scverify/Verify_orig_cxx_osci.mk'
+# Info: CDesignChecker Shell script written to '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/block_processor/FusedBlockProcessor.v1/CDesignChecker/design_checker.sh'
+# Info: Completed transformation 'compile' on solution 'FusedBlockProcessor.v1': elapsed time 8.72 seconds, memory usage 1240240kB, peak memory usage 1240240kB (SOL-9)
+# Info: Design complexity at end of 'compile': Total ops = 998, Real ops = 292, Vars = 178 (SOL-21)
+# > flow package require /SCVerify
+# 10.4
+# > exit
+// Finish time Thu Feb  5 23:15:23 2026, time elapsed 0:25, peak memory 1.18GB, exit status 0

@@ -1,0 +1,13 @@
+reloadable_uuid=b8234ea9-9533-40c1-9872-1af86be30b81
+preserved_uuid=d6865548-2080-447c-bdc7-51fb3502dec0
+sid=sid2.d6865548-2080-447c-bdc7-51fb3502dec0
+name=solution.v2
+version=v2
+solution_dir=SIF
+state=analyze
+branch_sid=sid1.62c8b841-1ea4-4ca7-a35c-f9d5bc81ef8c
+branch_state=initial
+xrefboss_uuid=63bd30f7-02fe-4e48-8f89-eb09344cdb4d
+datum_uuid=69bc489e-53fd-4be1-81f5-7d427eb1f433
+state_order=2
+dependent_solutions=sid1.62c8b841-1ea4-4ca7-a35c-f9d5bc81ef8c,

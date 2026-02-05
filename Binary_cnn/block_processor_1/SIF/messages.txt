@@ -1,0 +1,34 @@
+
+# Messages from "go new"
+
+# Info: Branching solution 'solution.v2' at state 'initial' (PRJ-2)
+
+# Messages from "go analyze"
+
+solution.v2
+solution options defaults
+solution options set /Flows/Enable-SCVerify yes
+yes
+solution options set /Output/GenerateCycleNetlist false
+false
+solution file add ./src/streaming/block_processor.h -type C++
+/INPUTFILES/1
+solution file add ./src/streaming/block_processor.cpp -type C++
+/INPUTFILES/2
+solution file add ./src/streaming/block_processor_tb.cpp -type C++ -exclude true
+/INPUTFILES/3
+flow package require /SCVerify
+10.4
+go analyze
+# Info: Starting transformation 'analyze' on solution 'solution.v2' (SOL-8)
+Creating project directory '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/block_processor_1/'. (PRJ-1)
+Moving session transcript to file "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/catapult.log"
+Front End called with arguments: -- /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/block_processor.cpp /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/block_processor.h (CIN-69)
+Edison Design Group C++/C Front End - Version 6.6 (CIN-1)
+# Error: function "ConvComputeUnit::compute_3x3" already defined during compilation of "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/block_processor.cpp" (CRD-1075)
+# Error:           detected during compilation of secondary translation unit "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/block_processor.h" (CRD-1075)
+# Error: function "ConvComputeUnit::compute_1x1" already defined during compilation of "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/block_processor.cpp" (CRD-1075)
+# Error:           detected during compilation of secondary translation unit "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/block_processor.h" (CRD-1075)
+# Error: function "ConvComputeUnit::apply_bn_relu" already defined during compilation of "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/block_processor.cpp" (CRD-1075)
+# Error:           detected during compilation of secondary translation unit "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/streaming/block_processor.h" (CRD-1075)
+# Error: Compilation aborted (CIN-5)

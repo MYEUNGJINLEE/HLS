@@ -1,0 +1,13 @@
+reloadable_uuid=8daf1036-229c-4c2e-8fa8-408121f2c35e
+preserved_uuid=62c8b841-1ea4-4ca7-a35c-f9d5bc81ef8c
+sid=sid1.62c8b841-1ea4-4ca7-a35c-f9d5bc81ef8c
+name=solution.v1
+version=v1
+solution_dir=SIF
+state=new
+branch_sid=
+branch_state=invalid
+xrefboss_uuid=e7797195-afa4-44ec-9965-7790979019af
+datum_uuid=b865d1d3-d93c-4670-bc37-3248df69f985
+state_order=1
+dependent_solutions=

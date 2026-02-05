@@ -1,0 +1,13 @@
+reloadable_uuid=dacb8a1d-83fb-4f94-89ca-1c933518dc83
+preserved_uuid=fc4b0ea4-af80-4e59-9ede-224e4825c026
+sid=sid2.fc4b0ea4-af80-4e59-9ede-224e4825c026
+name=FusedBlockProcessor.v1
+version=v1
+solution_dir=FusedBlockProcessor.v1
+state=compile
+branch_sid=sid1.a27bab0b-0f6b-423c-9eb7-5546377b881c
+branch_state=initial
+xrefboss_uuid=1697e3e3-b3a1-47d4-aa66-438ffc746207
+datum_uuid=1b485f4b-4f0d-41d6-b534-42733786c9d8
+state_order=2
+dependent_solutions=sid1.a27bab0b-0f6b-423c-9eb7-5546377b881c,
