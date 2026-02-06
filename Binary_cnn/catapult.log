@@ -5,7 +5,7 @@
 //             CONFIDENTIAL AND PROPRIETARY INFORMATION WHICH IS THE
 //                   PROPERTY OF SIEMENS EDA OR ITS LICENSORS.
 //  
-//  Running on Linux soc_lab_LMJ@ssu_soc_lab:164021 3.10.0-1160.108.1.el7.x86_64 x86_64 aol
+//  Running on Linux soc_lab_LMJ@ssu_soc_lab:168687 3.10.0-1160.108.1.el7.x86_64 x86_64 aol
 //  
 //  Package information: SIFLIBS v28.2_1.0, HLS_PKGS v28.2_1.0, 
 //                       SIF_TOOLKITS v28.2_1.0, SIF_XILINX v28.2_1.0, 
@@ -14,232 +14,167 @@
 //                       CDS_OASYS v21.1_3.1, CDS_PSR v25.1_0.14, 
 //                       DesignPad v2.78_1.0, DesignAnalyzer 2025.2/1187690
 //  
-//  Start time Sat Feb  7 02:24:41 2026
+//  Start time Sat Feb  7 02:50:30 2026
 # -------------------------------------------------
-# Logging session transcript to file "/tmp/log164021782deac5.0"
+# Logging session transcript to file "/tmp/log168687d02c362f.0"
 # Loading options from '$HOME/.catapult/2025.2_1-1197638.aol.reg'.
-dofile ./scripts/run_stem_catapult.tcl
-# > project new -name stem_processor
-# > solution new -state initial
-# Info: Branching solution 'solution.v2' at state 'initial' (PRJ-2)
-# solution.v2
-# > solution options defaults
-# > solution options set /Flows/Enable-SCVerify yes
-# yes
-# > solution options set /Output/GenerateCycleNetlist false
-# false
-# > solution file add ./src/stem/stem_processor.cpp -type C++
-# /INPUTFILES/1
-# > solution file add ./src/stem/stem_processor_tb.cpp -type C++ -exclude true
-# /INPUTFILES/2
-# > go analyze
-# Info: Starting transformation 'analyze' on solution 'solution.v2' (SOL-8)
 # Creating project directory '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/'. (PRJ-1)
 # Moving session transcript to file "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/catapult.log"
-# Front End called with arguments: -- /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/stem/stem_processor.cpp (CIN-69)
-# Edison Design Group C++/C Front End - Version 6.6 (CIN-1)
-# $PROJECT_HOME/src/stem/stem_processor.h(25): Pragma 'hls_design<top>' detected on class 'StemProcessor' (CIN-6)
-# $PROJECT_HOME/src/stem/stem_processor.h(25): Pragma 'hls_design<top>' detected on class 'StemProcessor' (CIN-6)
-# Source file analysis completed (CIN-68)
-# Info: Completed transformation 'analyze' on solution 'solution.v2': elapsed time 2.31 seconds, memory usage 1232048kB, peak memory usage 1232048kB (SOL-9)
-# > go compile
-# Info: Starting transformation 'compile' on solution 'StemProcessor.v1' (SOL-8)
-# Generating synthesis internal form... (CIN-3)
-# $PROJECT_HOME/src/stem/stem_processor.h(25): Found top design routine 'StemProcessor' specified by directive (CIN-52)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(34): Instantiating global variable 'STEM_LINE_MASK' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(31): Instantiating global variable 'STEM_CH_PARALLEL' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(32): Instantiating global variable 'STEM_MAX_WIDTH' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(68): Instantiating global variable 'CONV0_K' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(68): Instantiating global variable 'CONV0_S' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(78): Instantiating global variable 'CONV2_K' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(78): Instantiating global variable 'CONV2_S' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(68): Instantiating global variable 'CONV0_P' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(78): Instantiating global variable 'CONV2_P' which may be accessed outside this scope (CIN-18)
-# $PROJECT_HOME/src/stem/stem_processor.h(27): Inlining member function 'StemProcessor::StemProcessor' on object '' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(19): Inlining member function 'StemLineBuffer::StemLineBuffer' on object 'line_buf_a' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(192): Inlining member function 'StemLineBuffer::reset' on object 'line_buf_a' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(19): Inlining member function 'StemLineBuffer::StemLineBuffer' on object 'line_buf_b' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(192): Inlining member function 'StemLineBuffer::reset' on object 'line_buf_b' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(224): Inlining member function 'StemConcatBuffer::StemConcatBuffer' on object 'concat_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(21): Synthesizing method 'StemProcessor::run' (CIN-13)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(21): Inlining member function 'StemProcessor::run' on object '' (CIN-64)
-# $MGC_HOME/shared/include/ac_int.h(3016): Inlining member function 'ac_int<64, false>::ac_bitref::operator ac_int<1, false><1, false>' on object 'bitref' (CIN-64)
-# $MGC_HOME/shared/include/ac_int.h(3016): Inlining member function 'ac_int<64, false>::ac_bitref::operator ac_int<1, false><1, false>' on object 'bitref' (CIN-64)
-# $MGC_HOME/shared/include/ac_int.h(3016): Inlining member function 'ac_int<64, false>::ac_bitref::operator ac_int<1, false><1, false>' on object 'bitref' (CIN-64)
-# $MGC_HOME/shared/include/ac_int.h(3016): Inlining member function 'ac_int<64, false>::ac_bitref::operator ac_int<1, false><1, false>' on object 'bitref' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(24): Inlining member function 'StemLineBuffer::configure' on object 'line_buf_a' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(24): Inlining member function 'StemLineBuffer::configure' on object 'line_buf_b' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(19): Inlining member function 'StemLineBuffer::StemLineBuffer' on object 'conv1_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(192): Inlining member function 'StemLineBuffer::reset' on object 'conv1_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(24): Inlining member function 'StemLineBuffer::configure' on object 'conv1_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(19): Inlining member function 'StemLineBuffer::StemLineBuffer' on object 'mp_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(192): Inlining member function 'StemLineBuffer::reset' on object 'mp_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(24): Inlining member function 'StemLineBuffer::configure' on object 'mp_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(166): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE1_READ_COL:for' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(61): Inlining member function 'StemLineBuffer::write_rgb_pixel' on object 'line_buf_a' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(65): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/WRITE_RGB' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(171): Inlining member function 'StemLineBuffer::can_output_row' on object 'line_buf_a' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(109): Inlining member function 'StemLineBuffer::extract_window_3x3' on object 'line_buf_a' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(114): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_KR' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(117): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_KC' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(123): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_CH' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(189): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE2_CONV0_COL:for' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(196): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV0_IC' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(199): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV0_K' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(201): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV0_K:for' (CIN-203)
-# $MGC_HOME/shared/include/ac_int.h(3463): Inlining routine 'operator==<1, false>' (CIN-14)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(214): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE2_CONV0_COL:for#1' (CIN-203)
-# $MGC_HOME/shared/include/ac_fixed.h(1703): Inlining routine 'operator<<24, 16, true, AC_TRN, AC_WRAP>' (CIN-14)
-# $PROJECT_HOME/src/stem/stem_buffer.h(78): Inlining member function 'StemLineBuffer::write_pixel_partial' on object 'line_buf_b' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(82): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/WRITE_PARTIAL' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(78): Inlining member function 'StemLineBuffer::write_pixel_partial' on object 'mp_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(82): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/WRITE_PARTIAL#1' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(95): Inlining member function 'StemLineBuffer::read_pixel' on object 'line_buf_b' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(99): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/READ_CH' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(240): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE3_CONV1_COL:for' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(246): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV1_IC' (CIN-203)
-# $MGC_HOME/shared/include/ac_int.h(3463): Inlining routine 'operator==<1, false>' (CIN-14)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(254): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE3_CONV1_COL:for#1' (CIN-203)
-# $MGC_HOME/shared/include/ac_fixed.h(1703): Inlining routine 'operator<<24, 16, true, AC_TRN, AC_WRAP>' (CIN-14)
-# $PROJECT_HOME/src/stem/stem_buffer.h(78): Inlining member function 'StemLineBuffer::write_pixel_partial' on object 'conv1_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(82): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/WRITE_PARTIAL#2' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(171): Inlining member function 'StemLineBuffer::can_output_row' on object 'conv1_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(109): Inlining member function 'StemLineBuffer::extract_window_3x3' on object 'conv1_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(114): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_KR#1' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(117): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_KC#1' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(123): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_CH#1' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(283): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE4_CONV2_COL:for' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(289): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV2_IC' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(291): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV2_IC:for' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(293): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV2_IC:for:for' (CIN-203)
-# $MGC_HOME/shared/include/ac_int.h(3463): Inlining routine 'operator==<1, false>' (CIN-14)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(305): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE4_CONV2_COL:for#1' (CIN-203)
-# $MGC_HOME/shared/include/ac_fixed.h(1703): Inlining routine 'operator<<24, 16, true, AC_TRN, AC_WRAP>' (CIN-14)
-# $PROJECT_HOME/src/stem/stem_buffer.h(227): Inlining member function 'StemConcatBuffer::write_path_a' on object 'concat_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(229): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/WRITE_A' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(171): Inlining member function 'StemLineBuffer::can_output_row' on object 'mp_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(140): Inlining member function 'StemLineBuffer::extract_window_2x2' on object 'mp_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(146): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_MP_KR' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(149): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_MP_KC' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(156): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_MP_CH' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(334): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE5_MP_COL:for' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(238): Inlining member function 'StemConcatBuffer::write_path_b' on object 'concat_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(240): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/WRITE_B' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(249): Inlining member function 'StemConcatBuffer::read_concat' on object 'concat_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(251): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/READ_CONCAT' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(368): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE6_CONV3_COL:for' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(375): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV3_IC' (CIN-203)
-# $MGC_HOME/shared/include/ac_int.h(3463): Inlining routine 'operator==<1, false>' (CIN-14)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(385): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE6_CONV3_COL:for#1' (CIN-203)
-# $MGC_HOME/shared/include/ac_fixed.h(1703): Inlining routine 'operator<<24, 16, true, AC_TRN, AC_WRAP>' (CIN-14)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(397): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE6_CONV3_COL:for#2' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(21): Optimizing block '/StemProcessor' ... (CIN-4)
-# $PROJECT_HOME/src/stem/stem_config.h(112): INOUT port 'config.input_height' is only used as an input. (OPT-10)
-# $PROJECT_HOME/src/stem/stem_config.h(113): INOUT port 'config.input_width' is only used as an input. (OPT-10)
-# $PROJECT_HOME/src/stem/stem_config.h(114): INOUT port 'config.use_bn' is only used as an input. (OPT-10)
-# $PROJECT_HOME/src/stem/stem_config.h(115): INOUT port 'config.use_relu' is only used as an input. (OPT-10)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(23): INOUT port 'rgb_input' is only used as an input. (OPT-10)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(24): INOUT port 'weight_stream' is only used as an input. (OPT-10)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(25): INOUT port 'bn_scale' is only used as an input. (OPT-10)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(26): INOUT port 'bn_bias' is only used as an input. (OPT-10)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(27): INOUT port 'output_stream' is only used as an output. (OPT-11)
-# Info: $PROJECT_HOME/src/stem/stem_processor.h(27): Partition '/StemProcessor/constructor' is found empty and is optimized away. (OPT-12)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(59): Loop '/StemProcessor/run/for:for:for:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(58): Loop '/StemProcessor/run/for:for:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(55): Loop '/StemProcessor/run/for:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(54): Loop '/StemProcessor/run/for' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(70): Loop '/StemProcessor/run/for#1:for' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(68): Loop '/StemProcessor/run/for#1' iterated at most 16 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(82): Loop '/StemProcessor/run/for#2:for:for:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(81): Loop '/StemProcessor/run/for#2:for:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(78): Loop '/StemProcessor/run/for#2:for' iterated at most 16 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(77): Loop '/StemProcessor/run/for#2' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(93): Loop '/StemProcessor/run/for#3:for' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(91): Loop '/StemProcessor/run/for#3' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(105): Loop '/StemProcessor/run/if#1:for' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(106): Loop '/StemProcessor/run/if#1:for#1' iterated at most 16 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(107): Loop '/StemProcessor/run/if#1:for#2' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(108): Loop '/StemProcessor/run/if#1:for#3' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(167): Loop '/StemProcessor/run/STAGE1_READ_COL:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(66): Loop '/StemProcessor/run/WRITE_RGB' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(124): Loop '/StemProcessor/run/EXTRACT_CH' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(118): Loop '/StemProcessor/run/EXTRACT_KC' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(115): Loop '/StemProcessor/run/EXTRACT_KR' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(190): Loop '/StemProcessor/run/STAGE2_CONV0_COL:for' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(202): Loop '/StemProcessor/run/CONV0_K:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(200): Loop '/StemProcessor/run/CONV0_K' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(197): Loop '/StemProcessor/run/CONV0_IC' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(194): Loop '/StemProcessor/run/CONV0_OC' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(215): Loop '/StemProcessor/run/STAGE2_CONV0_COL:for#1' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(83): Loop '/StemProcessor/run/WRITE_PARTIAL' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(83): Loop '/StemProcessor/run/WRITE_PARTIAL#1' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(184): Loop '/StemProcessor/run/STAGE2_CONV0_COL' iterated at most 1025 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(100): Loop '/StemProcessor/run/READ_CH' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(241): Loop '/StemProcessor/run/STAGE3_CONV1_COL:for' iterated at most 16 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(247): Loop '/StemProcessor/run/CONV1_IC' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(244): Loop '/StemProcessor/run/CONV1_OC' iterated at most 16 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(255): Loop '/StemProcessor/run/STAGE3_CONV1_COL:for#1' iterated at most 16 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(83): Loop '/StemProcessor/run/WRITE_PARTIAL#2' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(235): Loop '/StemProcessor/run/STAGE3_CONV1_COL' iterated at most 1025 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(179): Loop '/StemProcessor/run/STAGE2_ROWS' iterated at most 2 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(124): Loop '/StemProcessor/run/EXTRACT_CH#1' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(118): Loop '/StemProcessor/run/EXTRACT_KC#1' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(115): Loop '/StemProcessor/run/EXTRACT_KR#1' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(284): Loop '/StemProcessor/run/STAGE4_CONV2_COL:for' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(294): Loop '/StemProcessor/run/CONV2_IC:for:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(292): Loop '/StemProcessor/run/CONV2_IC:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(290): Loop '/StemProcessor/run/CONV2_IC' iterated at most 16 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(287): Loop '/StemProcessor/run/CONV2_OC' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(306): Loop '/StemProcessor/run/STAGE4_CONV2_COL:for#1' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(230): Loop '/StemProcessor/run/WRITE_A' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(278): Loop '/StemProcessor/run/STAGE4_CONV2_COL' iterated at most 513 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(273): Loop '/StemProcessor/run/STAGE4_ROWS' iterated at most 2 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(157): Loop '/StemProcessor/run/EXTRACT_MP_CH' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(150): Loop '/StemProcessor/run/EXTRACT_MP_KC' iterated at most 2 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(147): Loop '/StemProcessor/run/EXTRACT_MP_KR' iterated at most 2 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(335): Loop '/StemProcessor/run/STAGE5_MP_COL:for' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(241): Loop '/StemProcessor/run/WRITE_B' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(329): Loop '/StemProcessor/run/STAGE5_MP_COL' iterated at most 513 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(324): Loop '/StemProcessor/run/STAGE5_ROWS' iterated at most 2 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_buffer.h(252): Loop '/StemProcessor/run/READ_CONCAT' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(369): Loop '/StemProcessor/run/STAGE6_CONV3_COL:for' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(376): Loop '/StemProcessor/run/CONV3_IC' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(373): Loop '/StemProcessor/run/CONV3_OC' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(386): Loop '/StemProcessor/run/STAGE6_CONV3_COL:for#1' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(398): Loop '/StemProcessor/run/STAGE6_CONV3_COL:for#2' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(362): Loop '/StemProcessor/run/STAGE6_CONV3_COL' iterated at most 513 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(356): Loop '/StemProcessor/run/STAGE6_ROWS' iterated at most 2 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(153): Loop '/StemProcessor/run/PIPELINE_MAIN' iterated at most 2049 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(190): Detected constant initialization of array 'STAGE2_CONV0_COL:acc#1', optimizing loop 'STAGE2_CONV0_COL:for' (LOOP-12)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(241): Detected constant initialization of array 'STAGE3_CONV1_COL:acc#1', optimizing loop 'STAGE3_CONV1_COL:for' (LOOP-12)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(284): Detected constant initialization of array 'STAGE4_CONV2_COL:acc#1', optimizing loop 'STAGE4_CONV2_COL:for' (LOOP-12)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(369): Detected constant initialization of array 'STAGE6_CONV3_COL:acc#1', optimizing loop 'STAGE6_CONV3_COL:for' (LOOP-12)
-# Info: Merged 'line_buf_a.can_output_row:select#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176) to 'line_buf_a.can_output_row:sel#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176). (OPT-16)
-# Info: Merged 'conv1_buf.can_output_row:select#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176) to 'conv1_buf.can_output_row:sel#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176). (OPT-16)
-# Info: Merged 'mp_buf.can_output_row:select#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176) to 'mp_buf.can_output_row:sel#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176). (OPT-16)
-# Info: Running transformation 'compile' on solution 'StemProcessor.v1': elapsed time 29.95 seconds, memory usage 1242288kB, peak memory usage 1297584kB (SOL-15)
-# Design 'StemProcessor' was read (SOL-1)
-# Makefile for Original Design + Testbench written to file './scverify/Verify_orig_cxx_osci.mk'
-# Info: CDesignChecker Shell script written to '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1/CDesignChecker/design_checker.sh'
-# Info: Completed transformation 'compile' on solution 'StemProcessor.v1': elapsed time 36.00 seconds, memory usage 1242288kB, peak memory usage 1297584kB (SOL-9)
-# Info: Design complexity at end of 'compile': Total ops = 1090, Real ops = 285, Vars = 190 (SOL-21)
-# > flow package require /SCVerify
-# 10.4
-# > set ccs_fd [open ./stem_processor.ccs w]
-# file12
-# > puts $ccs_fd {// Auto-generated by run_stem_catapult.tcl}
-# > puts $ccs_fd {if {[info script] != {} && [file isdirectory [file rootname [info script]]]} {
-# >   project load [file rootname [info script]] 2025.2
-# > } else {
-# >   set _dirs [lsort -dictionary [glob -nocomplain stem_processor*]]
-# >   set _proj {}
-# >   foreach d $_dirs { if {[file isdirectory $d]} { set _proj $d } }
-# >   if {$_proj ne {}} {
-# >     project load $_proj 2025.2
-# >   } else {
-# >     error {unable to locate project directory 'stem_processor*'}
-# >   }
-# > }}
-# > close $ccs_fd
-# > exit
-// Finish time Sat Feb  7 02:25:39 2026, time elapsed 0:58, peak memory 1.24GB, exit status 0
+flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
+# Making './scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim'
+# Make utility invoked from '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1'
+#     /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/bin/make -f ./scverify/Verify_orig_cxx_osci.mk SIMTOOL=osci build < "/dev/null" (BASIC-15)
+# make[1]: Entering directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1'
+# ============================================
+# Creating simulation directory 'scverify/orig_cxx_osci'
+# mkdir -p scverify/orig_cxx_osci
+# ============================================
+# Compiling C++ file: ../../src/stem/stem_processor.cpp
+# /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/dcs_gcc/usr/bin/g++ -DCCS_DUT_SYSC  -DSC_INCLUDE_DYNAMIC_PROCESSES -DSC_USE_STD_STRING -DCCS_MISMATCHED_OUTPUTS_ONLY -DDEADLOCK_DETECTION -std=gnu++11 -Wall -Wno-unknown-pragmas -Wno-unused-label -g -I. -I../.. -I. -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/hls_pkgs/src -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/siflibs -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/hls_pkgs/mgc_comps_src -DSC_USE_STD_STRING  -c ../../src/stem/stem_processor.cpp -o scverify/orig_cxx_osci/stem_processor.cpp.cxxts.o
+# ============================================
+# Compiling C++ file: ../../src/stem/stem_processor_tb.cpp
+# /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/dcs_gcc/usr/bin/g++ -DCCS_DUT_SYSC  -DSC_INCLUDE_DYNAMIC_PROCESSES -DSC_USE_STD_STRING -DCCS_MISMATCHED_OUTPUTS_ONLY -DDEADLOCK_DETECTION -std=gnu++11 -Wall -Wno-unknown-pragmas -Wno-unused-label -g -I. -I../.. -I. -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/hls_pkgs/src -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/siflibs -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/hls_pkgs/mgc_comps_src -DSC_USE_STD_STRING  -c ../../src/stem/stem_processor_tb.cpp -o scverify/orig_cxx_osci/stem_processor_tb.cpp.cxxts.o
+# ../../src/stem/stem_processor_tb.cpp: In function ‘int main(int, char**)’:
+# ../../src/stem/stem_processor_tb.cpp:481:27: warning: variable ‘packed’ set but not used [-Wunused-but-set-variable]
+#   481 |         stem_packed_act_t packed = output_stream.read();
+#       |                           ^~~~~~
+# ../../src/stem/stem_processor_tb.cpp:347:15: warning: unused variable ‘L0_OUT_CH’ [-Wunused-variable]
+#   347 |     const int L0_OUT_CH = 32;
+#       |               ^~~~~~~~~
+# ../../src/stem/stem_processor_tb.cpp:348:15: warning: unused variable ‘L1_OUT_CH’ [-Wunused-variable]
+#   348 |     const int L1_OUT_CH = 16;
+#       |               ^~~~~~~~~
+# ../../src/stem/stem_processor_tb.cpp:349:15: warning: unused variable ‘L2_OUT_CH’ [-Wunused-variable]
+#   349 |     const int L2_OUT_CH = 32;
+#       |               ^~~~~~~~~
+# ../../src/stem/stem_processor_tb.cpp:350:15: warning: unused variable ‘L3_IN_CH’ [-Wunused-variable]
+#   350 |     const int L3_IN_CH = 64;
+#       |               ^~~~~~~~
+# ============================================
+# Linking executable
+# /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/dcs_gcc/usr/bin/g++  -static-libstdc++ -L/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/lib/Linux/gcc-10.3.0-64 -L/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/lib -L/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/lib/Linux/gcc-10.3.0-64 scverify/orig_cxx_osci/stem_processor.cpp.cxxts.o scverify/orig_cxx_osci/stem_processor_tb.cpp.cxxts.o -Wl,-Bstatic -lsystemc -Wl,-Bdynamic -lpthread -o scverify/orig_cxx_osci/scverify_top
+# make[1]: Leaving directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1'
+#     /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/bin/make -f ./scverify/Verify_orig_cxx_osci.mk SIMTOOL=osci sim (BASIC-14)
+# make[1]: Entering directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1'
+# ============================================
+# Simulating design
+# cd ../..; ./stem_processor/StemProcessor.v1/scverify/orig_cxx_osci/scverify_top 
+# ========================================
+# StemProcessor Testbench
+# ========================================
+# Test Configuration:
+#   Input: 640x640x3
+#   Output: 160x160x32
+# [TB] STEM_WEIGHT_FILE not set. Using pseudo-random weights.
+# [TB] BN file not set. Using identity BN (scale=1, bias=0).
+# 
+# Running StemProcessor...
+# StemProcessor completed.
+# 
+# Output Verification:
+#   Expected outputs: 25600
+#   Received outputs: 25600
+# 
+# *** TEST PASSED ***
+# make[1]: Leaving directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1'
+solution library add nangate-45nm_beh -- -rtlsyntool DesignCompiler -vendor Nangate -technology 045nm
+solution library add ram_nangate-45nm_pipe_beh
+solution library add ram_nangate-45nm-dualport_beh
+solution library add ram_nangate-45nm-separate_beh
+solution library add ram_nangate-45nm-singleport_beh
+solution library add ram_nangate-45nm-register-file_beh
+go libraries
+# Info: Starting transformation 'libraries' on solution 'StemProcessor.v1' (SOL-8)
+# Info: Please set ComponentLibs/TechLibSearchPath to enable flows that use downstream synthesis tools (LIB-220)
+# Reading component library '$MGC_HOME/pkgs/siflibs/mgc_busdefs.lib' [mgc_busdefs]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/siflibs/stdops.lib' [STDOPS]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/siflibs/fpops.lib' [FPOPS]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/siflibs/ccs_dw_ops.lib' [CCS_DW_OPS]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/siflibs/ccs_ioport.lib' [ccs_ioport]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/siflibs/mgc_ioport.lib' [mgc_ioport]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/cds_assert/assert_ops.lib' [ASSERT_OPS]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/cds_assert/assert_mods.lib' [assert_mods]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/siflibs/ccs_connections.lib' [ccs_connections]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/siflibs/nangate/nangate-45nm_beh.lib' [nangate-45nm_beh]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/siflibs/nangate/ram_nangate-45nm_pipe_beh.lib' [ram_nangate-45nm_pipe_beh]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/siflibs/nangate/ram_nangate-45nm-dualport_beh.lib' [ram_nangate-45nm-dualport_beh]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/siflibs/nangate/ram_nangate-45nm-separate_beh.lib' [ram_nangate-45nm-separate_beh]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/siflibs/nangate/ram_nangate-45nm-singleport_beh.lib' [ram_nangate-45nm-singleport_beh]... (LIB-49)
+# Reading component library '$MGC_HOME/pkgs/siflibs/nangate/ram_nangate-45nm-register-file_beh.lib' [ram_nangate-45nm-register-file_beh]... (LIB-49)
+# Info: Completed transformation 'libraries' on solution 'StemProcessor.v1': elapsed time 0.51 seconds, memory usage 1419772kB, peak memory usage 1419772kB (SOL-9)
+# Info: Design complexity at end of 'libraries': Total ops = 1090, Real ops = 285, Vars = 190 (SOL-21)
+directive set -CLOCKS {clk {-CLOCK_PERIOD 3.33 -CLOCK_EDGE rising -CLOCK_HIGH_TIME 1.665 -CLOCK_OFFSET 0.000000 -CLOCK_UNCERTAINTY 0.0 -RESET_KIND sync -RESET_SYNC_NAME rst -RESET_SYNC_ACTIVE high -RESET_ASYNC_NAME arst_n -RESET_ASYNC_ACTIVE low -ENABLE_NAME {} -ENABLE_ACTIVE high}}
+# /CLOCKS {clk {-CLOCK_PERIOD 3.33 -CLOCK_EDGE rising -CLOCK_HIGH_TIME 1.665 -CLOCK_OFFSET 0.000000 -CLOCK_UNCERTAINTY 0.0 -RESET_KIND sync -RESET_SYNC_NAME rst -RESET_SYNC_ACTIVE high -RESET_ASYNC_NAME arst_n -RESET_ASYNC_ACTIVE low -ENABLE_NAME {} -ENABLE_ACTIVE high}}
+go assembly
+# Info: Starting transformation 'assembly' on solution 'StemProcessor.v1' (SOL-8)
+# Info: Completed transformation 'assembly' on solution 'StemProcessor.v1': elapsed time 15.54 seconds, memory usage 1419772kB, peak memory usage 1419772kB (SOL-9)
+# Info: Design complexity at end of 'assembly': Total ops = 1095, Real ops = 290, Vars = 192 (SOL-21)
+go architect
+# Info: Starting transformation 'loops' on solution 'StemProcessor.v1' (SOL-8)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(59): Loop '/StemProcessor/run/for:for:for:for' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(58): Loop '/StemProcessor/run/for:for:for' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(55): Loop '/StemProcessor/run/for:for' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(54): Loop '/StemProcessor/run/for' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(70): Loop '/StemProcessor/run/for#1:for' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(68): Loop '/StemProcessor/run/for#1' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(82): Loop '/StemProcessor/run/for#2:for:for:for' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(81): Loop '/StemProcessor/run/for#2:for:for' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(78): Loop '/StemProcessor/run/for#2:for' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(77): Loop '/StemProcessor/run/for#2' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(93): Loop '/StemProcessor/run/for#3:for' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(91): Loop '/StemProcessor/run/for#3' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(105): Loop '/StemProcessor/run/if#1:for' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(106): Loop '/StemProcessor/run/if#1:for#1' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(107): Loop '/StemProcessor/run/if#1:for#2' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(108): Loop '/StemProcessor/run/if#1:for#3' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(167): Loop '/StemProcessor/run/STAGE1_READ_COL:for' is being fully unrolled (3 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_buffer.h(66): Loop '/StemProcessor/run/WRITE_RGB' is being fully unrolled (64 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_buffer.h(124): Loop '/StemProcessor/run/EXTRACT_CH' is being fully unrolled (64 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(202): Loop '/StemProcessor/run/CONV0_K:for' is being fully unrolled (3 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(215): Loop '/StemProcessor/run/STAGE2_CONV0_COL:for#1' is being fully unrolled (32 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_buffer.h(83): Loop '/StemProcessor/run/WRITE_PARTIAL' is being fully unrolled (64 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_buffer.h(83): Loop '/StemProcessor/run/WRITE_PARTIAL#1' is being fully unrolled (64 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_buffer.h(100): Loop '/StemProcessor/run/READ_CH' is being fully unrolled (64 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(247): Loop '/StemProcessor/run/CONV1_IC' is being fully unrolled (32 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(255): Loop '/StemProcessor/run/STAGE3_CONV1_COL:for#1' is being fully unrolled (16 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_buffer.h(83): Loop '/StemProcessor/run/WRITE_PARTIAL#2' is being fully unrolled (64 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_buffer.h(124): Loop '/StemProcessor/run/EXTRACT_CH#1' is being fully unrolled (64 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(294): Loop '/StemProcessor/run/CONV2_IC:for:for' is being fully unrolled (3 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(306): Loop '/StemProcessor/run/STAGE4_CONV2_COL:for#1' is being fully unrolled (32 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_buffer.h(230): Loop '/StemProcessor/run/WRITE_A' is being fully unrolled (64 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_buffer.h(157): Loop '/StemProcessor/run/EXTRACT_MP_CH' is being fully unrolled (64 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(335): Loop '/StemProcessor/run/STAGE5_MP_COL:for' is being fully unrolled (32 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_buffer.h(241): Loop '/StemProcessor/run/WRITE_B' is being fully unrolled (64 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_buffer.h(252): Loop '/StemProcessor/run/READ_CONCAT' is being fully unrolled (64 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(376): Loop '/StemProcessor/run/CONV3_IC' is being fully unrolled (64 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(386): Loop '/StemProcessor/run/STAGE6_CONV3_COL:for#1' is being fully unrolled (32 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(398): Loop '/StemProcessor/run/STAGE6_CONV3_COL:for#2' is being fully unrolled (32 times). (LOOP-7)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 30.11 seconds, memory usage 1485308kB, peak memory usage 1485308kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 55.78 seconds, memory usage 1485308kB, peak memory usage 1485308kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 81.74 seconds, memory usage 1485308kB, peak memory usage 1485308kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 107.72 seconds, memory usage 1485308kB, peak memory usage 1485308kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 133.79 seconds, memory usage 1485308kB, peak memory usage 1649160kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 159.38 seconds, memory usage 1485308kB, peak memory usage 1649160kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 185.23 seconds, memory usage 1559036kB, peak memory usage 1649160kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 215.17 seconds, memory usage 1559036kB, peak memory usage 1649160kB (SOL-15)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(162): Loop '/StemProcessor/run/STAGE1_READ_COL' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_buffer.h(118): Loop '/StemProcessor/run/EXTRACT_KC' is being fully unrolled (3 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(200): Loop '/StemProcessor/run/CONV0_K' is being fully unrolled (3 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(244): Loop '/StemProcessor/run/CONV1_OC' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(235): Loop '/StemProcessor/run/STAGE3_CONV1_COL' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_buffer.h(118): Loop '/StemProcessor/run/EXTRACT_KC#1' is being fully unrolled (3 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(292): Loop '/StemProcessor/run/CONV2_IC:for' is being fully unrolled (3 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_buffer.h(150): Loop '/StemProcessor/run/EXTRACT_MP_KC' is being fully unrolled (2 times). (LOOP-7)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(373): Loop '/StemProcessor/run/CONV3_OC' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(362): Loop '/StemProcessor/run/STAGE6_CONV3_COL' is left rolled. (LOOP-4)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(356): Loop '/StemProcessor/run/STAGE6_ROWS' is left rolled. (LOOP-4)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 241.37 seconds, memory usage 1559036kB, peak memory usage 1649160kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 267.36 seconds, memory usage 1559036kB, peak memory usage 1649160kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 293.35 seconds, memory usage 1559036kB, peak memory usage 1649160kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 318.95 seconds, memory usage 1559036kB, peak memory usage 1649160kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 344.75 seconds, memory usage 1559036kB, peak memory usage 1649160kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 371.55 seconds, memory usage 1559036kB, peak memory usage 1649160kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 401.50 seconds, memory usage 1559036kB, peak memory usage 1649160kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 427.38 seconds, memory usage 1559036kB, peak memory usage 1649160kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 453.31 seconds, memory usage 1559036kB, peak memory usage 1649160kB (SOL-15)
+# Info: Running transformation 'loops' on solution 'StemProcessor.v1': elapsed time 479.14 seconds, memory usage 1559036kB, peak memory usage 1649160kB (SOL-15)

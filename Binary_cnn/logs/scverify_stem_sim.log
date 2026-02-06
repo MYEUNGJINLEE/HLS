@@ -1,3 +1,24 @@
-make[2]: Entering directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1/scverify'
-/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include/mkfiles/ccs_osci.mk:35: *** The SYSTEMC_INCDIR environment variable must be set to use this makefile.  멈춤.
-make[2]: Leaving directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1/scverify'
+//  Catapult Ultra Synthesis 2025.2_1/1197638 (Production Release) Thu Jun 12 00:48:01 PDT 2025
+//  
+//          Copyright (c) Siemens EDA, 1996-2025, All Rights Reserved.
+//                        UNPUBLISHED, LICENSED SOFTWARE.
+//             CONFIDENTIAL AND PROPRIETARY INFORMATION WHICH IS THE
+//                   PROPERTY OF SIEMENS EDA OR ITS LICENSORS.
+//  
+//  Running on Linux soc_lab_LMJ@ssu_soc_lab:168012 3.10.0-1160.108.1.el7.x86_64 x86_64 aol
+//  
+//  Package information: SIFLIBS v28.2_1.0, HLS_PKGS v28.2_1.0, 
+//                       SIF_TOOLKITS v28.2_1.0, SIF_XILINX v28.2_1.0, 
+//                       SIF_ALTERA v28.2_1.0, CCS_LIBS v28.2_1.0, 
+//                       CDS_PPRO v2025.1, CDS_DesignChecker v2025.1_1, 
+//                       CDS_OASYS v21.1_3.1, CDS_PSR v25.1_0.14, 
+//                       DesignPad v2.78_1.0, DesignAnalyzer 2025.2/1187690
+//  
+# Connected to license server 1717@143.248.230.188 (LIC-13)
+# Catapult product license successfully checked out, elapsed time 00:02 (LIC-14)
+dofile ../../logs/stem_scverify_launch.tcl
+# > flow package require /SCVerify
+# 10.4
+# > flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
+# > end dofile ../../logs/stem_scverify_launch.tcl
+# Error: flow working directory is not valid
