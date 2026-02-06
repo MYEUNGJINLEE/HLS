@@ -16,8 +16,9 @@ catapult_pid*
 **/scverify/orig_cxx_osci/
 **/td_ccore_solutions/
 
-# Logs (optional - remove if you want to track logs)
+# Logs
 Binary_cnn/logs/
+*.log
 
 # OS files
 Thumbs.db
