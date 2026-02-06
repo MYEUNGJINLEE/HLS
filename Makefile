@@ -189,17 +189,41 @@ stem-tb-weight: stem-clean weight-dir
 		echo "CXX_HOME is not set and g++/c++ was not found in PATH."; \
 		exit 1; \
 	fi; \
+	SYSTEMC_INCDIR_RUN="$$SYSTEMC_INCDIR"; \
+	if [ -z "$$SYSTEMC_INCDIR_RUN" ] && [ -n "$$MGC_HOME" ] && [ -f "$$MGC_HOME/shared/include/systemc.h" ]; then \
+		SYSTEMC_INCDIR_RUN="$$MGC_HOME/shared/include"; \
+	fi; \
+	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
+		CATAPULT_BIN=$$(command -v catapult 2>/dev/null); \
+		if [ -n "$$CATAPULT_BIN" ]; then \
+			CATAPULT_ROOT=$$(cd $$(dirname "$$CATAPULT_BIN")/.. 2>/dev/null && pwd); \
+			if [ -f "$$CATAPULT_ROOT/Mgc_home/shared/include/systemc.h" ]; then \
+				SYSTEMC_INCDIR_RUN="$$CATAPULT_ROOT/Mgc_home/shared/include"; \
+			fi; \
+		fi; \
+	fi; \
+	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
+		for d in /usr/local/systemc/include /usr/include/systemc /usr/include; do \
+			if [ -f "$$d/systemc.h" ]; then SYSTEMC_INCDIR_RUN="$$d"; break; fi; \
+		done; \
+	fi; \
+	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
+		echo "SYSTEMC_INCDIR is not set and systemc.h was not found."; \
+		exit 1; \
+	fi; \
 	if [ "$$SCV_BASENAME" = "Makefile" ]; then \
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
 		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
 		STEM_BN_BIAS_FILE="$$ROOT_DIR/weights/stem_bn_bias.txt" \
 		CXX_HOME="$$CXX_HOME_RUN" \
+		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
 		$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_stem_sim.log; \
 	else \
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
 		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
 		STEM_BN_BIAS_FILE="$$ROOT_DIR/weights/stem_bn_bias.txt" \
 		CXX_HOME="$$CXX_HOME_RUN" \
+		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
 		$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" 2>&1 | tee logs/scverify_stem_sim.log; \
 	fi
 
@@ -232,13 +256,37 @@ stem-tb-no-weight: stem-clean
 		echo "CXX_HOME is not set and g++/c++ was not found in PATH."; \
 		exit 1; \
 	fi; \
+	SYSTEMC_INCDIR_RUN="$$SYSTEMC_INCDIR"; \
+	if [ -z "$$SYSTEMC_INCDIR_RUN" ] && [ -n "$$MGC_HOME" ] && [ -f "$$MGC_HOME/shared/include/systemc.h" ]; then \
+		SYSTEMC_INCDIR_RUN="$$MGC_HOME/shared/include"; \
+	fi; \
+	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
+		CATAPULT_BIN=$$(command -v catapult 2>/dev/null); \
+		if [ -n "$$CATAPULT_BIN" ]; then \
+			CATAPULT_ROOT=$$(cd $$(dirname "$$CATAPULT_BIN")/.. 2>/dev/null && pwd); \
+			if [ -f "$$CATAPULT_ROOT/Mgc_home/shared/include/systemc.h" ]; then \
+				SYSTEMC_INCDIR_RUN="$$CATAPULT_ROOT/Mgc_home/shared/include"; \
+			fi; \
+		fi; \
+	fi; \
+	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
+		for d in /usr/local/systemc/include /usr/include/systemc /usr/include; do \
+			if [ -f "$$d/systemc.h" ]; then SYSTEMC_INCDIR_RUN="$$d"; break; fi; \
+		done; \
+	fi; \
+	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
+		echo "SYSTEMC_INCDIR is not set and systemc.h was not found."; \
+		exit 1; \
+	fi; \
 	if [ "$$SCV_BASENAME" = "Makefile" ]; then \
 		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
 		CXX_HOME="$$CXX_HOME_RUN" \
+		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
 		$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_stem_sim.log; \
 	else \
 		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
 		CXX_HOME="$$CXX_HOME_RUN" \
+		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
 		$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" 2>&1 | tee logs/scverify_stem_sim.log; \
 	fi
 
