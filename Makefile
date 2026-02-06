@@ -223,6 +223,7 @@ stem-tb-weight: stem-clean weight-dir
 	fi; \
 	printf "CXX_HOME := %s\nSYSTEMC_INCDIR := %s\n" "$$CXX_HOME_RUN" "$$SYSTEMC_INCDIR_RUN" > "$$SCV_DIR/ccs_env.mk"; \
 	if [ -n "$$SYSTEMC_LIBDIR_RUN" ]; then printf "SYSTEMC_LIBDIR := %s\n" "$$SYSTEMC_LIBDIR_RUN" >> "$$SCV_DIR/ccs_env.mk"; fi; \
+	SCV_LOG="logs/scverify_stem_sim.log"; \
 	if [ "$$SCV_BASENAME" = "Makefile" ]; then \
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
 		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
@@ -233,7 +234,8 @@ stem-tb-weight: stem-clean weight-dir
 		CXX_HOME="$$CXX_HOME_RUN" \
 		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
 		SYSTEMC_LIBDIR="$$SYSTEMC_LIBDIR_RUN" \
-		sim 2>&1 | tee logs/scverify_stem_sim.log; \
+		sim > "$$SCV_LOG" 2>&1; \
+		SIM_RC=$$?; \
 	else \
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
 		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
@@ -244,7 +246,22 @@ stem-tb-weight: stem-clean weight-dir
 		CXX_HOME="$$CXX_HOME_RUN" \
 		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
 		SYSTEMC_LIBDIR="$$SYSTEMC_LIBDIR_RUN" \
-		2>&1 | tee logs/scverify_stem_sim.log; \
+		> "$$SCV_LOG" 2>&1; \
+		SIM_RC=$$?; \
+	fi; \
+	cat "$$SCV_LOG"; \
+	if [ "$$SIM_RC" -ne 0 ]; then \
+		echo "[stem-tb] FAIL: SCVerify returned $$SIM_RC"; \
+		exit "$$SIM_RC"; \
+	fi; \
+	if grep -q "\\*\\*\\* TEST PASSED \\*\\*\\*" "$$SCV_LOG"; then \
+		echo "[stem-tb] PASS"; \
+	elif grep -q "\\*\\*\\* TEST FAILED \\*\\*\\*" "$$SCV_LOG"; then \
+		echo "[stem-tb] FAIL: TB reported TEST FAILED"; \
+		exit 1; \
+	else \
+		echo "[stem-tb] FAIL: PASS marker not found in $$SCV_LOG"; \
+		exit 1; \
 	fi
 
 # Run stem processor testbench without external weight/BN files
@@ -310,6 +327,7 @@ stem-tb-no-weight: stem-clean
 	fi; \
 	printf "CXX_HOME := %s\nSYSTEMC_INCDIR := %s\n" "$$CXX_HOME_RUN" "$$SYSTEMC_INCDIR_RUN" > "$$SCV_DIR/ccs_env.mk"; \
 	if [ -n "$$SYSTEMC_LIBDIR_RUN" ]; then printf "SYSTEMC_LIBDIR := %s\n" "$$SYSTEMC_LIBDIR_RUN" >> "$$SCV_DIR/ccs_env.mk"; fi; \
+	SCV_LOG="logs/scverify_stem_sim.log"; \
 	if [ "$$SCV_BASENAME" = "Makefile" ]; then \
 		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
 		CXX_HOME="$$CXX_HOME_RUN" \
@@ -318,7 +336,8 @@ stem-tb-no-weight: stem-clean
 		CXX_HOME="$$CXX_HOME_RUN" \
 		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
 		SYSTEMC_LIBDIR="$$SYSTEMC_LIBDIR_RUN" \
-		sim 2>&1 | tee logs/scverify_stem_sim.log; \
+		sim > "$$SCV_LOG" 2>&1; \
+		SIM_RC=$$?; \
 	else \
 		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
 		CXX_HOME="$$CXX_HOME_RUN" \
@@ -327,7 +346,22 @@ stem-tb-no-weight: stem-clean
 		CXX_HOME="$$CXX_HOME_RUN" \
 		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
 		SYSTEMC_LIBDIR="$$SYSTEMC_LIBDIR_RUN" \
-		2>&1 | tee logs/scverify_stem_sim.log; \
+		> "$$SCV_LOG" 2>&1; \
+		SIM_RC=$$?; \
+	fi; \
+	cat "$$SCV_LOG"; \
+	if [ "$$SIM_RC" -ne 0 ]; then \
+		echo "[stem-tb] FAIL: SCVerify returned $$SIM_RC"; \
+		exit "$$SIM_RC"; \
+	fi; \
+	if grep -q "\\*\\*\\* TEST PASSED \\*\\*\\*" "$$SCV_LOG"; then \
+		echo "[stem-tb] PASS"; \
+	elif grep -q "\\*\\*\\* TEST FAILED \\*\\*\\*" "$$SCV_LOG"; then \
+		echo "[stem-tb] FAIL: TB reported TEST FAILED"; \
+		exit 1; \
+	else \
+		echo "[stem-tb] FAIL: PASS marker not found in $$SCV_LOG"; \
+		exit 1; \
 	fi
 
 # Run stem processor with GUI
