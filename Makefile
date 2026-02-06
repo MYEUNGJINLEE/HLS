@@ -173,15 +173,27 @@ stem-tb-weight: stem-clean weight-dir
 	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
 	SCV_DIR=$$(dirname "$$SCV_MK"); \
 	SCV_BASENAME=$$(basename "$$SCV_MK"); \
+	if [ ! -f "$$SCV_DIR/ccs_env.mk" ]; then touch "$$SCV_DIR/ccs_env.mk"; fi; \
+	CXX_HOME_RUN="$$CXX_HOME"; \
+	if [ -z "$$CXX_HOME_RUN" ]; then \
+		CXX_BIN=$$(command -v g++ 2>/dev/null || command -v c++ 2>/dev/null); \
+		if [ -n "$$CXX_BIN" ]; then CXX_HOME_RUN=$$(dirname $$(dirname "$$CXX_BIN")); fi; \
+	fi; \
+	if [ -z "$$CXX_HOME_RUN" ]; then \
+		echo "CXX_HOME is not set and g++/c++ was not found in PATH."; \
+		exit 1; \
+	fi; \
 	if [ "$$SCV_BASENAME" = "Makefile" ]; then \
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
 		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
 		STEM_BN_BIAS_FILE="$$ROOT_DIR/weights/stem_bn_bias.txt" \
+		CXX_HOME="$$CXX_HOME_RUN" \
 		$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_stem_sim.log; \
 	else \
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
 		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
 		STEM_BN_BIAS_FILE="$$ROOT_DIR/weights/stem_bn_bias.txt" \
+		CXX_HOME="$$CXX_HOME_RUN" \
 		$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" 2>&1 | tee logs/scverify_stem_sim.log; \
 	fi
 
@@ -198,11 +210,23 @@ stem-tb-no-weight: stem-clean
 	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
 	SCV_DIR=$$(dirname "$$SCV_MK"); \
 	SCV_BASENAME=$$(basename "$$SCV_MK"); \
+	if [ ! -f "$$SCV_DIR/ccs_env.mk" ]; then touch "$$SCV_DIR/ccs_env.mk"; fi; \
+	CXX_HOME_RUN="$$CXX_HOME"; \
+	if [ -z "$$CXX_HOME_RUN" ]; then \
+		CXX_BIN=$$(command -v g++ 2>/dev/null || command -v c++ 2>/dev/null); \
+		if [ -n "$$CXX_BIN" ]; then CXX_HOME_RUN=$$(dirname $$(dirname "$$CXX_BIN")); fi; \
+	fi; \
+	if [ -z "$$CXX_HOME_RUN" ]; then \
+		echo "CXX_HOME is not set and g++/c++ was not found in PATH."; \
+		exit 1; \
+	fi; \
 	if [ "$$SCV_BASENAME" = "Makefile" ]; then \
 		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
+		CXX_HOME="$$CXX_HOME_RUN" \
 		$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_stem_sim.log; \
 	else \
 		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
+		CXX_HOME="$$CXX_HOME_RUN" \
 		$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" 2>&1 | tee logs/scverify_stem_sim.log; \
 	fi
 
