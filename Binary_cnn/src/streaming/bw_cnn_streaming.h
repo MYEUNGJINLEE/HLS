@@ -104,8 +104,11 @@ struct StreamingConvConfig {
 // ============================================================================
 
 struct Window3x3 {
+    // Force register implementation for parallel access (576 elements)
     act_t data[3][3][CH_PARALLEL];    // [row][col][channel] - HWC format
 };
+// Note: Use #pragma hls_memory impl=registers variable=<window_var>.data
+// at declaration site for register implementation
 
 struct Window1x1 {
     act_t data[CH_PARALLEL];          // [channel]

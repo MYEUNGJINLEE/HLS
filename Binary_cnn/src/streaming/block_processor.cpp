@@ -3,6 +3,15 @@
 // ============================================================================
 // FusedBlockProcessor Implementation
 // ============================================================================
+//
+// HLS Design Principles Applied:
+//   1. All loop bounds are compile-time constants (MAX_*)
+//   2. Dynamic bounds handled via early-exit (if/break)
+//   3. No while loops - all converted to bounded for loops
+//   4. Proper pragma annotations for pipelining/unrolling
+//   5. Consistent loop labeling for synthesis reports
+//
+// ============================================================================
 
 void FusedBlockProcessor::run(
     BlockConfig &config,
@@ -36,13 +45,6 @@ void FusedBlockProcessor::run(
 // ============================================================================
 // Fused Conv1x1 -> Conv3x3 Pipeline
 // ============================================================================
-//
-// Processing flow (per input row):
-//   1. Read input pixels (all IC tiles)
-//   2. Conv1x1 -> BN+ReLU -> store to inter_buf (WideLineBuffer)
-//   3. When inter_buf has enough rows -> Conv3x3 -> BN+ReLU -> output
-//
-// ============================================================================
 
 void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
     const BlockConfig &config,
@@ -62,7 +64,7 @@ void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
     // Phase 0: Load all weights and BN params from streams
     // ================================================================
 
-    // Layer 0 (Conv1x1) weights
+    // Layer 0 (Conv1x1) weights: 2×2×64×64 = 16K bits = 2KB
     bw_t w0_cache[MAX_MID_CH_TILES][MAX_MID_CH_TILES][CH_PARALLEL][CH_PARALLEL];
     bn_param_t bn0_scale[MAX_MID_CH_TILES][CH_PARALLEL];
     bn_param_t bn0_bias[MAX_MID_CH_TILES][CH_PARALLEL];
@@ -75,7 +77,7 @@ void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
                                     bn0_scale, bn0_bias, sched0.oc_tiles);
     }
 
-    // Layer 1 (Conv3x3) weights
+    // Layer 1 (Conv3x3) weights: 2×2×64×64×9 = 144K bits = 18KB
     bw_t w1_cache[MAX_MID_CH_TILES][MAX_MID_CH_TILES][CH_PARALLEL][CH_PARALLEL][3][3];
     bn_param_t bn1_scale[MAX_MID_CH_TILES][CH_PARALLEL];
     bn_param_t bn1_bias[MAX_MID_CH_TILES][CH_PARALLEL];
@@ -110,6 +112,7 @@ void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
 
     // ================================================================
     // Processing buffers
+    // Catapult will infer registers for small arrays in inner loops
     // ================================================================
 
     act_t input_pixel[MAX_MID_CH_TILES][CH_PARALLEL];
@@ -119,25 +122,39 @@ void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
     out_act_t final_out[CH_PARALLEL];
     Window3x3 window;
 
-    int in_height = layer0.input_height.to_int();
-    int in_width = layer0.input_width.to_int();
-    int l0_stride = layer0.stride.to_int();
-    int out_height = inter_buf.get_out_height();
-    int out_width = inter_buf.get_out_width();
+    // Extract runtime dimensions (used for early-exit checks)
+    const int in_height = layer0.input_height.to_int();
+    const int in_width = layer0.input_width.to_int();
+    const int l0_stride = layer0.stride.to_int();
+    const int l0_ic_tiles = sched0.ic_tiles;
+    const int l0_oc_tiles = sched0.oc_tiles;
+    const int l1_ic_tiles = sched1.ic_tiles;
+    const int l1_oc_tiles = sched1.oc_tiles;
+    const int out_height = inter_buf.get_out_height();
+    const int out_width = inter_buf.get_out_width();
 
     int next_out_row = 0;
 
     // ================================================================
     // Main processing loop: row by row
+    // All loops use compile-time MAX bounds with early-exit
     // ================================================================
 
     FUSED_IN_ROW:
-    for (int in_row = 0; in_row < in_height; in_row++) {
+    for (int in_row = 0; in_row < BLOCK_MAX_HEIGHT; in_row++) {
+        if (in_row >= in_height) break;  // Early exit
+
         FUSED_IN_COL:
-        for (int in_col = 0; in_col < in_width; in_col++) {
-            // --- Read input pixel (all IC tiles for Layer 0) ---
+        for (int in_col = 0; in_col < BLOCK_MAX_WIDTH; in_col++) {
+            if (in_col >= in_width) break;  // Early exit
+
+            // --------------------------------------------------------
+            // Read input pixel (all IC tiles for Layer 0)
+            // --------------------------------------------------------
             FUSED_READ_IC:
-            for (int ict = 0; ict < sched0.ic_tiles; ict++) {
+            for (int ict = 0; ict < MAX_MID_CH_TILES; ict++) {
+                if (ict >= l0_ic_tiles) break;
+
                 packed_act_t packed = input_stream.read();
 
                 FUSED_UNPACK:
@@ -147,21 +164,26 @@ void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
                 }
             }
 
-            // --- Layer 0: Conv1x1 ---
-            // Avoid modulo: stride is always 1 or 2
+            // --------------------------------------------------------
+            // Layer 0: Conv1x1 (stride-aware output)
+            // --------------------------------------------------------
             bool l0_valid;
             if (l0_stride == 2) {
                 l0_valid = ((in_row & 1) == 0) && ((in_col & 1) == 0);
             } else {
-                l0_valid = true;  // stride == 1, always valid
+                l0_valid = true;  // stride == 1
             }
 
             if (l0_valid) {
                 FUSED_L0_OC_TILE:
-                for (int oct = 0; oct < sched0.oc_tiles; oct++) {
+                for (int oct = 0; oct < MAX_MID_CH_TILES; oct++) {
+                    if (oct >= l0_oc_tiles) break;
+
                     // Accumulate across IC tiles
                     FUSED_L0_IC_TILE:
-                    for (int ict = 0; ict < sched0.ic_tiles; ict++) {
+                    for (int ict = 0; ict < MAX_MID_CH_TILES; ict++) {
+                        if (ict >= l0_ic_tiles) break;
+
                         bool is_first = (ict == 0);
 
                         FUSED_L0_COMP_OC:
@@ -201,17 +223,31 @@ void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
 
                 inter_buf.advance_write();
             }
-        }
+        }  // end FUSED_IN_COL
 
-        // --- Layer 1: Conv3x3 (produce output rows when ready) ---
-        while (next_out_row < out_height && inter_buf.can_output_row(next_out_row)) {
+        // ============================================================
+        // Layer 1: Conv3x3 (produce output rows when ready)
+        // Bounded for loop replaces while loop
+        // ============================================================
+        FUSED_L1_OUTPUT_ROWS:
+        for (int out_iter = 0; out_iter < BLOCK_MAX_OUT_H; out_iter++) {
+            // Exit conditions: no more rows OR buffer not ready
+            if (next_out_row >= out_height) break;
+            if (!inter_buf.can_output_row(next_out_row)) break;
+
             FUSED_L1_OUT_COL:
-            for (int out_col = 0; out_col < out_width; out_col++) {
+            for (int out_col = 0; out_col < BLOCK_MAX_OUT_W; out_col++) {
+                if (out_col >= out_width) break;
+
                 FUSED_L1_OC_TILE:
-                for (int oct = 0; oct < sched1.oc_tiles; oct++) {
+                for (int oct = 0; oct < MAX_MID_CH_TILES; oct++) {
+                    if (oct >= l1_oc_tiles) break;
+
                     // Accumulate across IC tiles
                     FUSED_L1_IC_TILE:
-                    for (int ict = 0; ict < sched1.ic_tiles; ict++) {
+                    for (int ict = 0; ict < MAX_MID_CH_TILES; ict++) {
+                        if (ict >= l1_ic_tiles) break;
+
                         inter_buf.extract_window_3x3(next_out_row, out_col, ict, window);
 
                         conv_tile.compute_3x3_ic_tiled(
@@ -225,7 +261,7 @@ void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
                         layer1.use_batch_norm, layer1.use_relu, bn_out
                     );
 
-                    // Output (shortcut handling deferred to Phase 4)
+                    // Pack and output
                     FUSED_L1_COPY:
                     #pragma hls_unroll
                     for (int ch = 0; ch < CH_PARALLEL; ch++) {
@@ -246,17 +282,29 @@ void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
 
             next_out_row++;
         }
-    }
+    }  // end FUSED_IN_ROW
 
     // ================================================================
     // Flush remaining output rows (bottom padding region)
+    // Bounded for loop replaces while loop
     // ================================================================
 
     FUSED_FLUSH:
-    while (next_out_row < out_height) {
-        for (int out_col = 0; out_col < out_width; out_col++) {
-            for (int oct = 0; oct < sched1.oc_tiles; oct++) {
-                for (int ict = 0; ict < sched1.ic_tiles; ict++) {
+    for (int flush_iter = 0; flush_iter < BLOCK_MAX_OUT_H; flush_iter++) {
+        if (next_out_row >= out_height) break;
+
+        FUSED_FLUSH_COL:
+        for (int out_col = 0; out_col < BLOCK_MAX_OUT_W; out_col++) {
+            if (out_col >= out_width) break;
+
+            FUSED_FLUSH_OC:
+            for (int oct = 0; oct < MAX_MID_CH_TILES; oct++) {
+                if (oct >= l1_oc_tiles) break;
+
+                FUSED_FLUSH_IC:
+                for (int ict = 0; ict < MAX_MID_CH_TILES; ict++) {
+                    if (ict >= l1_ic_tiles) break;
+
                     inter_buf.extract_window_3x3(next_out_row, out_col, ict, window);
                     conv_tile.compute_3x3_ic_tiled(
                         window, w1_cache[oct][ict], psum, (ict == 0)
@@ -268,6 +316,7 @@ void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
                     layer1.use_batch_norm, layer1.use_relu, bn_out
                 );
 
+                FUSED_FLUSH_COPY:
                 #pragma hls_unroll
                 for (int ch = 0; ch < CH_PARALLEL; ch++) {
                     final_out[ch] = bn_out[ch];
@@ -275,6 +324,7 @@ void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
 
                 packed_act_t out_packed = 0;
 
+                FUSED_FLUSH_PACK:
                 #pragma hls_unroll
                 for (int ch = 0; ch < CH_PARALLEL; ch++) {
                     out_packed.set_slc(ch * 8, final_out[ch].slc<8>(0));

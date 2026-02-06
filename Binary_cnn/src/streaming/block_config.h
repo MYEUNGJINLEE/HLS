@@ -25,6 +25,17 @@ static const int INTER_BUF_MASK   = INTER_BUF_ROWS - 1;  // 0x7 for & operation
 static const int MAX_CH_TILES     = 16;
 
 // ============================================================================
+// HLS Loop Bounds (compile-time constants for synthesis)
+// ============================================================================
+// These constants define maximum loop iterations for HLS.
+// Actual iterations controlled by early-exit conditions.
+
+static const int BLOCK_MAX_HEIGHT = 320;   // Max input height for fused blocks
+static const int BLOCK_MAX_WIDTH  = 320;   // Max input width for fused blocks
+static const int BLOCK_MAX_OUT_H  = 320;   // Max output height
+static const int BLOCK_MAX_OUT_W  = 320;   // Max output width
+
+// ============================================================================
 // Tile Schedule (computed from layer dimensions)
 // ============================================================================
 
