@@ -344,10 +344,6 @@ CCS_MAIN(int argc, char *argv[]) {
 
     // Channels remain the same
     const int RGB_CH = 3;
-    const int L0_OUT_CH = 32;
-    const int L1_OUT_CH = 16;
-    const int L2_OUT_CH = 32;
-    const int L3_IN_CH = 64;
     const int L3_OUT_CH = 32;
 
     std::cout << "Test Configuration:" << std::endl;
@@ -478,7 +474,7 @@ CCS_MAIN(int argc, char *argv[]) {
     int expected_outputs = L3_OUT_H * L3_OUT_W;
 
     while (output_stream.available(1)) {
-        stem_packed_act_t packed = output_stream.read();
+        output_stream.read();
         output_count++;
 
         // Just verify we got the expected number of outputs
