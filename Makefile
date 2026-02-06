@@ -177,78 +177,18 @@ stem-tb-weight: stem-clean weight-dir
 		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
 	fi; \
 	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
-	SCV_DIR=$$(dirname "$$SCV_MK"); \
-	SCV_BASENAME=$$(basename "$$SCV_MK"); \
-	if [ ! -f "$$SCV_DIR/ccs_env.mk" ]; then touch "$$SCV_DIR/ccs_env.mk"; fi; \
-	CXX_HOME_RUN="$$CXX_HOME"; \
-	if [ -z "$$CXX_HOME_RUN" ]; then \
-		CXX_BIN=$$(command -v g++ 2>/dev/null || command -v c++ 2>/dev/null); \
-		if [ -n "$$CXX_BIN" ]; then CXX_HOME_RUN=$$(dirname $$(dirname "$$CXX_BIN")); fi; \
-	fi; \
-	if [ -z "$$CXX_HOME_RUN" ]; then \
-		echo "CXX_HOME is not set and g++/c++ was not found in PATH."; \
-		exit 1; \
-	fi; \
-	SYSTEMC_INCDIR_RUN="$$SYSTEMC_INCDIR"; \
-	if [ -z "$$SYSTEMC_INCDIR_RUN" ] && [ -n "$$MGC_HOME" ] && [ -f "$$MGC_HOME/shared/include/systemc.h" ]; then \
-		SYSTEMC_INCDIR_RUN="$$MGC_HOME/shared/include"; \
-	fi; \
-	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
-		CATAPULT_BIN=$$(command -v catapult 2>/dev/null); \
-		if [ -n "$$CATAPULT_BIN" ]; then \
-			CATAPULT_BIN_REAL="$$CATAPULT_BIN"; \
-			if command -v readlink >/dev/null 2>&1; then \
-				CATAPULT_BIN_REAL=$$(readlink -f "$$CATAPULT_BIN" 2>/dev/null || echo "$$CATAPULT_BIN"); \
-			fi; \
-			CATAPULT_ROOT=$$(cd $$(dirname "$$CATAPULT_BIN_REAL")/.. 2>/dev/null && pwd); \
-			if [ -f "$$CATAPULT_ROOT/Mgc_home/shared/include/systemc.h" ]; then \
-				SYSTEMC_INCDIR_RUN="$$CATAPULT_ROOT/Mgc_home/shared/include"; \
-			fi; \
-		fi; \
-	fi; \
-	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
-		for d in /usr/local/systemc/include /usr/include/systemc /usr/include; do \
-			if [ -f "$$d/systemc.h" ]; then SYSTEMC_INCDIR_RUN="$$d"; break; fi; \
-		done; \
-	fi; \
-	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
-		echo "SYSTEMC_INCDIR is not set and systemc.h was not found."; \
-		exit 1; \
-	fi; \
-	SYSTEMC_LIBDIR_RUN="$$SYSTEMC_LIBDIR"; \
-	if [ -z "$$SYSTEMC_LIBDIR_RUN" ]; then \
-		for d in "$$(dirname "$$SYSTEMC_INCDIR_RUN")/lib-linux64" "$$(dirname "$$SYSTEMC_INCDIR_RUN")/lib64" "$$(dirname "$$SYSTEMC_INCDIR_RUN")/lib"; do \
-			if ls "$$d"/libsystemc* >/dev/null 2>&1; then SYSTEMC_LIBDIR_RUN="$$d"; break; fi; \
-		done; \
-	fi; \
-	printf "CXX_HOME := %s\nSYSTEMC_INCDIR := %s\n" "$$CXX_HOME_RUN" "$$SYSTEMC_INCDIR_RUN" > "$$SCV_DIR/ccs_env.mk"; \
-	if [ -n "$$SYSTEMC_LIBDIR_RUN" ]; then printf "SYSTEMC_LIBDIR := %s\n" "$$SYSTEMC_LIBDIR_RUN" >> "$$SCV_DIR/ccs_env.mk"; fi; \
-	SCV_LOG="logs/scverify_stem_sim.log"; \
-	if [ "$$SCV_BASENAME" = "Makefile" ]; then \
+	SCV_MK_ARG=$${SCV_MK#$$SOL_DIR/}; \
+	if [ "$$SCV_MK_ARG" = "$$SCV_MK" ]; then SCV_MK_ARG="$$SCV_MK"; else SCV_MK_ARG="./$$SCV_MK_ARG"; fi; \
+	SCV_LOG="$$ROOT_DIR/logs/scverify_stem_sim.log"; \
+	LAUNCH_TCL="$$ROOT_DIR/logs/stem_scverify_launch.tcl"; \
+	printf "flow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$SCV_MK_ARG" > "$$LAUNCH_TCL"; \
+	(cd "$$SOL_DIR" && \
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
 		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
 		STEM_BN_BIAS_FILE="$$ROOT_DIR/weights/stem_bn_bias.txt" \
-		CXX_HOME="$$CXX_HOME_RUN" \
-		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
-		$(MAKE) -C "$$SCV_DIR" \
-		CXX_HOME="$$CXX_HOME_RUN" \
-		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
-		SYSTEMC_LIBDIR="$$SYSTEMC_LIBDIR_RUN" \
-		sim > "$$SCV_LOG" 2>&1; \
-		SIM_RC=$$?; \
-	else \
-		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
-		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
-		STEM_BN_BIAS_FILE="$$ROOT_DIR/weights/stem_bn_bias.txt" \
-		CXX_HOME="$$CXX_HOME_RUN" \
-		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
-		$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" \
-		CXX_HOME="$$CXX_HOME_RUN" \
-		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
-		SYSTEMC_LIBDIR="$$SYSTEMC_LIBDIR_RUN" \
-		> "$$SCV_LOG" 2>&1; \
-		SIM_RC=$$?; \
-	fi; \
+		catapult -shell -file "$$LAUNCH_TCL" > "$$SCV_LOG" 2>&1); \
+	SIM_RC=$$?; \
+	rm -f "$$LAUNCH_TCL"; \
 	cat "$$SCV_LOG"; \
 	if [ "$$SIM_RC" -ne 0 ]; then \
 		echo "[stem-tb] FAIL: SCVerify returned $$SIM_RC"; \
@@ -268,7 +208,8 @@ stem-tb-weight: stem-clean weight-dir
 # (forces TB fallback: pseudo-random weights + identity BN)
 stem-tb-no-weight: stem-clean
 	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
-	cd Binary_cnn && SOL_DIR=$$(ls -d stem_processor/StemProcessor.v* stem_processor/solution.v* 2>/dev/null | sort -V | tail -n 1); \
+	cd Binary_cnn && ROOT_DIR=$$(pwd); \
+	SOL_DIR=$$(ls -d stem_processor/StemProcessor.v* stem_processor/solution.v* 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$SOL_DIR" ]; then echo "No stem solution directory found (StemProcessor.v* or solution.v*)."; exit 1; fi; \
 	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_orig_cxx_osci.mk" 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$SCV_MK" ]; then \
@@ -281,74 +222,16 @@ stem-tb-no-weight: stem-clean
 		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
 	fi; \
 	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
-	SCV_DIR=$$(dirname "$$SCV_MK"); \
-	SCV_BASENAME=$$(basename "$$SCV_MK"); \
-	if [ ! -f "$$SCV_DIR/ccs_env.mk" ]; then touch "$$SCV_DIR/ccs_env.mk"; fi; \
-	CXX_HOME_RUN="$$CXX_HOME"; \
-	if [ -z "$$CXX_HOME_RUN" ]; then \
-		CXX_BIN=$$(command -v g++ 2>/dev/null || command -v c++ 2>/dev/null); \
-		if [ -n "$$CXX_BIN" ]; then CXX_HOME_RUN=$$(dirname $$(dirname "$$CXX_BIN")); fi; \
-	fi; \
-	if [ -z "$$CXX_HOME_RUN" ]; then \
-		echo "CXX_HOME is not set and g++/c++ was not found in PATH."; \
-		exit 1; \
-	fi; \
-	SYSTEMC_INCDIR_RUN="$$SYSTEMC_INCDIR"; \
-	if [ -z "$$SYSTEMC_INCDIR_RUN" ] && [ -n "$$MGC_HOME" ] && [ -f "$$MGC_HOME/shared/include/systemc.h" ]; then \
-		SYSTEMC_INCDIR_RUN="$$MGC_HOME/shared/include"; \
-	fi; \
-	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
-		CATAPULT_BIN=$$(command -v catapult 2>/dev/null); \
-		if [ -n "$$CATAPULT_BIN" ]; then \
-			CATAPULT_BIN_REAL="$$CATAPULT_BIN"; \
-			if command -v readlink >/dev/null 2>&1; then \
-				CATAPULT_BIN_REAL=$$(readlink -f "$$CATAPULT_BIN" 2>/dev/null || echo "$$CATAPULT_BIN"); \
-			fi; \
-			CATAPULT_ROOT=$$(cd $$(dirname "$$CATAPULT_BIN_REAL")/.. 2>/dev/null && pwd); \
-			if [ -f "$$CATAPULT_ROOT/Mgc_home/shared/include/systemc.h" ]; then \
-				SYSTEMC_INCDIR_RUN="$$CATAPULT_ROOT/Mgc_home/shared/include"; \
-			fi; \
-		fi; \
-	fi; \
-	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
-		for d in /usr/local/systemc/include /usr/include/systemc /usr/include; do \
-			if [ -f "$$d/systemc.h" ]; then SYSTEMC_INCDIR_RUN="$$d"; break; fi; \
-		done; \
-	fi; \
-	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
-		echo "SYSTEMC_INCDIR is not set and systemc.h was not found."; \
-		exit 1; \
-	fi; \
-	SYSTEMC_LIBDIR_RUN="$$SYSTEMC_LIBDIR"; \
-	if [ -z "$$SYSTEMC_LIBDIR_RUN" ]; then \
-		for d in "$$(dirname "$$SYSTEMC_INCDIR_RUN")/lib-linux64" "$$(dirname "$$SYSTEMC_INCDIR_RUN")/lib64" "$$(dirname "$$SYSTEMC_INCDIR_RUN")/lib"; do \
-			if ls "$$d"/libsystemc* >/dev/null 2>&1; then SYSTEMC_LIBDIR_RUN="$$d"; break; fi; \
-		done; \
-	fi; \
-	printf "CXX_HOME := %s\nSYSTEMC_INCDIR := %s\n" "$$CXX_HOME_RUN" "$$SYSTEMC_INCDIR_RUN" > "$$SCV_DIR/ccs_env.mk"; \
-	if [ -n "$$SYSTEMC_LIBDIR_RUN" ]; then printf "SYSTEMC_LIBDIR := %s\n" "$$SYSTEMC_LIBDIR_RUN" >> "$$SCV_DIR/ccs_env.mk"; fi; \
-	SCV_LOG="logs/scverify_stem_sim.log"; \
-	if [ "$$SCV_BASENAME" = "Makefile" ]; then \
+	SCV_MK_ARG=$${SCV_MK#$$SOL_DIR/}; \
+	if [ "$$SCV_MK_ARG" = "$$SCV_MK" ]; then SCV_MK_ARG="$$SCV_MK"; else SCV_MK_ARG="./$$SCV_MK_ARG"; fi; \
+	SCV_LOG="$$ROOT_DIR/logs/scverify_stem_sim.log"; \
+	LAUNCH_TCL="$$ROOT_DIR/logs/stem_scverify_launch.tcl"; \
+	printf "flow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$SCV_MK_ARG" > "$$LAUNCH_TCL"; \
+	(cd "$$SOL_DIR" && \
 		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
-		CXX_HOME="$$CXX_HOME_RUN" \
-		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
-		$(MAKE) -C "$$SCV_DIR" \
-		CXX_HOME="$$CXX_HOME_RUN" \
-		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
-		SYSTEMC_LIBDIR="$$SYSTEMC_LIBDIR_RUN" \
-		sim > "$$SCV_LOG" 2>&1; \
-		SIM_RC=$$?; \
-	else \
-		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
-		CXX_HOME="$$CXX_HOME_RUN" \
-		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
-		$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" \
-		CXX_HOME="$$CXX_HOME_RUN" \
-		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
-		SYSTEMC_LIBDIR="$$SYSTEMC_LIBDIR_RUN" \
-		> "$$SCV_LOG" 2>&1; \
-		SIM_RC=$$?; \
-	fi; \
+		catapult -shell -file "$$LAUNCH_TCL" > "$$SCV_LOG" 2>&1); \
+	SIM_RC=$$?; \
+	rm -f "$$LAUNCH_TCL"; \
 	cat "$$SCV_LOG"; \
 	if [ "$$SIM_RC" -ne 0 ]; then \
 		echo "[stem-tb] FAIL: SCVerify returned $$SIM_RC"; \
