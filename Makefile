@@ -181,7 +181,8 @@ stem-tb-weight: stem-clean weight-dir
 	if [ "$$SCV_MK_ARG" = "$$SCV_MK" ]; then SCV_MK_ARG="$$SCV_MK"; else SCV_MK_ARG="./$$SCV_MK_ARG"; fi; \
 	SCV_LOG="$$ROOT_DIR/logs/scverify_stem_sim.log"; \
 	LAUNCH_TCL="$$ROOT_DIR/logs/stem_scverify_launch.tcl"; \
-	printf "flow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$SCV_MK_ARG" > "$$LAUNCH_TCL"; \
+	CCS_SCRIPT="$$ROOT_DIR/stem_processor.ccs"; \
+	printf "if {![file exists {%s}]} { error {missing stem_processor.ccs; run stem flow first} }\nsource {%s}\nflow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$CCS_SCRIPT" "$$CCS_SCRIPT" "$$SCV_MK_ARG" > "$$LAUNCH_TCL"; \
 	(cd "$$SOL_DIR" && \
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
 		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
@@ -226,7 +227,8 @@ stem-tb-no-weight: stem-clean
 	if [ "$$SCV_MK_ARG" = "$$SCV_MK" ]; then SCV_MK_ARG="$$SCV_MK"; else SCV_MK_ARG="./$$SCV_MK_ARG"; fi; \
 	SCV_LOG="$$ROOT_DIR/logs/scverify_stem_sim.log"; \
 	LAUNCH_TCL="$$ROOT_DIR/logs/stem_scverify_launch.tcl"; \
-	printf "flow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$SCV_MK_ARG" > "$$LAUNCH_TCL"; \
+	CCS_SCRIPT="$$ROOT_DIR/stem_processor.ccs"; \
+	printf "if {![file exists {%s}]} { error {missing stem_processor.ccs; run stem flow first} }\nsource {%s}\nflow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$CCS_SCRIPT" "$$CCS_SCRIPT" "$$SCV_MK_ARG" > "$$LAUNCH_TCL"; \
 	(cd "$$SOL_DIR" && \
 		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
 		catapult -shell -file "$$LAUNCH_TCL" > "$$SCV_LOG" 2>&1); \
