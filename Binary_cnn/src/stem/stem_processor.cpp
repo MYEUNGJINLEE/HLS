@@ -26,6 +26,25 @@ void StemProcessor::run(
     ac_channel<stem_bn_t> &bn_bias,
     ac_channel<stem_packed_act_t> &output_stream
 ) {
+    // Use runtime spatial dimensions from config (supports reduced-size TB runs).
+    const int in_h = (int)config.input_height;
+    const int in_w = (int)config.input_width;
+
+    if (in_h <= 0 || in_w <= 0 || in_w > STEM_MAX_WIDTH) {
+        return;
+    }
+
+    const int conv0_out_h = (in_h + (CONV0_P << 1) - CONV0_K) / CONV0_S + 1;
+    const int conv0_out_w = (in_w + (CONV0_P << 1) - CONV0_K) / CONV0_S + 1;
+    const int conv1_out_h = conv0_out_h;
+    const int conv1_out_w = conv0_out_w;
+    const int conv2_out_h = (conv1_out_h + (CONV2_P << 1) - CONV2_K) / CONV2_S + 1;
+    const int conv2_out_w = (conv1_out_w + (CONV2_P << 1) - CONV2_K) / CONV2_S + 1;
+    const int mp_out_h = conv0_out_h >> 1;
+    const int mp_out_w = conv0_out_w >> 1;
+    const int conv3_out_h = conv2_out_h;
+    const int conv3_out_w = conv2_out_w;
+
     // ================================================================
     // Phase 0: Load ALL weights upfront (binary = very small)
     // ================================================================
@@ -94,18 +113,18 @@ void StemProcessor::run(
     // ================================================================
 
     // RGB input buffer for Conv0
-    line_buf_a.configure(CONV0_IN_W, CONV0_IN_H, 3, CONV0_K, CONV0_P, CONV0_S);
+    line_buf_a.configure(in_w, in_h, 3, CONV0_K, CONV0_P, CONV0_S);
 
     // Conv0 output buffer (feeds Conv1 and MaxPool)
-    line_buf_b.configure(CONV0_OUT_W, CONV0_OUT_H, 32, 1, 0, 1);
+    line_buf_b.configure(conv0_out_w, conv0_out_h, 32, 1, 0, 1);
 
     // Conv1 output buffer (feeds Conv2)
     StemLineBuffer conv1_buf;
-    conv1_buf.configure(CONV1_OUT_W, CONV1_OUT_H, 16, CONV2_K, CONV2_P, CONV2_S);
+    conv1_buf.configure(conv1_out_w, conv1_out_h, 16, CONV2_K, CONV2_P, CONV2_S);
 
     // MaxPool buffer (from Conv0 output)
     StemLineBuffer mp_buf;
-    mp_buf.configure(MP_IN_W, MP_IN_H, 32, 2, 0, 2);
+    mp_buf.configure(conv0_out_w, conv0_out_h, 32, 2, 0, 2);
 
     // ================================================================
     // Pipeline state tracking
@@ -128,19 +147,19 @@ void StemProcessor::run(
     // Total iterations = input rows + pipeline drain
     // ================================================================
 
-    static const int PIPELINE_MAX_ITER = CONV0_IN_H + CONV3_OUT_H + 10;
+    const int PIPELINE_MAX_ITER = in_h + conv3_out_h + 10;
 
     PIPELINE_MAIN:
     for (int iter = 0; iter < PIPELINE_MAX_ITER; iter++) {
         // Exit when all outputs produced
-        if (conv3_out_row >= CONV3_OUT_H) break;
+        if (conv3_out_row >= conv3_out_h) break;
 
         // ----------------------------------------------------------------
         // Stage 1: Read RGB input row (if more to read)
         // ----------------------------------------------------------------
-        if (conv0_in_row < CONV0_IN_H) {
+        if (conv0_in_row < in_h) {
             STAGE1_READ_COL:
-            for (int col = 0; col < CONV0_IN_W; col++) {
+            for (int col = 0; col < in_w; col++) {
                 stem_packed_rgb_t packed_rgb = rgb_input.read();
                 stem_act_t rgb[3];
 
@@ -158,11 +177,11 @@ void StemProcessor::run(
         // ----------------------------------------------------------------
         STAGE2_ROWS:
         for (int s2 = 0; s2 < MAX_STAGE_ROWS; s2++) {
-            if (conv0_out_row >= CONV0_OUT_H) break;
+            if (conv0_out_row >= conv0_out_h) break;
             if (!line_buf_a.can_output_row(conv0_out_row, conv0_in_row)) break;
 
             STAGE2_CONV0_COL:
-            for (int col = 0; col < CONV0_OUT_W; col++) {
+            for (int col = 0; col < conv0_out_w; col++) {
                 StemWindow3x3 window;
                 line_buf_a.extract_window_3x3(conv0_out_row, col, window);
 
@@ -213,7 +232,7 @@ void StemProcessor::run(
             // ----------------------------------------------------------------
             int c1_row = conv0_out_row - 1;
             STAGE3_CONV1_COL:
-            for (int col = 0; col < CONV1_OUT_W; col++) {
+            for (int col = 0; col < conv1_out_w; col++) {
                 stem_act_t input[32];
                 line_buf_b.read_pixel(c1_row, col, input);
 
@@ -252,11 +271,11 @@ void StemProcessor::run(
         // ----------------------------------------------------------------
         STAGE4_ROWS:
         for (int s4 = 0; s4 < MAX_STAGE_ROWS; s4++) {
-            if (conv2_out_row >= CONV2_OUT_H) break;
+            if (conv2_out_row >= conv2_out_h) break;
             if (!conv1_buf.can_output_row(conv2_out_row, conv1_out_row)) break;
 
             STAGE4_CONV2_COL:
-            for (int col = 0; col < CONV2_OUT_W; col++) {
+            for (int col = 0; col < conv2_out_w; col++) {
                 StemWindow3x3 window;
                 conv1_buf.extract_window_3x3(conv2_out_row, col, window);
 
@@ -303,11 +322,11 @@ void StemProcessor::run(
         // ----------------------------------------------------------------
         STAGE5_ROWS:
         for (int s5 = 0; s5 < MAX_STAGE_ROWS; s5++) {
-            if (mp_out_row >= MP_OUT_H) break;
+            if (mp_out_row >= mp_out_h) break;
             if (!mp_buf.can_output_row(mp_out_row, conv0_out_row)) break;
 
             STAGE5_MP_COL:
-            for (int col = 0; col < MP_OUT_W; col++) {
+            for (int col = 0; col < mp_out_w; col++) {
                 stem_act_t window[2][2][STEM_CH_PARALLEL];
                 mp_buf.extract_window_2x2(mp_out_row, col, window);
 
@@ -335,12 +354,12 @@ void StemProcessor::run(
 
         STAGE6_ROWS:
         for (int s6 = 0; s6 < MAX_STAGE_ROWS; s6++) {
-            if (conv3_out_row >= CONV3_OUT_H) break;
+            if (conv3_out_row >= conv3_out_h) break;
             // Check if we have enough concat rows (1x1 only needs current row)
-            if (conv3_out_row >= concat_ready_row && concat_ready_row < CONV3_OUT_H) break;
+            if (conv3_out_row >= concat_ready_row && concat_ready_row < conv3_out_h) break;
 
             STAGE6_CONV3_COL:
-            for (int col = 0; col < CONV3_OUT_W; col++) {
+            for (int col = 0; col < conv3_out_w; col++) {
                 // Read pixel directly from concat buffer (1x1 conv)
                 stem_act_t pixel[STEM_CH_PARALLEL];
                 concat_buf.read_concat(col, pixel);

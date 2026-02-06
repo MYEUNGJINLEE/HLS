@@ -48,7 +48,7 @@ public:
                                 }
 
                                 float w_val = weights[((oc * in_ch + ic) * 3 + kr) * 3 + kc];
-                                // Binary: 0 → +1, 1 → -1
+                                // Binary: 0 -> +1, 1 -> -1
                                 acc += (w_val == 0) ? in_val : -in_val;
                             }
                         }
@@ -228,15 +228,13 @@ CCS_MAIN(int argc, char *argv[]) {
         }
     }
 
-    // Conv3 weights: 32 OC × 64 IC × 9
+    // Conv3 weights: 32 OC x 64 IC (1x1)
     for (int oc = 0; oc < 32; oc++) {
+        stem_packed_bw_t packed = 0;
         for (int ic = 0; ic < 64; ic++) {
-            stem_packed_bw_t packed = 0;
-            for (int k = 0; k < 9; k++) {
-                packed[k] = rand() % 2;
-            }
-            weight_stream.write(packed);
+            packed[ic] = rand() % 2;
         }
+        weight_stream.write(packed);
     }
 
     // BN parameters (identity for testing: scale=1, bias=0)
