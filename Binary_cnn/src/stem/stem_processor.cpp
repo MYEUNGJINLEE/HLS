@@ -59,10 +59,11 @@ void StemProcessor::process_conv0(
     for (int oc = 0; oc < 32; oc++) {
         for (int ic = 0; ic < 3; ic++) {
             stem_packed_bw_t packed = weight_stream.read();
-            for (int k = 0; k < 9; k++) {
-                int kr = k / 3;
-                int kc = k % 3;
-                w0[oc][ic][kr][kc] = packed[k];
+            int k = 0;
+            for (int kr = 0; kr < 3; kr++) {
+                for (int kc = 0; kc < 3; kc++) {
+                    w0[oc][ic][kr][kc] = packed[k++];
+                }
             }
         }
     }
@@ -210,10 +211,11 @@ void StemProcessor::process_conv2(
     for (int oc = 0; oc < 32; oc++) {
         for (int ic = 0; ic < 16; ic++) {
             stem_packed_bw_t packed = weight_stream.read();
-            for (int k = 0; k < 9; k++) {
-                int kr = k / 3;
-                int kc = k % 3;
-                w2[oc][ic][kr][kc] = packed[k];
+            int k = 0;
+            for (int kr = 0; kr < 3; kr++) {
+                for (int kc = 0; kc < 3; kc++) {
+                    w2[oc][ic][kr][kc] = packed[k++];
+                }
             }
         }
     }
@@ -292,10 +294,11 @@ void StemProcessor::process_conv3(
     for (int oc = 0; oc < 32; oc++) {
         for (int ic = 0; ic < 64; ic++) {
             stem_packed_bw_t packed = weight_stream.read();
-            for (int k = 0; k < 9; k++) {
-                int kr = k / 3;
-                int kc = k % 3;
-                w3[oc][ic][kr][kc] = packed[k];
+            int k = 0;
+            for (int kr = 0; kr < 3; kr++) {
+                for (int kc = 0; kc < 3; kc++) {
+                    w3[oc][ic][kr][kc] = packed[k++];
+                }
             }
         }
     }
