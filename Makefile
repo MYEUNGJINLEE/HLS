@@ -177,13 +177,13 @@ stem-tb-weight: stem-clean weight-dir
 		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
 	fi; \
 	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
-	SCV_MK_ARG=$${SCV_MK#$$SOL_DIR/}; \
-	if [ "$$SCV_MK_ARG" = "$$SCV_MK" ]; then SCV_MK_ARG="$$SCV_MK"; else SCV_MK_ARG="./$$SCV_MK_ARG"; fi; \
+	PROJ_DIR=$$(dirname "$$SOL_DIR"); \
+	PROJ_DIR_ABS="$$ROOT_DIR/$$PROJ_DIR"; \
+	SCV_MK_ABS="$$ROOT_DIR/$$SCV_MK"; \
 	SCV_LOG="$$ROOT_DIR/logs/scverify_stem_sim.log"; \
 	LAUNCH_TCL="$$ROOT_DIR/logs/stem_scverify_launch.tcl"; \
-	CCS_SCRIPT="$$ROOT_DIR/stem_processor.ccs"; \
-	printf "if {![file exists {%s}]} { error {missing stem_processor.ccs; run stem flow first} }\nsource {%s}\nflow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$CCS_SCRIPT" "$$CCS_SCRIPT" "$$SCV_MK_ARG" > "$$LAUNCH_TCL"; \
-	(cd "$$SOL_DIR" && \
+	printf "if {![file isdirectory {%s}]} { error {missing stem project directory} }\nproject load {%s} 2025.2\nflow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$PROJ_DIR_ABS" "$$PROJ_DIR_ABS" "$$SCV_MK_ABS" > "$$LAUNCH_TCL"; \
+	(cd "$$ROOT_DIR" && \
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
 		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
 		STEM_BN_BIAS_FILE="$$ROOT_DIR/weights/stem_bn_bias.txt" \
@@ -223,13 +223,13 @@ stem-tb-no-weight: stem-clean
 		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
 	fi; \
 	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
-	SCV_MK_ARG=$${SCV_MK#$$SOL_DIR/}; \
-	if [ "$$SCV_MK_ARG" = "$$SCV_MK" ]; then SCV_MK_ARG="$$SCV_MK"; else SCV_MK_ARG="./$$SCV_MK_ARG"; fi; \
+	PROJ_DIR=$$(dirname "$$SOL_DIR"); \
+	PROJ_DIR_ABS="$$ROOT_DIR/$$PROJ_DIR"; \
+	SCV_MK_ABS="$$ROOT_DIR/$$SCV_MK"; \
 	SCV_LOG="$$ROOT_DIR/logs/scverify_stem_sim.log"; \
 	LAUNCH_TCL="$$ROOT_DIR/logs/stem_scverify_launch.tcl"; \
-	CCS_SCRIPT="$$ROOT_DIR/stem_processor.ccs"; \
-	printf "if {![file exists {%s}]} { error {missing stem_processor.ccs; run stem flow first} }\nsource {%s}\nflow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$CCS_SCRIPT" "$$CCS_SCRIPT" "$$SCV_MK_ARG" > "$$LAUNCH_TCL"; \
-	(cd "$$SOL_DIR" && \
+	printf "if {![file isdirectory {%s}]} { error {missing stem project directory} }\nproject load {%s} 2025.2\nflow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$PROJ_DIR_ABS" "$$PROJ_DIR_ABS" "$$SCV_MK_ABS" > "$$LAUNCH_TCL"; \
+	(cd "$$ROOT_DIR" && \
 		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
 		catapult -shell -file "$$LAUNCH_TCL" > "$$SCV_LOG" 2>&1); \
 	SIM_RC=$$?; \
