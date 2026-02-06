@@ -49,7 +49,7 @@ stream-tb:
 	if [ -z "$$SCV_MK" ]; then echo "SCVerify makefile not found under $$SOL_DIR"; exit 1; fi; \
 	SCV_DIR=$$(dirname "$$SCV_MK"); \
 	SCV_BASENAME=$$(basename "$$SCV_MK"); \
-	$$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_sim.log
+	$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_sim.log
 
 # Clean streaming projects (including numbered variants _1, _2, ...)
 stream-clean:
@@ -86,7 +86,7 @@ block-tb: block-clean
 	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
 	SCV_DIR=$$(dirname "$$SCV_MK"); \
 	SCV_BASENAME=$$(basename "$$SCV_MK"); \
-	$$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_block_processor_sim.log
+	$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_block_processor_sim.log
 
 # Run Catapult with GUI and keep window open
 stream-gui:
@@ -141,10 +141,10 @@ stem-tb:
 	COUNT=$$((HAS_W + HAS_S + HAS_B)); \
 	if [ "$$COUNT" -eq 3 ]; then \
 		echo "[stem-tb] Found all weight/BN files. Running stem-tb-weight."; \
-		$$(MAKE) stem-tb-weight; \
+		$(MAKE) stem-tb-weight; \
 	elif [ "$$COUNT" -eq 0 ]; then \
 		echo "[stem-tb] No weight/BN files found. Running stem-tb-no-weight."; \
-		$$(MAKE) stem-tb-no-weight; \
+		$(MAKE) stem-tb-no-weight; \
 	else \
 		echo "[stem-tb] Partial weight/BN files detected. Provide all 3 files or none."; \
 		if [ "$$HAS_W" -eq 0 ]; then echo "Missing: Binary_cnn/weights/stem_weights.txt"; fi; \
@@ -177,12 +177,12 @@ stem-tb-weight: stem-clean weight-dir
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
 		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
 		STEM_BN_BIAS_FILE="$$ROOT_DIR/weights/stem_bn_bias.txt" \
-		$$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_stem_sim.log; \
+		$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_stem_sim.log; \
 	else \
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
 		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
 		STEM_BN_BIAS_FILE="$$ROOT_DIR/weights/stem_bn_bias.txt" \
-		$$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" 2>&1 | tee logs/scverify_stem_sim.log; \
+		$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" 2>&1 | tee logs/scverify_stem_sim.log; \
 	fi
 
 # Run stem processor testbench without external weight/BN files
@@ -200,10 +200,10 @@ stem-tb-no-weight: stem-clean
 	SCV_BASENAME=$$(basename "$$SCV_MK"); \
 	if [ "$$SCV_BASENAME" = "Makefile" ]; then \
 		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
-		$$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_stem_sim.log; \
+		$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_stem_sim.log; \
 	else \
 		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
-		$$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" 2>&1 | tee logs/scverify_stem_sim.log; \
+		$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" 2>&1 | tee logs/scverify_stem_sim.log; \
 	fi
 
 # Run stem processor with GUI
