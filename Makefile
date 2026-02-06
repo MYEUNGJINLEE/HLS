@@ -1,4 +1,4 @@
-.PHONY: update stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean clean
+.PHONY: update stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean stem stem-log stem-gui stem-tb stem-clean clean
 
 # Update local repository to latest origin/dev
 update:
@@ -30,8 +30,12 @@ stream-clean:
 block-clean:
 	cd Binary_cnn && rm -rf block_processor* block_processor.ccs
 
+# Clean stem processor projects
+stem-clean:
+	cd Binary_cnn && rm -rf stem_processor* stem_processor.ccs
+
 # Clean all Catapult-generated artifacts
-clean: stream-clean block-clean
+clean: stream-clean block-clean stem-clean
 	cd Binary_cnn && rm -rf bin_cnn bin_cnn.ccs Catapult Catapult.ccs logs catapult_pid* .Catapult*
 
 # Run block processor Catapult in batch mode (auto-cleans old project)
@@ -80,4 +84,40 @@ block-gui:
 		catapult "$$PRJ" & \
 	else \
 		echo "Could not find block_processor*.ccs project file."; exit 1; \
+	fi
+
+# ============================================================================
+# Stem Processor Targets
+# ============================================================================
+
+# Run stem processor Catapult in batch mode (auto-cleans old project)
+stem: stem-clean
+	cd Binary_cnn && catapult -shell -file scripts/run_stem_catapult.tcl
+
+# Run stem processor with log
+stem-log: stem-clean
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
+
+# Run stem processor batch flow and execute SCVerify testbench simulation
+stem-tb: stem-clean
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
+	cd Binary_cnn && SOL_DIR=$$(ls -d stem_processor/StemProcessor.v* 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SOL_DIR" ]; then echo "No StemProcessor.v* solution directory found."; exit 1; fi; \
+	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
+	SCV_DIR=$$(dirname "$$SCV_MK"); \
+	$$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_stem_sim.log
+
+# Run stem processor with GUI
+stem-gui:
+	cd Binary_cnn && PRJ=$$(ls -t stem_processor*.ccs 2>/dev/null | head -n 1); \
+	if [ -z "$$PRJ" ]; then \
+		echo "No stem_processor*.ccs found. Running batch flow once to create project..."; \
+		catapult -shell -file scripts/run_stem_catapult.tcl; \
+		PRJ=$$(ls -t stem_processor*.ccs 2>/dev/null | head -n 1); \
+	fi; \
+	if [ -n "$$PRJ" ]; then \
+		catapult "$$PRJ" & \
+	else \
+		echo "Could not find stem_processor*.ccs project file."; exit 1; \
 	fi
