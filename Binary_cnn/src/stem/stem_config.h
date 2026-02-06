@@ -15,7 +15,7 @@
 //           ├─→ Path A: Conv1 1x1 (32→16) → Conv2 3x3 s=2 (16→32) → 160x160x32
 //           └─→ Path B: MaxPool 2x2 s=2 → 160x160x32
 //                 └─→ Concat → 160x160x64
-//                       └─→ Conv3: 3x3, s=1, p=1 (64→32) → 160x160x32
+//                       └─→ Conv3: 1x1 (64→32) → 160x160x32
 //
 // Hardware Strategy:
 //   - Single Conv Engine (64x64 PE) reused for all layers
@@ -81,10 +81,10 @@ static const int CONV2_K = 3, CONV2_S = 2, CONV2_P = 1;
 static const int MP_IN_H  = 320, MP_IN_W  = 320, MP_IN_CH  = 32;
 static const int MP_OUT_H = 160, MP_OUT_W = 160, MP_OUT_CH = 32;
 
-// Conv3: 160x160x64 → 160x160x32 (3x3, s=1, p=1)
+// Conv3: 160x160x64 → 160x160x32 (1x1)
 static const int CONV3_IN_H  = 160, CONV3_IN_W  = 160, CONV3_IN_CH  = 64;
 static const int CONV3_OUT_H = 160, CONV3_OUT_W = 160, CONV3_OUT_CH = 32;
-static const int CONV3_K = 3, CONV3_S = 1, CONV3_P = 1;
+static const int CONV3_K = 1, CONV3_S = 1, CONV3_P = 0;
 
 // ----------------------------------------------------------------------------
 // Weight Sizes (binary weights, very compact)
@@ -93,8 +93,8 @@ static const int CONV3_K = 3, CONV3_S = 1, CONV3_P = 1;
 // Conv0: 3x3, IC=3, OC=32 → 3*32*9 = 864 bits = 108 bytes
 // Conv1: 1x1, IC=32, OC=16 → 32*16 = 512 bits = 64 bytes
 // Conv2: 3x3, IC=16, OC=32 → 16*32*9 = 4608 bits = 576 bytes
-// Conv3: 3x3, IC=64, OC=32 → 64*32*9 = 18432 bits = 2304 bytes
-// Total: ~3 KB (very small!)
+// Conv3: 1x1, IC=64, OC=32 → 64*32 = 2048 bits = 256 bytes
+// Total: ~1 KB (very small!)
 
 // ----------------------------------------------------------------------------
 // 3x3 Window for Convolution

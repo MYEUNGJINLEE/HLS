@@ -32,8 +32,9 @@ static const int MAX_CH_TILES     = 16;
 
 static const int BLOCK_MAX_HEIGHT = 320;   // Max input height for fused blocks
 static const int BLOCK_MAX_WIDTH  = 320;   // Max input width for fused blocks
-static const int BLOCK_MAX_OUT_H  = 320;   // Max output height
+static const int BLOCK_MAX_OUT_H  = 320;   // Max output height (for flush loop)
 static const int BLOCK_MAX_OUT_W  = 320;   // Max output width
+static const int MAX_OUT_ROWS_PER_IN = 2;  // Max output rows per input row (3x3 conv)
 
 // ============================================================================
 // Tile Schedule (computed from layer dimensions)

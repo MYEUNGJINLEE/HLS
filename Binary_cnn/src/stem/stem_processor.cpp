@@ -67,17 +67,12 @@ void StemProcessor::run(
         }
     }
 
-    // Conv3 weights: 3x3, IC=64, OC=32 → 18432 bits
-    stem_bw_t w3[32][64][3][3];
+    // Conv3 weights: 1x1, IC=64, OC=32 → 2048 bits
+    stem_bw_t w3[32][64];
     for (int oc = 0; oc < 32; oc++) {
+        stem_packed_bw_t packed = weight_stream.read();
         for (int ic = 0; ic < 64; ic++) {
-            stem_packed_bw_t packed = weight_stream.read();
-            int k = 0;
-            for (int kr = 0; kr < 3; kr++) {
-                for (int kc = 0; kc < 3; kc++) {
-                    w3[oc][ic][kr][kc] = packed[k++];
-                }
-            }
+            w3[oc][ic] = packed[ic];
         }
     }
 
@@ -112,10 +107,6 @@ void StemProcessor::run(
     StemLineBuffer mp_buf;
     mp_buf.configure(MP_IN_W, MP_IN_H, 32, 2, 0, 2);
 
-    // Conv3 input buffer (from concat)
-    StemLineBuffer conv3_in_buf;
-    conv3_in_buf.configure(CONV3_IN_W, CONV3_IN_H, 64, CONV3_K, CONV3_P, CONV3_S);
-
     // ================================================================
     // Pipeline state tracking
     // ================================================================
@@ -127,12 +118,20 @@ void StemProcessor::run(
     int mp_out_row = 0;      // Next MaxPool output row to produce
     int conv3_out_row = 0;   // Next Conv3 output row to produce
 
+    // Max output rows producible per main-loop iteration
+    // 3x3 s=2: 1 output per 2 inputs → max 1 per iter
+    // 1x1: 1 output per input → max 1 per iter
+    static const int MAX_STAGE_ROWS = 2;
+
     // ================================================================
     // Main pipelined processing loop
+    // Total iterations = input rows + pipeline drain
     // ================================================================
 
+    static const int PIPELINE_MAX_ITER = CONV0_IN_H + CONV3_OUT_H + 10;
+
     PIPELINE_MAIN:
-    for (int iter = 0; iter < CONV0_IN_H + CONV3_OUT_H + 10; iter++) {
+    for (int iter = 0; iter < PIPELINE_MAX_ITER; iter++) {
         // Exit when all outputs produced
         if (conv3_out_row >= CONV3_OUT_H) break;
 
@@ -157,8 +156,10 @@ void StemProcessor::run(
         // ----------------------------------------------------------------
         // Stage 2: Produce Conv0 output rows (when buffer ready)
         // ----------------------------------------------------------------
-        while (conv0_out_row < CONV0_OUT_H &&
-               line_buf_a.can_output_row(conv0_out_row, conv0_in_row)) {
+        STAGE2_ROWS:
+        for (int s2 = 0; s2 < MAX_STAGE_ROWS; s2++) {
+            if (conv0_out_row >= CONV0_OUT_H) break;
+            if (!line_buf_a.can_output_row(conv0_out_row, conv0_in_row)) break;
 
             STAGE2_CONV0_COL:
             for (int col = 0; col < CONV0_OUT_W; col++) {
@@ -249,8 +250,10 @@ void StemProcessor::run(
         // ----------------------------------------------------------------
         // Stage 4: Produce Conv2 output rows (when buffer ready)
         // ----------------------------------------------------------------
-        while (conv2_out_row < CONV2_OUT_H &&
-               conv1_buf.can_output_row(conv2_out_row, conv1_out_row)) {
+        STAGE4_ROWS:
+        for (int s4 = 0; s4 < MAX_STAGE_ROWS; s4++) {
+            if (conv2_out_row >= CONV2_OUT_H) break;
+            if (!conv1_buf.can_output_row(conv2_out_row, conv1_out_row)) break;
 
             STAGE4_CONV2_COL:
             for (int col = 0; col < CONV2_OUT_W; col++) {
@@ -298,8 +301,10 @@ void StemProcessor::run(
         // ----------------------------------------------------------------
         // Stage 5: Produce MaxPool output rows (parallel with Conv2)
         // ----------------------------------------------------------------
-        while (mp_out_row < MP_OUT_H &&
-               mp_buf.can_output_row(mp_out_row, conv0_out_row)) {
+        STAGE5_ROWS:
+        for (int s5 = 0; s5 < MAX_STAGE_ROWS; s5++) {
+            if (mp_out_row >= MP_OUT_H) break;
+            if (!mp_buf.can_output_row(mp_out_row, conv0_out_row)) break;
 
             STAGE5_MP_COL:
             for (int col = 0; col < MP_OUT_W; col++) {
@@ -328,46 +333,32 @@ void StemProcessor::run(
         // ----------------------------------------------------------------
         int concat_ready_row = (conv2_out_row < mp_out_row) ? conv2_out_row : mp_out_row;
 
-        while (conv3_out_row < CONV3_OUT_H) {
-            // Check if we have enough concat rows
-            int needed_rows = conv3_out_row + 2;  // 3x3 kernel needs row-1 to row+1
-            if (needed_rows > concat_ready_row && concat_ready_row < CONV3_OUT_H) break;
-
-            // Copy concat row to conv3 input buffer
-            if (conv3_out_row == 0 || conv3_out_row <= concat_ready_row) {
-                for (int col = 0; col < CONV3_IN_W; col++) {
-                    stem_act_t pixel[STEM_CH_PARALLEL];
-                    concat_buf.read_concat(col, pixel);
-                    conv3_in_buf.write_pixel(conv3_out_row, col, pixel);
-                }
-            }
-
-            if (!conv3_in_buf.can_output_row(conv3_out_row, concat_ready_row)) break;
+        STAGE6_ROWS:
+        for (int s6 = 0; s6 < MAX_STAGE_ROWS; s6++) {
+            if (conv3_out_row >= CONV3_OUT_H) break;
+            // Check if we have enough concat rows (1x1 only needs current row)
+            if (conv3_out_row >= concat_ready_row && concat_ready_row < CONV3_OUT_H) break;
 
             STAGE6_CONV3_COL:
             for (int col = 0; col < CONV3_OUT_W; col++) {
-                StemWindow3x3 window;
-                conv3_in_buf.extract_window_3x3(conv3_out_row, col, window);
+                // Read pixel directly from concat buffer (1x1 conv)
+                stem_act_t pixel[STEM_CH_PARALLEL];
+                concat_buf.read_concat(col, pixel);
 
                 stem_acc_t acc[32];
                 #pragma hls_unroll
                 for (int oc = 0; oc < 32; oc++) acc[oc] = 0;
 
+                // 1x1 Convolution: IC=64 → OC=32
                 CONV3_OC:
                 for (int oc = 0; oc < 32; oc++) {
                     CONV3_IC:
                     #pragma hls_unroll
                     for (int ic = 0; ic < 64; ic++) {
-                        #pragma hls_unroll
-                        for (int kr = 0; kr < 3; kr++) {
-                            #pragma hls_unroll
-                            for (int kc = 0; kc < 3; kc++) {
-                                if (w3[oc][ic][kr][kc] == 0)
-                                    acc[oc] += window.data[kr][kc][ic];
-                                else
-                                    acc[oc] -= window.data[kr][kc][ic];
-                            }
-                        }
+                        if (w3[oc][ic] == 0)
+                            acc[oc] += pixel[ic];
+                        else
+                            acc[oc] -= pixel[ic];
                     }
                 }
 

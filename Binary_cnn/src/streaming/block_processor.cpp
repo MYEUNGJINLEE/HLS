@@ -230,7 +230,7 @@ void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
         // Bounded for loop replaces while loop
         // ============================================================
         FUSED_L1_OUTPUT_ROWS:
-        for (int out_iter = 0; out_iter < BLOCK_MAX_OUT_H; out_iter++) {
+        for (int out_iter = 0; out_iter < MAX_OUT_ROWS_PER_IN; out_iter++) {
             // Exit conditions: no more rows OR buffer not ready
             if (next_out_row >= out_height) break;
             if (!inter_buf.can_output_row(next_out_row)) break;
