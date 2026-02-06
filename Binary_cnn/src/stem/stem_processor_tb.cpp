@@ -152,15 +152,14 @@ CCS_MAIN(int argc, char *argv[]) {
     std::cout << "StemProcessor Testbench" << std::endl;
     std::cout << "========================================" << std::endl;
 
-    // Use small scale for initial testing
-    const int TEST_IN_H = 32;
-    const int TEST_IN_W = 32;
+    // Use production-scale input for stem verification
+    const int TEST_IN_H = CONV0_IN_H;
+    const int TEST_IN_W = CONV0_IN_W;
 
-    // Scale down layer dimensions proportionally
-    const int L0_OUT_H = TEST_IN_H / 2;  // 16
-    const int L0_OUT_W = TEST_IN_W / 2;  // 16
-    const int L3_OUT_H = TEST_IN_H / 4;  // 8
-    const int L3_OUT_W = TEST_IN_W / 4;  // 8
+    const int L0_OUT_H = (TEST_IN_H + 2 * CONV0_P - CONV0_K) / CONV0_S + 1;
+    const int L0_OUT_W = (TEST_IN_W + 2 * CONV0_P - CONV0_K) / CONV0_S + 1;
+    const int L3_OUT_H = (L0_OUT_H + 2 * CONV2_P - CONV2_K) / CONV2_S + 1;
+    const int L3_OUT_W = (L0_OUT_W + 2 * CONV2_P - CONV2_K) / CONV2_S + 1;
 
     // Channels remain the same
     const int RGB_CH = 3;
