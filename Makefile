@@ -166,7 +166,13 @@ stem-tb-weight: stem-clean weight-dir
 	cd Binary_cnn && ROOT_DIR=$$(pwd); \
 	SOL_DIR=$$(ls -d stem_processor/StemProcessor.v* stem_processor/solution.v* 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$SOL_DIR" ]; then echo "No stem solution directory found (StemProcessor.v* or solution.v*)."; exit 1; fi; \
-	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_orig_cxx_osci.mk" 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/verify_orig_cxx_osci.mk" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
 	if [ -z "$$SCV_MK" ]; then \
 		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
 	fi; \
@@ -203,7 +209,13 @@ stem-tb-no-weight: stem-clean
 	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
 	cd Binary_cnn && SOL_DIR=$$(ls -d stem_processor/StemProcessor.v* stem_processor/solution.v* 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$SOL_DIR" ]; then echo "No stem solution directory found (StemProcessor.v* or solution.v*)."; exit 1; fi; \
-	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_orig_cxx_osci.mk" 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/verify_orig_cxx_osci.mk" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
 	if [ -z "$$SCV_MK" ]; then \
 		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
 	fi; \
