@@ -196,7 +196,11 @@ stem-tb-weight: stem-clean weight-dir
 	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
 		CATAPULT_BIN=$$(command -v catapult 2>/dev/null); \
 		if [ -n "$$CATAPULT_BIN" ]; then \
-			CATAPULT_ROOT=$$(cd $$(dirname "$$CATAPULT_BIN")/.. 2>/dev/null && pwd); \
+			CATAPULT_BIN_REAL="$$CATAPULT_BIN"; \
+			if command -v readlink >/dev/null 2>&1; then \
+				CATAPULT_BIN_REAL=$$(readlink -f "$$CATAPULT_BIN" 2>/dev/null || echo "$$CATAPULT_BIN"); \
+			fi; \
+			CATAPULT_ROOT=$$(cd $$(dirname "$$CATAPULT_BIN_REAL")/.. 2>/dev/null && pwd); \
 			if [ -f "$$CATAPULT_ROOT/Mgc_home/shared/include/systemc.h" ]; then \
 				SYSTEMC_INCDIR_RUN="$$CATAPULT_ROOT/Mgc_home/shared/include"; \
 			fi; \
@@ -211,20 +215,36 @@ stem-tb-weight: stem-clean weight-dir
 		echo "SYSTEMC_INCDIR is not set and systemc.h was not found."; \
 		exit 1; \
 	fi; \
+	SYSTEMC_LIBDIR_RUN="$$SYSTEMC_LIBDIR"; \
+	if [ -z "$$SYSTEMC_LIBDIR_RUN" ]; then \
+		for d in "$$(dirname "$$SYSTEMC_INCDIR_RUN")/lib-linux64" "$$(dirname "$$SYSTEMC_INCDIR_RUN")/lib64" "$$(dirname "$$SYSTEMC_INCDIR_RUN")/lib"; do \
+			if ls "$$d"/libsystemc* >/dev/null 2>&1; then SYSTEMC_LIBDIR_RUN="$$d"; break; fi; \
+		done; \
+	fi; \
+	printf "CXX_HOME := %s\nSYSTEMC_INCDIR := %s\n" "$$CXX_HOME_RUN" "$$SYSTEMC_INCDIR_RUN" > "$$SCV_DIR/ccs_env.mk"; \
+	if [ -n "$$SYSTEMC_LIBDIR_RUN" ]; then printf "SYSTEMC_LIBDIR := %s\n" "$$SYSTEMC_LIBDIR_RUN" >> "$$SCV_DIR/ccs_env.mk"; fi; \
 	if [ "$$SCV_BASENAME" = "Makefile" ]; then \
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
 		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
 		STEM_BN_BIAS_FILE="$$ROOT_DIR/weights/stem_bn_bias.txt" \
 		CXX_HOME="$$CXX_HOME_RUN" \
 		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
-		$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_stem_sim.log; \
+		$(MAKE) -C "$$SCV_DIR" \
+		CXX_HOME="$$CXX_HOME_RUN" \
+		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
+		SYSTEMC_LIBDIR="$$SYSTEMC_LIBDIR_RUN" \
+		sim 2>&1 | tee logs/scverify_stem_sim.log; \
 	else \
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
 		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
 		STEM_BN_BIAS_FILE="$$ROOT_DIR/weights/stem_bn_bias.txt" \
 		CXX_HOME="$$CXX_HOME_RUN" \
 		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
-		$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" 2>&1 | tee logs/scverify_stem_sim.log; \
+		$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" \
+		CXX_HOME="$$CXX_HOME_RUN" \
+		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
+		SYSTEMC_LIBDIR="$$SYSTEMC_LIBDIR_RUN" \
+		2>&1 | tee logs/scverify_stem_sim.log; \
 	fi
 
 # Run stem processor testbench without external weight/BN files
@@ -263,7 +283,11 @@ stem-tb-no-weight: stem-clean
 	if [ -z "$$SYSTEMC_INCDIR_RUN" ]; then \
 		CATAPULT_BIN=$$(command -v catapult 2>/dev/null); \
 		if [ -n "$$CATAPULT_BIN" ]; then \
-			CATAPULT_ROOT=$$(cd $$(dirname "$$CATAPULT_BIN")/.. 2>/dev/null && pwd); \
+			CATAPULT_BIN_REAL="$$CATAPULT_BIN"; \
+			if command -v readlink >/dev/null 2>&1; then \
+				CATAPULT_BIN_REAL=$$(readlink -f "$$CATAPULT_BIN" 2>/dev/null || echo "$$CATAPULT_BIN"); \
+			fi; \
+			CATAPULT_ROOT=$$(cd $$(dirname "$$CATAPULT_BIN_REAL")/.. 2>/dev/null && pwd); \
 			if [ -f "$$CATAPULT_ROOT/Mgc_home/shared/include/systemc.h" ]; then \
 				SYSTEMC_INCDIR_RUN="$$CATAPULT_ROOT/Mgc_home/shared/include"; \
 			fi; \
@@ -278,16 +302,32 @@ stem-tb-no-weight: stem-clean
 		echo "SYSTEMC_INCDIR is not set and systemc.h was not found."; \
 		exit 1; \
 	fi; \
+	SYSTEMC_LIBDIR_RUN="$$SYSTEMC_LIBDIR"; \
+	if [ -z "$$SYSTEMC_LIBDIR_RUN" ]; then \
+		for d in "$$(dirname "$$SYSTEMC_INCDIR_RUN")/lib-linux64" "$$(dirname "$$SYSTEMC_INCDIR_RUN")/lib64" "$$(dirname "$$SYSTEMC_INCDIR_RUN")/lib"; do \
+			if ls "$$d"/libsystemc* >/dev/null 2>&1; then SYSTEMC_LIBDIR_RUN="$$d"; break; fi; \
+		done; \
+	fi; \
+	printf "CXX_HOME := %s\nSYSTEMC_INCDIR := %s\n" "$$CXX_HOME_RUN" "$$SYSTEMC_INCDIR_RUN" > "$$SCV_DIR/ccs_env.mk"; \
+	if [ -n "$$SYSTEMC_LIBDIR_RUN" ]; then printf "SYSTEMC_LIBDIR := %s\n" "$$SYSTEMC_LIBDIR_RUN" >> "$$SCV_DIR/ccs_env.mk"; fi; \
 	if [ "$$SCV_BASENAME" = "Makefile" ]; then \
 		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
 		CXX_HOME="$$CXX_HOME_RUN" \
 		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
-		$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_stem_sim.log; \
+		$(MAKE) -C "$$SCV_DIR" \
+		CXX_HOME="$$CXX_HOME_RUN" \
+		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
+		SYSTEMC_LIBDIR="$$SYSTEMC_LIBDIR_RUN" \
+		sim 2>&1 | tee logs/scverify_stem_sim.log; \
 	else \
 		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
 		CXX_HOME="$$CXX_HOME_RUN" \
 		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
-		$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" 2>&1 | tee logs/scverify_stem_sim.log; \
+		$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" \
+		CXX_HOME="$$CXX_HOME_RUN" \
+		SYSTEMC_INCDIR="$$SYSTEMC_INCDIR_RUN" \
+		SYSTEMC_LIBDIR="$$SYSTEMC_LIBDIR_RUN" \
+		2>&1 | tee logs/scverify_stem_sim.log; \
 	fi
 
 # Run stem processor with GUI
