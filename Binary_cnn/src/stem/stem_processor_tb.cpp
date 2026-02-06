@@ -30,7 +30,7 @@ static float quantize_stem_out(float val) {
     if (val > 7.9375f) val = 7.9375f;
     if (val < -8.0f) val = -8.0f;
     stem_out_t q = (stem_out_t)val;
-    return (float)q;
+    return (float)q.to_double();
 }
 
 static bool read_weight_bit_token(std::istream &is, int &bit) {
@@ -405,7 +405,7 @@ CCS_MAIN(int argc, char *argv[]) {
 
                 stem_act_t q_in;
                 q_in.set_slc(0, raw.slc<8>(0));
-                input_ref[(r * TEST_IN_W + c) * RGB_CH + ch] = (float)q_in;
+                input_ref[(r * TEST_IN_W + c) * RGB_CH + ch] = (float)q_in.to_double();
             }
             rgb_input.write(packed);
         }
@@ -630,7 +630,9 @@ CCS_MAIN(int argc, char *argv[]) {
                 stem_out_t golden_val = (stem_out_t)conv3_out_ref[ref_idx];
                 ac_int<8, false> golden_bits = golden_val.slc<8>(0);
 
-                float abs_err = std::fabs((float)dut_val - (float)golden_val);
+                float dut_f = (float)dut_val.to_double();
+                float golden_f = (float)golden_val.to_double();
+                float abs_err = std::fabs(dut_f - golden_f);
                 if (abs_err > max_abs_err) {
                     max_abs_err = abs_err;
                 }
@@ -642,8 +644,8 @@ CCS_MAIN(int argc, char *argv[]) {
                         int col = output_count % L3_OUT_W;
                         std::cout << "  Mismatch[" << mismatch_count << "]"
                                   << " (r=" << row << ", c=" << col << ", ch=" << ch << ")"
-                                  << " DUT=" << (float)dut_val
-                                  << " GOLDEN=" << (float)golden_val << std::endl;
+                                  << " DUT=" << dut_f
+                                  << " GOLDEN=" << golden_f << std::endl;
                     }
                 }
             }
