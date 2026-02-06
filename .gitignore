@@ -1,0 +1,24 @@
+# Catapult HLS generated artifacts
+Binary_cnn/Catapult/
+Binary_cnn/bin_cnn_streaming/
+Binary_cnn/bin_cnn_streaming_*/
+Binary_cnn/block_processor/
+Binary_cnn/stem_processor/
+Binary_cnn/bin_cnn/
+*.ccs
+catapult_pid*
+.Catapult*
+
+# Catapult SIF/build artifacts
+**/SIF/
+**/.sif/
+**/.lock
+**/scverify/orig_cxx_osci/
+**/td_ccore_solutions/
+
+# Logs (optional - remove if you want to track logs)
+Binary_cnn/logs/
+
+# OS files
+Thumbs.db
+.DS_Store
