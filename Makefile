@@ -1,10 +1,29 @@
-.PHONY: update stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean stem stem-log stem-gui stem-tb stem-clean clean
+.PHONY: update push push-compile-results stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean stem stem-log stem-gui stem-tb stem-clean clean
 
 # Update local repository to latest origin/dev
 update:
 	git fetch origin
 	git checkout dev
 	git pull origin dev
+
+# Force-add compile logs, commit, and push to origin/dev
+# Usage:
+#   make push-compile-results
+push: push-compile-results
+
+push-compile-results:
+	@LOGS=$$(ls -1 Binary_cnn/logs/*.log Binary_cnn/catapult.log 2>/dev/null); \
+	if [ -z "$$LOGS" ]; then \
+		echo "No compile logs found (Binary_cnn/logs/*.log, Binary_cnn/catapult.log)."; \
+		exit 1; \
+	fi; \
+	git add -f $$LOGS; \
+	if git diff --cached --quiet; then \
+		echo "No log changes to commit."; \
+		exit 0; \
+	fi; \
+	git commit -m "logs: catpult log upload"; \
+	git push origin dev
 
 # Run Catapult in batch mode (no GUI)
 stream:
