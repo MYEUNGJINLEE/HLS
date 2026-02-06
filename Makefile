@@ -38,13 +38,12 @@ stem-clean:
 clean: stream-clean block-clean stem-clean
 	cd Binary_cnn && rm -rf bin_cnn bin_cnn.ccs Catapult Catapult.ccs logs catapult_pid* .Catapult*
 
-# Run block processor Catapult in batch mode (auto-cleans old project)
+# Run block processor Catapult in batch mode with log (auto-cleans old project)
 block: block-clean
-	cd Binary_cnn && catapult -shell -file scripts/run_block_processor_catapult.tcl
-
-# Run block processor with log (visible in terminal + saved to file)
-block-log: block-clean
 	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_block_processor_catapult.tcl 2>&1 | tee logs/catapult_block_processor.log
+
+# Alias for block
+block-log: block
 
 # Run block processor batch flow and execute SCVerify testbench simulation
 block-tb: block-clean
@@ -90,13 +89,12 @@ block-gui:
 # Stem Processor Targets
 # ============================================================================
 
-# Run stem processor Catapult in batch mode (auto-cleans old project)
+# Run stem processor Catapult in batch mode with log (auto-cleans old project)
 stem: stem-clean
-	cd Binary_cnn && catapult -shell -file scripts/run_stem_catapult.tcl
-
-# Run stem processor with log
-stem-log: stem-clean
 	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
+
+# Alias for stem
+stem-log: stem
 
 # Run stem processor batch flow and execute SCVerify testbench simulation
 stem-tb: stem-clean
