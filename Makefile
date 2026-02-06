@@ -19,8 +19,14 @@ stream-tb:
 	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_streaming_catapult.tcl 2>&1 | tee logs/catapult_streaming.log
 	cd Binary_cnn && SOL_DIR=$$(ls -d bin_cnn_streaming/BW_CNN_Streaming.v* BW_CNN_Streaming.v* 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$SOL_DIR" ]; then echo "No BW_CNN_Streaming.v* solution directory found."; exit 1; fi; \
-	if [ ! -f "$$SOL_DIR/scverify/Makefile" ]; then echo "SCVerify Makefile not found: $$SOL_DIR/scverify/Makefile"; exit 1; fi; \
-	$$(MAKE) -C "$$SOL_DIR/scverify" sim 2>&1 | tee logs/scverify_sim.log
+	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
+	if [ -z "$$SCV_MK" ]; then echo "SCVerify makefile not found under $$SOL_DIR"; exit 1; fi; \
+	SCV_DIR=$$(dirname "$$SCV_MK"); \
+	SCV_BASENAME=$$(basename "$$SCV_MK"); \
+	$$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_sim.log
 
 # Clean streaming projects (including numbered variants _1, _2, ...)
 stream-clean:
@@ -51,9 +57,13 @@ block-tb: block-clean
 	cd Binary_cnn && SOL_DIR=$$(ls -d block_processor/FusedBlockProcessor.v* 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$SOL_DIR" ]; then echo "No FusedBlockProcessor.v* solution directory found."; exit 1; fi; \
 	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
 	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
 	SCV_DIR=$$(dirname "$$SCV_MK"); \
-	$$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_block_processor_sim.log
+	SCV_BASENAME=$$(basename "$$SCV_MK"); \
+	$$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_block_processor_sim.log
 
 # Run Catapult with GUI and keep window open
 stream-gui:
@@ -102,9 +112,13 @@ stem-tb: stem-clean
 	cd Binary_cnn && SOL_DIR=$$(ls -d stem_processor/StemProcessor.v* 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$SOL_DIR" ]; then echo "No StemProcessor.v* solution directory found."; exit 1; fi; \
 	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
 	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
 	SCV_DIR=$$(dirname "$$SCV_MK"); \
-	$$(MAKE) -C "$$SCV_DIR" sim 2>&1 | tee logs/scverify_stem_sim.log
+	SCV_BASENAME=$$(basename "$$SCV_MK"); \
+	$$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_stem_sim.log
 
 # Run stem processor with GUI
 stem-gui:
