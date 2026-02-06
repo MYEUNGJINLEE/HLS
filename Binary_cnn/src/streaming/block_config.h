@@ -16,8 +16,10 @@ static const int MAX_FUSED_LAYERS = 3;
 static const int MAX_MID_CH       = 128;
 static const int MAX_MID_CH_TILES = MAX_MID_CH / CH_PARALLEL;  // 2
 
-// Inter-layer line buffer rows (5 for 3x3 kernel + circular margin)
-static const int INTER_BUF_ROWS   = 5;
+// Inter-layer line buffer rows (8 = power of 2 for efficient modulo via bitmask)
+// Minimum 5 rows needed for 3x3 kernel with circular buffering
+static const int INTER_BUF_ROWS   = 8;
+static const int INTER_BUF_MASK   = INTER_BUF_ROWS - 1;  // 0x7 for & operation
 
 // Maximum channel tiles for multi-tile processing (1024ch / 64 = 16)
 static const int MAX_CH_TILES     = 16;
@@ -85,8 +87,10 @@ struct BlockConfig {
 inline void compute_tile_schedule(const LayerDescriptor &layer, TileSchedule &sched) {
     sched.total_ic = layer.input_channels.to_int();
     sched.total_oc = layer.output_channels.to_int();
-    sched.ic_tiles = (sched.total_ic + CH_PARALLEL - 1) / CH_PARALLEL;
-    sched.oc_tiles = (sched.total_oc + CH_PARALLEL - 1) / CH_PARALLEL;
+    // Use shift instead of division (CH_PARALLEL = 64 = 2^6)
+    // ceil(x / 64) = (x + 63) >> 6
+    sched.ic_tiles = (sched.total_ic + CH_PARALLEL - 1) >> 6;
+    sched.oc_tiles = (sched.total_oc + CH_PARALLEL - 1) >> 6;
 }
 
 #endif // BLOCK_CONFIG_H

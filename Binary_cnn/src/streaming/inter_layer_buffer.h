@@ -31,12 +31,21 @@ public:
         img_width = width;
         img_height = height;
         num_channels = channels;
-        ch_tiles = (channels + CH_PARALLEL - 1) / CH_PARALLEL;
+        // Use shift instead of division (CH_PARALLEL = 64 = 2^6)
+        ch_tiles = (channels + CH_PARALLEL - 1) >> 6;
         kern_size = kernel_size;
         pad = padding;
         str = stride;
-        out_width = (width + 2 * padding - kernel_size) / stride + 1;
-        out_height = (height + 2 * padding - kernel_size) / stride + 1;
+        // Avoid division: stride is always 1 or 2 in YOLO
+        int spatial_w = width + 2 * padding - kernel_size;
+        int spatial_h = height + 2 * padding - kernel_size;
+        if (stride == 2) {
+            out_width = (spatial_w >> 1) + 1;
+            out_height = (spatial_h >> 1) + 1;
+        } else {
+            out_width = spatial_w + 1;
+            out_height = spatial_h + 1;
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -44,7 +53,7 @@ public:
     // Call ch_tiles times per spatial position, then call advance_write()
     // -----------------------------------------------------------------------
     void write_pixel_tile(int ch_tile, const act_t data[CH_PARALLEL]) {
-        int buf_row = write_row % INTER_BUF_ROWS;
+        int buf_row = write_row & INTER_BUF_MASK;
 
         WRITE_TILE_CH:
         #pragma hls_unroll
@@ -107,7 +116,7 @@ public:
                         in_col < 0 || in_col >= img_width) {
                         window.data[kr][kc][ch] = 0;  // zero padding
                     } else {
-                        int buf_row = in_row % INTER_BUF_ROWS;
+                        int buf_row = in_row & INTER_BUF_MASK;
                         window.data[kr][kc][ch] = buffer[buf_row][in_col][ch_tile][ch];
                     }
                 }
@@ -120,7 +129,7 @@ public:
     // -----------------------------------------------------------------------
     void read_pixel_tile(int row, int col, int ch_tile,
                          act_t data[CH_PARALLEL]) {
-        int buf_row = row % INTER_BUF_ROWS;
+        int buf_row = row & INTER_BUF_MASK;
 
         READ_TILE_CH:
         #pragma hls_unroll

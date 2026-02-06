@@ -148,7 +148,13 @@ void FusedBlockProcessor::process_fused_conv1x1_conv3x3(
             }
 
             // --- Layer 0: Conv1x1 ---
-            bool l0_valid = (in_row % l0_stride == 0) && (in_col % l0_stride == 0);
+            // Avoid modulo: stride is always 1 or 2
+            bool l0_valid;
+            if (l0_stride == 2) {
+                l0_valid = ((in_row & 1) == 0) && ((in_col & 1) == 0);
+            } else {
+                l0_valid = true;  // stride == 1, always valid
+            }
 
             if (l0_valid) {
                 FUSED_L0_OC_TILE:
