@@ -4,7 +4,7 @@
 update:
 	git fetch origin
 	git checkout dev
-	git pull origin dev
+	git pull --rebase --autostash origin dev
 
 # Create local weight directory for stem verification files
 weight-dir:
