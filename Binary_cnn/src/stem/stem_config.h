@@ -33,6 +33,12 @@ static const int STEM_MAX_WIDTH   = 640;     // Maximum input width
 static const int STEM_LINE_ROWS   = 8;       // Line buffer rows (power of 2)
 static const int STEM_LINE_MASK   = STEM_LINE_ROWS - 1;  // For & operation
 
+// Synthesis-friendly default partial unroll factor.
+// Keeps full functional behavior while reducing memory/port exploration cost.
+#ifndef STEM_UNROLL_FACTOR
+#define STEM_UNROLL_FACTOR 4
+#endif
+
 // ----------------------------------------------------------------------------
 // Data Types (matching streaming module)
 // ----------------------------------------------------------------------------
