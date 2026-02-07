@@ -5,7 +5,7 @@
 //             CONFIDENTIAL AND PROPRIETARY INFORMATION WHICH IS THE
 //                   PROPERTY OF SIEMENS EDA OR ITS LICENSORS.
 //  
-//  Running on Linux soc_lab_LMJ@ssu_soc_lab:168012 3.10.0-1160.108.1.el7.x86_64 x86_64 aol
+//  Running on Linux soc_lab_LMJ@ssu_soc_lab:176693 3.10.0-1160.108.1.el7.x86_64 x86_64 aol
 //  
 //  Package information: SIFLIBS v28.2_1.0, HLS_PKGS v28.2_1.0, 
 //                       SIF_TOOLKITS v28.2_1.0, SIF_XILINX v28.2_1.0, 
@@ -16,9 +16,56 @@
 //  
 # Connected to license server 1717@143.248.230.188 (LIC-13)
 # Catapult product license successfully checked out, elapsed time 00:02 (LIC-14)
-dofile ../../logs/stem_scverify_launch.tcl
+dofile ./logs/stem_scverify_launch.tcl
+# > if {![file isdirectory {/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor}]} { error {missing stem project directory} }
+# > project load {/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor} 2025.2
+# Creating project directory '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/'. (PRJ-1)
+# Moving session transcript to file "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/catapult.log"
 # > flow package require /SCVerify
 # 10.4
-# > flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
-# > end dofile ../../logs/stem_scverify_launch.tcl
-# Error: flow working directory is not valid
+# > flow run /SCVerify/launch_make /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1/scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
+# Making './scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim'
+# Make utility invoked from '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1'
+#     /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/bin/make -f ./scverify/Verify_orig_cxx_osci.mk SIMTOOL=osci build < "/dev/null" (BASIC-15)
+# make[2]: Entering directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1'
+# ============================================
+# Creating simulation directory 'scverify/orig_cxx_osci'
+# mkdir -p scverify/orig_cxx_osci
+# ============================================
+# Compiling C++ file: ../../src/stem/stem_processor.cpp
+# /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/dcs_gcc/usr/bin/g++ -DCCS_DUT_SYSC  -DSC_INCLUDE_DYNAMIC_PROCESSES -DSC_USE_STD_STRING -DCCS_MISMATCHED_OUTPUTS_ONLY -DDEADLOCK_DETECTION -std=gnu++11 -Wall -Wno-unknown-pragmas -Wno-unused-label -g -I. -I../.. -I. -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/hls_pkgs/src -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/siflibs -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/hls_pkgs/mgc_comps_src -DSC_USE_STD_STRING  -c ../../src/stem/stem_processor.cpp -o scverify/orig_cxx_osci/stem_processor.cpp.cxxts.o
+# ============================================
+# Compiling C++ file: ../../src/stem/stem_processor_tb.cpp
+# /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/dcs_gcc/usr/bin/g++ -DCCS_DUT_SYSC  -DSC_INCLUDE_DYNAMIC_PROCESSES -DSC_USE_STD_STRING -DCCS_MISMATCHED_OUTPUTS_ONLY -DDEADLOCK_DETECTION -std=gnu++11 -Wall -Wno-unknown-pragmas -Wno-unused-label -g -I. -I../.. -I. -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/include -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/hls_pkgs/src -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/siflibs -I/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/hls_pkgs/mgc_comps_src -DSC_USE_STD_STRING  -c ../../src/stem/stem_processor_tb.cpp -o scverify/orig_cxx_osci/stem_processor_tb.cpp.cxxts.o
+# ============================================
+# Linking executable
+# /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/pkgs/dcs_gcc/usr/bin/g++  -static-libstdc++ -L/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/lib/Linux/gcc-10.3.0-64 -L/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/lib -L/usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/shared/lib/Linux/gcc-10.3.0-64 scverify/orig_cxx_osci/stem_processor.cpp.cxxts.o scverify/orig_cxx_osci/stem_processor_tb.cpp.cxxts.o -Wl,-Bstatic -lsystemc -Wl,-Bdynamic -lpthread -o scverify/orig_cxx_osci/scverify_top
+# make[2]: Leaving directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1'
+#     /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/bin/make -f ./scverify/Verify_orig_cxx_osci.mk SIMTOOL=osci sim (BASIC-14)
+# make[2]: Entering directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1'
+# ============================================
+# Simulating design
+# cd ../..; ./stem_processor/StemProcessor.v1/scverify/orig_cxx_osci/scverify_top 
+# ========================================
+# StemProcessor Testbench
+# ========================================
+# Test Configuration:
+#   Input: 640x640x3
+#   Output: 160x160x32
+# [TB] STEM_WEIGHT_FILE not set. Using pseudo-random weights.
+# [TB] BN file not set. Using identity BN (scale=1, bias=0).
+# 
+# Running StemProcessor...
+# StemProcessor completed.
+# Running Golden Model...
+# Golden Model completed.
+# 
+# Output Verification:
+#   Expected outputs: 25600
+#   Received outputs: 25600
+#   Value mismatches: 0
+#   Max abs error: 0
+# 
+# *** TEST PASSED ***
+# make[2]: Leaving directory `/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1'
+# > exit

@@ -5,7 +5,7 @@
 //             CONFIDENTIAL AND PROPRIETARY INFORMATION WHICH IS THE
 //                   PROPERTY OF SIEMENS EDA OR ITS LICENSORS.
 //  
-//  Running on Linux soc_lab_LMJ@ssu_soc_lab:168313 3.10.0-1160.108.1.el7.x86_64 x86_64 aol
+//  Running on Linux soc_lab_LMJ@ssu_soc_lab:176348 3.10.0-1160.108.1.el7.x86_64 x86_64 aol
 //  
 //  Package information: SIFLIBS v28.2_1.0, HLS_PKGS v28.2_1.0, 
 //                       SIF_TOOLKITS v28.2_1.0, SIF_XILINX v28.2_1.0, 
@@ -39,7 +39,7 @@ dofile ./scripts/run_stem_catapult.tcl
 # $PROJECT_HOME/src/stem/stem_processor.h(25): Pragma 'hls_design<top>' detected on class 'StemProcessor' (CIN-6)
 # $PROJECT_HOME/src/stem/stem_processor.h(25): Pragma 'hls_design<top>' detected on class 'StemProcessor' (CIN-6)
 # Source file analysis completed (CIN-68)
-# Info: Completed transformation 'analyze' on solution 'solution.v2': elapsed time 2.26 seconds, memory usage 1232048kB, peak memory usage 1232048kB (SOL-9)
+# Info: Completed transformation 'analyze' on solution 'solution.v2': elapsed time 2.31 seconds, memory usage 1232048kB, peak memory usage 1232048kB (SOL-9)
 # > go compile
 # Info: Starting transformation 'compile' on solution 'StemProcessor.v1' (SOL-8)
 # Generating synthesis internal form... (CIN-3)
@@ -215,11 +215,11 @@ dofile ./scripts/run_stem_catapult.tcl
 # Info: Merged 'line_buf_a.can_output_row:select#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176) to 'line_buf_a.can_output_row:sel#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176). (OPT-16)
 # Info: Merged 'conv1_buf.can_output_row:select#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176) to 'conv1_buf.can_output_row:sel#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176). (OPT-16)
 # Info: Merged 'mp_buf.can_output_row:select#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176) to 'mp_buf.can_output_row:sel#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176). (OPT-16)
-# Info: Running transformation 'compile' on solution 'StemProcessor.v1': elapsed time 29.96 seconds, memory usage 1242288kB, peak memory usage 1330356kB (SOL-15)
+# Info: Running transformation 'compile' on solution 'StemProcessor.v1': elapsed time 29.95 seconds, memory usage 1242288kB, peak memory usage 1297584kB (SOL-15)
 # Design 'StemProcessor' was read (SOL-1)
 # Makefile for Original Design + Testbench written to file './scverify/Verify_orig_cxx_osci.mk'
 # Info: CDesignChecker Shell script written to '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1/CDesignChecker/design_checker.sh'
-# Info: Completed transformation 'compile' on solution 'StemProcessor.v1': elapsed time 37.21 seconds, memory usage 1242288kB, peak memory usage 1330356kB (SOL-9)
+# Info: Completed transformation 'compile' on solution 'StemProcessor.v1': elapsed time 35.93 seconds, memory usage 1307824kB, peak memory usage 1307824kB (SOL-9)
 # Info: Design complexity at end of 'compile': Total ops = 1090, Real ops = 285, Vars = 190 (SOL-21)
 # > flow package require /SCVerify
 # 10.4
