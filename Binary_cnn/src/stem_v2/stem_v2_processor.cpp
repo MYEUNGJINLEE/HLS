@@ -135,7 +135,6 @@ void StemProcessor::run(
         // ----------------------------------------------------------------
         if (conv0_in_row < in_h) {
             STAGE1_READ_COL:
-            #pragma hls_pipeline_init_interval 1
             for (int col = 0; col < in_w; col++) {
                 stem_packed_rgb_t packed_rgb = rgb_input.read();
                 stem_act_t rgb[3];
@@ -302,7 +301,6 @@ void StemProcessor::run(
             if (!mp_buf.can_output_row(mp_out_row, conv0_out_row)) break;
 
             STAGE5_MP_COL:
-            #pragma hls_pipeline_init_interval 1
             for (int col = 0; col < mp_out_w; col++) {
                 stem_act_t window[2][2][STEM_CH_PARALLEL];
                 mp_buf.extract_window_2x2(mp_out_row, col, window);
