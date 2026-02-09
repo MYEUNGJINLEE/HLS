@@ -156,7 +156,7 @@ void StemProcessor::run(
     // Max output rows producible per main-loop iteration
     // 3x3 s=2: 1 output per 2 inputs ??max 1 per iter
     // 1x1: 1 output per input ??max 1 per iter
-    static const int MAX_STAGE_ROWS = 2;
+    static const int MAX_STAGE_ROWS = STEM_MAX_STAGE_ROWS;
 
     // ================================================================
     // Main pipelined processing loop

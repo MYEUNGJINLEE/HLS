@@ -33,10 +33,16 @@ static const int STEM_MAX_WIDTH   = 640;     // Maximum input width
 static const int STEM_LINE_ROWS   = 8;       // Line buffer rows (power of 2)
 static const int STEM_LINE_MASK   = STEM_LINE_ROWS - 1;  // For & operation
 
-// Synthesis-friendly default partial unroll factor.
-// Keeps full functional behavior while reducing memory/port exploration cost.
+// Synthesis-stable default partial unroll factor.
+// Keep this low to reduce line-buffer port pressure and scheduling risk.
 #ifndef STEM_UNROLL_FACTOR
-#define STEM_UNROLL_FACTOR 4
+#define STEM_UNROLL_FACTOR 1
+#endif
+
+// Max rows processed per stage in one main-loop iteration.
+// Lower value reduces cross-stage memory dependency pressure.
+#ifndef STEM_MAX_STAGE_ROWS
+#define STEM_MAX_STAGE_ROWS 1
 #endif
 
 // ----------------------------------------------------------------------------
