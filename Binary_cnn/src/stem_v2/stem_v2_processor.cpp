@@ -161,13 +161,12 @@ void StemProcessor::run(
                 StemWindow3x3 window;
                 line_buf_a.extract_window_3x3(conv0_out_row, col, window);
 
-                stem_acc_t acc[32];
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
-                for (int oc = 0; oc < 32; oc++) acc[oc] = 0;
+                stem_out_t conv0_out[STEM_CH_PARALLEL];
 
                 CONV0_OC:
                 #pragma hls_pipeline_init_interval 1
                 for (int oc = 0; oc < 32; oc++) {
+                    stem_acc_t acc = 0;
                     CONV0_IC:
                     #pragma hls_unroll factor=STEM_UNROLL_FACTOR
                     for (int ic = 0; ic < 3; ic++) {
@@ -177,23 +176,17 @@ void StemProcessor::run(
                             #pragma hls_unroll factor=STEM_UNROLL_FACTOR
                             for (int kc = 0; kc < 3; kc++) {
                                 if (w0[oc][ic][kr][kc] == 0)
-                                    acc[oc] += window.data[kr][kc][ic];
+                                    acc += window.data[kr][kc][ic];
                                 else
-                                    acc[oc] -= window.data[kr][kc][ic];
+                                    acc -= window.data[kr][kc][ic];
                             }
                         }
                     }
-                }
-
-                stem_out_t conv0_out[STEM_CH_PARALLEL];
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
-                for (int ch = 0; ch < 32; ch++) {
-                    stem_acc_t val = acc[ch];
-                    if (config.use_bn) val = val * bn0_scale[ch] + bn0_bias[ch];
-                    if (config.use_relu && val < 0) val = 0;
-                    if (val > 7.9375) val = 7.9375;
-                    if (val < -8.0) val = -8.0;
-                    conv0_out[ch] = (stem_out_t)val;
+                    if (config.use_bn) acc = acc * bn0_scale[oc] + bn0_bias[oc];
+                    if (config.use_relu && acc < 0) acc = 0;
+                    if (acc > 7.9375) acc = 7.9375;
+                    if (acc < -8.0) acc = -8.0;
+                    conv0_out[oc] = (stem_out_t)acc;
                 }
 
                 // Write to Conv1 input buffer AND MaxPool buffer
@@ -209,30 +202,23 @@ void StemProcessor::run(
                 stem_act_t input[STEM_CH_PARALLEL];
                 line_buf_b.read_pixel(c1_row, col, input);
 
-                stem_acc_t acc[16];
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
-                for (int oc = 0; oc < 16; oc++) acc[oc] = 0;
+                stem_out_t conv1_out[STEM_CH_PARALLEL];
 
                 CONV1_OC:
                 #pragma hls_pipeline_init_interval 1
                 for (int oc = 0; oc < 16; oc++) {
+                    stem_acc_t acc = 0;
                     CONV1_IC:
                     #pragma hls_unroll factor=STEM_UNROLL_FACTOR
                     for (int ic = 0; ic < 32; ic++) {
-                        if (w1[oc][ic] == 0) acc[oc] += input[ic];
-                        else acc[oc] -= input[ic];
+                        if (w1[oc][ic] == 0) acc += input[ic];
+                        else acc -= input[ic];
                     }
-                }
-
-                stem_out_t conv1_out[STEM_CH_PARALLEL];
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
-                for (int ch = 0; ch < 16; ch++) {
-                    stem_acc_t val = acc[ch];
-                    if (config.use_bn) val = val * bn1_scale[ch] + bn1_bias[ch];
-                    if (config.use_relu && val < 0) val = 0;
-                    if (val > 7.9375) val = 7.9375;
-                    if (val < -8.0) val = -8.0;
-                    conv1_out[ch] = (stem_out_t)val;
+                    if (config.use_bn) acc = acc * bn1_scale[oc] + bn1_bias[oc];
+                    if (config.use_relu && acc < 0) acc = 0;
+                    if (acc > 7.9375) acc = 7.9375;
+                    if (acc < -8.0) acc = -8.0;
+                    conv1_out[oc] = (stem_out_t)acc;
                 }
 
                 conv1_buf.write_pixel_partial(c1_row, col, conv1_out, 16);
@@ -253,13 +239,12 @@ void StemProcessor::run(
                 StemWindow3x3 window;
                 conv1_buf.extract_window_3x3(conv2_out_row, col, window);
 
-                stem_acc_t acc[32];
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
-                for (int oc = 0; oc < 32; oc++) acc[oc] = 0;
+                stem_out_t conv2_out[STEM_CH_PARALLEL];
 
                 CONV2_OC:
                 #pragma hls_pipeline_init_interval 1
                 for (int oc = 0; oc < 32; oc++) {
+                    stem_acc_t acc = 0;
                     CONV2_IC:
                     #pragma hls_unroll factor=STEM_UNROLL_FACTOR
                     for (int ic = 0; ic < 16; ic++) {
@@ -268,23 +253,17 @@ void StemProcessor::run(
                             #pragma hls_unroll factor=STEM_UNROLL_FACTOR
                             for (int kc = 0; kc < 3; kc++) {
                                 if (w2[oc][ic][kr][kc] == 0)
-                                    acc[oc] += window.data[kr][kc][ic];
+                                    acc += window.data[kr][kc][ic];
                                 else
-                                    acc[oc] -= window.data[kr][kc][ic];
+                                    acc -= window.data[kr][kc][ic];
                             }
                         }
                     }
-                }
-
-                stem_out_t conv2_out[STEM_CH_PARALLEL];
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
-                for (int ch = 0; ch < 32; ch++) {
-                    stem_acc_t val = acc[ch];
-                    if (config.use_bn) val = val * bn2_scale[ch] + bn2_bias[ch];
-                    if (config.use_relu && val < 0) val = 0;
-                    if (val > 7.9375) val = 7.9375;
-                    if (val < -8.0) val = -8.0;
-                    conv2_out[ch] = (stem_out_t)val;
+                    if (config.use_bn) acc = acc * bn2_scale[oc] + bn2_bias[oc];
+                    if (config.use_relu && acc < 0) acc = 0;
+                    if (acc > 7.9375) acc = 7.9375;
+                    if (acc < -8.0) acc = -8.0;
+                    conv2_out[oc] = (stem_out_t)acc;
                 }
 
                 concat_buf.write_path_a(col, conv2_out, 32);
@@ -337,32 +316,25 @@ void StemProcessor::run(
                 stem_act_t pixel[STEM_CH_PARALLEL];
                 concat_buf.read_concat(col, pixel);
 
-                stem_acc_t acc[32];
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
-                for (int oc = 0; oc < 32; oc++) acc[oc] = 0;
+                stem_out_t conv3_out[STEM_CH_PARALLEL];
 
                 CONV3_OC:
                 #pragma hls_pipeline_init_interval 1
                 for (int oc = 0; oc < 32; oc++) {
+                    stem_acc_t acc = 0;
                     CONV3_IC:
                     #pragma hls_unroll factor=STEM_UNROLL_FACTOR
                     for (int ic = 0; ic < 64; ic++) {
                         if (w3[oc][ic] == 0)
-                            acc[oc] += pixel[ic];
+                            acc += pixel[ic];
                         else
-                            acc[oc] -= pixel[ic];
+                            acc -= pixel[ic];
                     }
-                }
-
-                stem_out_t conv3_out[STEM_CH_PARALLEL];
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
-                for (int ch = 0; ch < 32; ch++) {
-                    stem_acc_t val = acc[ch];
-                    if (config.use_bn) val = val * bn3_scale[ch] + bn3_bias[ch];
-                    if (config.use_relu && val < 0) val = 0;
-                    if (val > 7.9375) val = 7.9375;
-                    if (val < -8.0) val = -8.0;
-                    conv3_out[ch] = (stem_out_t)val;
+                    if (config.use_bn) acc = acc * bn3_scale[oc] + bn3_bias[oc];
+                    if (config.use_relu && acc < 0) acc = 0;
+                    if (acc > 7.9375) acc = 7.9375;
+                    if (acc < -8.0) acc = -8.0;
+                    conv3_out[oc] = (stem_out_t)acc;
                 }
 
                 stem_packed_act_t packed = 0;
