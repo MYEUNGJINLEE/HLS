@@ -7,8 +7,8 @@
 // Architecture: Row-level pipelining across all 5 layers
 //
 // Data Flow:
-//   RGB Input ??Conv0 ???¬â†’ Conv1 ??Conv2 ???¬â†’ Concat ??Conv3 ??Output
-//                       ?”â†’ MaxPool ?€?€?€?€?€?€?€?€??
+//   RGB Input ??Conv0 ???ï¿½â†’ Conv1 ??Conv2 ???ï¿½â†’ Concat ??Conv3 ??Output
+//                       ?ï¿½â†’ MaxPool ?ï¿½?ï¿½?ï¿½?ï¿½?ï¿½?ï¿½?ï¿½?ï¿½??
 //
 // Pipelining Strategy:
 //   - All weights loaded upfront (small due to binary weights)
@@ -159,6 +159,7 @@ void StemProcessor::run(
         // ----------------------------------------------------------------
         if (conv0_in_row < in_h) {
             STAGE1_READ_COL:
+            #pragma hls_pipeline_init_interval 1
             for (int col = 0; col < in_w; col++) {
                 stem_packed_rgb_t packed_rgb = rgb_input.read();
                 stem_act_t rgb[3];
@@ -181,6 +182,7 @@ void StemProcessor::run(
             if (!line_buf_a.can_output_row(conv0_out_row, conv0_in_row)) break;
 
             STAGE2_CONV0_COL:
+            #pragma hls_pipeline_init_interval 1
             for (int col = 0; col < conv0_out_w; col++) {
                 StemWindow3x3 window;
                 line_buf_a.extract_window_3x3(conv0_out_row, col, window);
@@ -232,6 +234,7 @@ void StemProcessor::run(
             // ----------------------------------------------------------------
             int c1_row = conv0_out_row - 1;
             STAGE3_CONV1_COL:
+            #pragma hls_pipeline_init_interval 1
             for (int col = 0; col < conv1_out_w; col++) {
                 stem_act_t input[32];
                 line_buf_b.read_pixel(c1_row, col, input);
@@ -275,6 +278,7 @@ void StemProcessor::run(
             if (!conv1_buf.can_output_row(conv2_out_row, conv1_out_row)) break;
 
             STAGE4_CONV2_COL:
+            #pragma hls_pipeline_init_interval 1
             for (int col = 0; col < conv2_out_w; col++) {
                 StemWindow3x3 window;
                 conv1_buf.extract_window_3x3(conv2_out_row, col, window);
@@ -326,6 +330,7 @@ void StemProcessor::run(
             if (!mp_buf.can_output_row(mp_out_row, conv0_out_row)) break;
 
             STAGE5_MP_COL:
+            #pragma hls_pipeline_init_interval 1
             for (int col = 0; col < mp_out_w; col++) {
                 stem_act_t window[2][2][STEM_CH_PARALLEL];
                 mp_buf.extract_window_2x2(mp_out_row, col, window);
@@ -359,6 +364,7 @@ void StemProcessor::run(
             if (conv3_out_row >= concat_ready_row && concat_ready_row < conv3_out_h) break;
 
             STAGE6_CONV3_COL:
+            #pragma hls_pipeline_init_interval 1
             for (int col = 0; col < conv3_out_w; col++) {
                 // Read pixel directly from concat buffer (1x1 conv)
                 stem_act_t pixel[STEM_CH_PARALLEL];
