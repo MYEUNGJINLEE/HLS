@@ -204,7 +204,7 @@ void StemProcessor::run(
                 stem_out_t conv0_out[STEM_CH_PARALLEL];
 
                 CONV0_OC:
-                #pragma hls_pipeline_init_interval 1
+                #pragma hls_pipeline_init_interval 2
                 for (int oc = 0; oc < 32; oc++) {
                     stem_acc_t acc = 0;
                     CONV0_IC:
@@ -406,7 +406,7 @@ void StemProcessor::compute_conv3x3(
     int valid_oc
 ) {
     CONV3x3_OC:
-    #pragma hls_pipeline_init_interval 1
+    #pragma hls_pipeline_init_interval 2
     for (int oc = 0; oc < STEM_CH_PARALLEL; oc++) {
         stem_acc_t acc = 0;
         if (oc < valid_oc) {
@@ -439,7 +439,7 @@ void StemProcessor::compute_conv1x1(
     int valid_oc
 ) {
     CONV1x1_OC:
-    #pragma hls_pipeline_init_interval 1
+    #pragma hls_pipeline_init_interval 2
     for (int oc = 0; oc < STEM_CH_PARALLEL; oc++) {
         stem_acc_t acc = 0;
         if (oc < valid_oc) {
