@@ -20,6 +20,9 @@ catapult_pid*
 Binary_cnn/logs/
 *.log
 
+# Core dumps
+core.*
+
 # OS files
 Thumbs.db
 .DS_Store
