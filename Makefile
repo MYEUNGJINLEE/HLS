@@ -123,13 +123,12 @@ block-gui:
 # Stem Processor Targets
 # ============================================================================
 
-# Run stem processor in GUI mode (analyze/compile and keep GUI open)
+# Run stem processor in GUI mode and save full console log
 stem: stem-clean
-	cd Binary_cnn && catapult -gui -file scripts/run_stem_catapult_gui.tcl
+	cd Binary_cnn && mkdir -p logs && catapult -gui -file scripts/run_stem_catapult_gui.tcl 2>&1 | tee logs/catapult_stem.log
 
-# Run stem processor in batch mode with full log
-stem-log: stem-clean
-	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
+# Alias (same as make stem)
+stem-log: stem
 
 # Run stem processor testbench in auto mode
 # - all 3 files exist: stem-tb-weight
