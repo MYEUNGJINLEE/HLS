@@ -17,8 +17,36 @@ solution options set /Output/GenerateCycleNetlist false
 solution file add ./src/stem/stem_processor.cpp -type C++
 solution file add ./src/stem/stem_processor_tb.cpp -type C++ -exclude true
 
-# Analyze/compile
+# Analyze
 go analyze
+
+# ============================================================================
+# Memory Banking Directives
+# ============================================================================
+# Force SRAM mapping to prevent 'memories' pass from exploring all
+# banking/port configurations (which caused 10+ hour synthesis hangs).
+#
+# Class member buffers:
+#   line_buf_a: [8][640][64] = 320KB (Conv0 input window buffer)
+#   line_buf_b: [8][640][64] = 320KB (Conv0 output / Conv1 input)
+#   concat_buf: [640][32] x 2 = 40KB (Conv2 + MaxPool concat)
+#
+# Local buffers in run():
+#   conv1_buf:  [8][640][64] = 320KB (Conv1 output / Conv2 input)
+#   mp_buf:     [8][640][64] = 320KB (Conv0 output copy for MaxPool)
+# ============================================================================
+
+# Class member buffers
+directive set /StemProcessor/line_buf_a.buffer:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
+directive set /StemProcessor/line_buf_b.buffer:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
+directive set /StemProcessor/concat_buf.path_a:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
+directive set /StemProcessor/concat_buf.path_b:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
+
+# Local buffers inside run() function
+directive set /StemProcessor/run/conv1_buf.buffer:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
+directive set /StemProcessor/run/mp_buf.buffer:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
+
+# Compile with directives applied
 go compile
 
 # Optional: generate SCVerify build/run scripts

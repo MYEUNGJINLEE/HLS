@@ -1,4 +1,4 @@
-.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean stem stem-log stem-gui stem-tb stem-tb-weight stem-tb-no-weight stem-clean clean
+.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean stem stem-log stem-gui stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean clean
 
 # Update local repository to latest origin/dev
 update:
@@ -63,8 +63,12 @@ block-clean:
 stem-clean:
 	cd Binary_cnn && rm -rf stem_processor* stem_processor.ccs
 
+# Clean stem_v2 processor projects
+stem2-clean:
+	cd Binary_cnn && rm -rf stem_v2_processor* stem_v2_processor.ccs
+
 # Clean all Catapult-generated artifacts
-clean: stream-clean block-clean stem-clean
+clean: stream-clean block-clean stem-clean stem2-clean
 	cd Binary_cnn && rm -rf bin_cnn bin_cnn.ccs Catapult Catapult.ccs logs catapult_pid* .Catapult*
 
 # Run block processor Catapult in batch mode with log (auto-cleans old project)
@@ -247,6 +251,73 @@ stem-tb-no-weight: stem-clean
 	else \
 		echo "[stem-tb] FAIL: PASS marker not found in $$SCV_LOG"; \
 		exit 1; \
+	fi
+
+# ============================================================================
+# Stem V2 Processor Targets (banking directives + reduced line buffer rows)
+# ============================================================================
+
+# Run stem_v2 processor Catapult in batch mode with log
+stem2: stem2-clean
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_v2_catapult.tcl 2>&1 | tee logs/catapult_stem_v2.log
+
+# Alias
+stem2-log: stem2
+
+# Run stem_v2 processor testbench (pseudo-random weights + identity BN)
+stem2-tb: stem2-clean
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_v2_catapult.tcl 2>&1 | tee logs/catapult_stem_v2.log
+	cd Binary_cnn && ROOT_DIR=$$(pwd); \
+	SOL_DIR=$$(ls -d stem_v2_processor/StemProcessor.v* stem_v2_processor/solution.v* 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SOL_DIR" ]; then echo "No stem_v2 solution directory found."; exit 1; fi; \
+	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_orig_cxx_osci.mk" 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/verify_orig_cxx_osci.mk" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
+	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
+	PROJ_DIR=$$(dirname "$$SOL_DIR"); \
+	PROJ_DIR_ABS="$$ROOT_DIR/$$PROJ_DIR"; \
+	SCV_MK_ABS="$$ROOT_DIR/$$SCV_MK"; \
+	SCV_LOG="$$ROOT_DIR/logs/scverify_stem_v2_sim.log"; \
+	LAUNCH_TCL="$$ROOT_DIR/logs/stem_v2_scverify_launch.tcl"; \
+	printf "if {![file isdirectory {%s}]} { error {missing stem_v2 project directory} }\nproject load {%s} 2025.2\nflow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$PROJ_DIR_ABS" "$$PROJ_DIR_ABS" "$$SCV_MK_ABS" > "$$LAUNCH_TCL"; \
+	(cd "$$ROOT_DIR" && \
+		catapult -shell -file "$$LAUNCH_TCL" > "$$SCV_LOG" 2>&1); \
+	SIM_RC=$$?; \
+	rm -f "$$LAUNCH_TCL"; \
+	cat "$$SCV_LOG"; \
+	if [ "$$SIM_RC" -ne 0 ]; then \
+		echo "[stem2-tb] FAIL: SCVerify returned $$SIM_RC"; \
+		exit "$$SIM_RC"; \
+	fi; \
+	if grep -q "\\*\\*\\* TEST PASSED \\*\\*\\*" "$$SCV_LOG"; then \
+		echo "[stem2-tb] PASS"; \
+	elif grep -q "\\*\\*\\* TEST FAILED \\*\\*\\*" "$$SCV_LOG"; then \
+		echo "[stem2-tb] FAIL: TB reported TEST FAILED"; \
+		exit 1; \
+	else \
+		echo "[stem2-tb] FAIL: PASS marker not found in $$SCV_LOG"; \
+		exit 1; \
+	fi
+
+# Run stem_v2 processor with GUI
+stem2-gui:
+	cd Binary_cnn && PRJ=$$(ls -t stem_v2_processor*.ccs 2>/dev/null | head -n 1); \
+	if [ -z "$$PRJ" ]; then \
+		echo "No stem_v2_processor*.ccs found. Running batch flow once..."; \
+		catapult -shell -file scripts/run_stem_v2_catapult.tcl; \
+		PRJ=$$(ls -t stem_v2_processor*.ccs 2>/dev/null | head -n 1); \
+	fi; \
+	if [ -n "$$PRJ" ]; then \
+		catapult "$$PRJ" & \
+	else \
+		echo "Could not find stem_v2_processor*.ccs project file."; exit 1; \
 	fi
 
 # Run stem processor with GUI
