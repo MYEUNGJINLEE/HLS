@@ -269,6 +269,55 @@ void StemProcessor::run(
         }
 
         // ----------------------------------------------------------------
+        // Stage 6: Produce Conv3 output rows (consume rows from prior iterations)
+        // ----------------------------------------------------------------
+        int concat_ready_row = (conv2_out_row < mp_out_row) ? conv2_out_row : mp_out_row;
+
+        STAGE6_ROWS:
+        for (int s6 = 0; s6 < MAX_STAGE_ROWS; s6++) {
+            if (conv3_out_row >= conv3_out_h) break;
+            // Check if we have enough concat rows (1x1 only needs current row)
+            if (conv3_out_row >= concat_ready_row && concat_ready_row < conv3_out_h) break;
+
+            STAGE6_CONV3_COL:
+            for (int col = 0; col < conv3_out_w; col++) {
+                // Read pixel directly from concat buffer (1x1 conv)
+                stem_act_t pixel[STEM_CH_PARALLEL];
+                concat_buf.read_concat(col, pixel);
+
+                stem_out_t conv3_out[STEM_CH_PARALLEL];
+
+                CONV3_OC:
+                #pragma hls_pipeline_init_interval 2
+                for (int oc = 0; oc < 32; oc++) {
+                    stem_acc_t acc = 0;
+                    CONV3_IC:
+                    #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                    for (int ic = 0; ic < 64; ic++) {
+                        if (w3[oc][ic] == 0)
+                            acc += pixel[ic];
+                        else
+                            acc -= pixel[ic];
+                    }
+                    if (config.use_bn) acc = acc * bn3_scale[oc] + bn3_bias[oc];
+                    if (config.use_relu && acc < 0) acc = 0;
+                    if (acc > 7.9375) acc = 7.9375;
+                    if (acc < -8.0) acc = -8.0;
+                    conv3_out[oc] = (stem_out_t)acc;
+                }
+
+                // Pack and output
+                stem_packed_act_t packed = 0;
+                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                for (int ch = 0; ch < 32; ch++) {
+                    packed.set_slc(ch * 8, conv3_out[ch].slc<8>(0));
+                }
+                output_stream.write(packed);
+            }
+            conv3_out_row++;
+        }
+
+        // ----------------------------------------------------------------
         // Stage 4: Produce Conv2 output rows (when buffer ready)
         // ----------------------------------------------------------------
         STAGE4_ROWS:
@@ -341,55 +390,6 @@ void StemProcessor::run(
                 concat_buf.write_path_b(col, mp_out, 32);
             }
             mp_out_row++;
-        }
-
-        // ----------------------------------------------------------------
-        // Stage 6: Produce Conv3 output rows (when concat ready)
-        // ----------------------------------------------------------------
-        int concat_ready_row = (conv2_out_row < mp_out_row) ? conv2_out_row : mp_out_row;
-
-        STAGE6_ROWS:
-        for (int s6 = 0; s6 < MAX_STAGE_ROWS; s6++) {
-            if (conv3_out_row >= conv3_out_h) break;
-            // Check if we have enough concat rows (1x1 only needs current row)
-            if (conv3_out_row >= concat_ready_row && concat_ready_row < conv3_out_h) break;
-
-            STAGE6_CONV3_COL:
-            for (int col = 0; col < conv3_out_w; col++) {
-                // Read pixel directly from concat buffer (1x1 conv)
-                stem_act_t pixel[STEM_CH_PARALLEL];
-                concat_buf.read_concat(col, pixel);
-
-                stem_out_t conv3_out[STEM_CH_PARALLEL];
-
-                CONV3_OC:
-                #pragma hls_pipeline_init_interval 2
-                for (int oc = 0; oc < 32; oc++) {
-                    stem_acc_t acc = 0;
-                    CONV3_IC:
-                    #pragma hls_unroll factor=STEM_UNROLL_FACTOR
-                    for (int ic = 0; ic < 64; ic++) {
-                        if (w3[oc][ic] == 0)
-                            acc += pixel[ic];
-                        else
-                            acc -= pixel[ic];
-                    }
-                    if (config.use_bn) acc = acc * bn3_scale[oc] + bn3_bias[oc];
-                    if (config.use_relu && acc < 0) acc = 0;
-                    if (acc > 7.9375) acc = 7.9375;
-                    if (acc < -8.0) acc = -8.0;
-                    conv3_out[oc] = (stem_out_t)acc;
-                }
-
-                // Pack and output
-                stem_packed_act_t packed = 0;
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
-                for (int ch = 0; ch < 32; ch++) {
-                    packed.set_slc(ch * 8, conv3_out[ch].slc<8>(0));
-                }
-                output_stream.write(packed);
-            }
-            conv3_out_row++;
         }
     }
 }
