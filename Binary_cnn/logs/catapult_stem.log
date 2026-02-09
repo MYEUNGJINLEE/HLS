@@ -5,7 +5,7 @@
 //             CONFIDENTIAL AND PROPRIETARY INFORMATION WHICH IS THE
 //                   PROPERTY OF SIEMENS EDA OR ITS LICENSORS.
 //  
-//  Running on Linux soc_lab_LMJ@ssu_soc_lab:176348 3.10.0-1160.108.1.el7.x86_64 x86_64 aol
+//  Running on Linux soc_lab_LMJ@ssu_soc_lab:319673 3.10.0-1160.108.1.el7.x86_64 x86_64 aol
 //  
 //  Package information: SIFLIBS v28.2_1.0, HLS_PKGS v28.2_1.0, 
 //                       SIF_TOOLKITS v28.2_1.0, SIF_XILINX v28.2_1.0, 
@@ -37,9 +37,97 @@ dofile ./scripts/run_stem_catapult.tcl
 # Front End called with arguments: -- /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/stem/stem_processor.cpp (CIN-69)
 # Edison Design Group C++/C Front End - Version 6.6 (CIN-1)
 # $PROJECT_HOME/src/stem/stem_processor.h(25): Pragma 'hls_design<top>' detected on class 'StemProcessor' (CIN-6)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(53): Cannot bind pragma 'hls_register' to any valid construct. Please check if a valid construct follows the pragma. (CIN-319)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(68): Cannot bind pragma 'hls_register' to any valid construct. Please check if a valid construct follows the pragma. (CIN-319)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(78): Cannot bind pragma 'hls_register' to any valid construct. Please check if a valid construct follows the pragma. (CIN-319)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(93): Cannot bind pragma 'hls_register' to any valid construct. Please check if a valid construct follows the pragma. (CIN-319)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(103): Cannot bind pragma 'hls_register' to any valid construct. Please check if a valid construct follows the pragma. (CIN-319)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(105): Cannot bind pragma 'hls_register' to any valid construct. Please check if a valid construct follows the pragma. (CIN-319)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(107): Cannot bind pragma 'hls_register' to any valid construct. Please check if a valid construct follows the pragma. (CIN-319)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(109): Cannot bind pragma 'hls_register' to any valid construct. Please check if a valid construct follows the pragma. (CIN-319)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(111): Cannot bind pragma 'hls_register' to any valid construct. Please check if a valid construct follows the pragma. (CIN-319)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(113): Cannot bind pragma 'hls_register' to any valid construct. Please check if a valid construct follows the pragma. (CIN-319)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(115): Cannot bind pragma 'hls_register' to any valid construct. Please check if a valid construct follows the pragma. (CIN-319)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(117): Cannot bind pragma 'hls_register' to any valid construct. Please check if a valid construct follows the pragma. (CIN-319)
 # $PROJECT_HOME/src/stem/stem_processor.h(25): Pragma 'hls_design<top>' detected on class 'StemProcessor' (CIN-6)
 # Source file analysis completed (CIN-68)
 # Info: Completed transformation 'analyze' on solution 'solution.v2': elapsed time 2.31 seconds, memory usage 1232048kB, peak memory usage 1232048kB (SOL-9)
+# > puts "======== DESIGN HIERARCHY DEBUG ========"
+# ======== DESIGN HIERARCHY DEBUG ========
+# > catch {puts "solution design get: [solution design get]"}
+# solution design get: StemProcessor StemProcessor StemProcessor::StemProcessor
+# 0
+# > catch {puts "directive get -rec: [directive get -rec]"}
+# 1
+# > puts "========================================"
+# ========================================
+# > set member_buffers {
+# >     line_buf_a.buffer
+# >     line_buf_b.buffer
+# >     concat_buf.path_a
+# >     concat_buf.path_b
+# > }
+# 
+#     line_buf_a.buffer
+#     line_buf_b.buffer
+#     concat_buf.path_a
+#     concat_buf.path_b
+# 
+# > set local_buffers {
+# >     run/conv1_buf.buffer
+# >     run/mp_buf.buffer
+# > }
+# 
+#     run/conv1_buf.buffer
+#     run/mp_buf.buffer
+# 
+# > set path_prefixes {
+# >     /StemProcessor
+# >     /StemProcessor/run
+# >     /stem_processor/StemProcessor
+# >     /stem_processor/StemProcessor/run
+# > }
+# 
+#     /StemProcessor
+#     /StemProcessor/run
+#     /stem_processor/StemProcessor
+#     /stem_processor/StemProcessor/run
+# 
+# > set applied 0
+# 0
+# > foreach prefix $path_prefixes {
+# >     set test_path "${prefix}/line_buf_a.buffer:rsc"
+# >     puts "Testing prefix: $prefix ..."
+# >     if {![catch {directive set $test_path -MAP_TO_MODULE {BLOCK_1R1W_RBW}}]} {
+# >         puts "  SUCCESS - using prefix: $prefix"
+# >         set applied 1
+# >         foreach buf {line_buf_b.buffer concat_buf.path_a concat_buf.path_b} {
+# >             catch {directive set ${prefix}/${buf}:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err
+# >             puts "  ${prefix}/${buf}:rsc -> $err"
+# >         }
+# >         foreach buf $local_buffers {
+# >             catch {directive set ${prefix}/${buf}:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err
+# >             puts "  ${prefix}/${buf}:rsc -> $err"
+# >         }
+# >         break
+# >     } else {
+# >         puts "  FAILED"
+# >     }
+# > }
+# Testing prefix: /StemProcessor ...
+#   FAILED
+# Testing prefix: /StemProcessor/run ...
+#   FAILED
+# Testing prefix: /stem_processor/StemProcessor ...
+#   FAILED
+# Testing prefix: /stem_processor/StemProcessor/run ...
+#   FAILED
+# > if {!$applied} {
+# >     puts "WARNING: No valid path prefix found. Proceeding without memory directives."
+# >     puts "Check 'DESIGN HIERARCHY DEBUG' section above for available paths."
+# > }
+# Warning: No valid path prefix found. Proceeding without memory directives.
+# Check 'DESIGN HIERARCHY DEBUG' section above for available paths.
 # > go compile
 # Info: Starting transformation 'compile' on solution 'StemProcessor.v1' (SOL-8)
 # Generating synthesis internal form... (CIN-3)
@@ -47,12 +135,12 @@ dofile ./scripts/run_stem_catapult.tcl
 # Warning: $PROJECT_HOME/src/stem/stem_config.h(34): Instantiating global variable 'STEM_LINE_MASK' which may be accessed outside this scope (CIN-18)
 # Warning: $PROJECT_HOME/src/stem/stem_config.h(31): Instantiating global variable 'STEM_CH_PARALLEL' which may be accessed outside this scope (CIN-18)
 # Warning: $PROJECT_HOME/src/stem/stem_config.h(32): Instantiating global variable 'STEM_MAX_WIDTH' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(68): Instantiating global variable 'CONV0_K' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(68): Instantiating global variable 'CONV0_S' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(78): Instantiating global variable 'CONV2_K' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(78): Instantiating global variable 'CONV2_S' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(68): Instantiating global variable 'CONV0_P' which may be accessed outside this scope (CIN-18)
-# Warning: $PROJECT_HOME/src/stem/stem_config.h(78): Instantiating global variable 'CONV2_P' which may be accessed outside this scope (CIN-18)
+# Warning: $PROJECT_HOME/src/stem/stem_config.h(74): Instantiating global variable 'CONV0_K' which may be accessed outside this scope (CIN-18)
+# Warning: $PROJECT_HOME/src/stem/stem_config.h(74): Instantiating global variable 'CONV0_S' which may be accessed outside this scope (CIN-18)
+# Warning: $PROJECT_HOME/src/stem/stem_config.h(84): Instantiating global variable 'CONV2_K' which may be accessed outside this scope (CIN-18)
+# Warning: $PROJECT_HOME/src/stem/stem_config.h(84): Instantiating global variable 'CONV2_S' which may be accessed outside this scope (CIN-18)
+# Warning: $PROJECT_HOME/src/stem/stem_config.h(74): Instantiating global variable 'CONV0_P' which may be accessed outside this scope (CIN-18)
+# Warning: $PROJECT_HOME/src/stem/stem_config.h(84): Instantiating global variable 'CONV2_P' which may be accessed outside this scope (CIN-18)
 # $PROJECT_HOME/src/stem/stem_processor.h(27): Inlining member function 'StemProcessor::StemProcessor' on object '' (CIN-64)
 # $PROJECT_HOME/src/stem/stem_buffer.h(19): Inlining member function 'StemLineBuffer::StemLineBuffer' on object 'line_buf_a' (CIN-64)
 # $PROJECT_HOME/src/stem/stem_buffer.h(192): Inlining member function 'StemLineBuffer::reset' on object 'line_buf_a' (CIN-64)
@@ -73,154 +161,138 @@ dofile ./scripts/run_stem_catapult.tcl
 # $PROJECT_HOME/src/stem/stem_buffer.h(19): Inlining member function 'StemLineBuffer::StemLineBuffer' on object 'mp_buf' (CIN-64)
 # $PROJECT_HOME/src/stem/stem_buffer.h(192): Inlining member function 'StemLineBuffer::reset' on object 'mp_buf' (CIN-64)
 # $PROJECT_HOME/src/stem/stem_buffer.h(24): Inlining member function 'StemLineBuffer::configure' on object 'mp_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(166): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE1_READ_COL:for' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(182): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/STAGE1_READ_COL:for': not a valid enumeration value (CIN-93)
 # $PROJECT_HOME/src/stem/stem_buffer.h(61): Inlining member function 'StemLineBuffer::write_rgb_pixel' on object 'line_buf_a' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(65): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/WRITE_RGB' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(65): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/WRITE_RGB': not a valid enumeration value (CIN-93)
 # $PROJECT_HOME/src/stem/stem_buffer.h(171): Inlining member function 'StemLineBuffer::can_output_row' on object 'line_buf_a' (CIN-64)
 # $PROJECT_HOME/src/stem/stem_buffer.h(109): Inlining member function 'StemLineBuffer::extract_window_3x3' on object 'line_buf_a' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(114): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_KR' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(117): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_KC' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(123): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_CH' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(189): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE2_CONV0_COL:for' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(196): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV0_IC' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(199): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV0_K' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(201): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV0_K:for' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(114): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/EXTRACT_KR': not a valid enumeration value (CIN-93)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(117): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/EXTRACT_KC': not a valid enumeration value (CIN-93)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(123): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/EXTRACT_CH': not a valid enumeration value (CIN-93)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(207): Pragma 'hls_pipeline_init_interval<1>' detected on '/StemProcessor/run/CONV0_OC' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(211): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/CONV0_IC': not a valid enumeration value (CIN-93)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(214): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/CONV0_K': not a valid enumeration value (CIN-93)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(216): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/CONV0_K:for': not a valid enumeration value (CIN-93)
 # $MGC_HOME/shared/include/ac_int.h(3463): Inlining routine 'operator==<1, false>' (CIN-14)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(214): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE2_CONV0_COL:for#1' (CIN-203)
 # $MGC_HOME/shared/include/ac_fixed.h(1703): Inlining routine 'operator<<24, 16, true, AC_TRN, AC_WRAP>' (CIN-14)
 # $PROJECT_HOME/src/stem/stem_buffer.h(78): Inlining member function 'StemLineBuffer::write_pixel_partial' on object 'line_buf_b' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(82): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/WRITE_PARTIAL' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(82): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/WRITE_PARTIAL': not a valid enumeration value (CIN-93)
 # $PROJECT_HOME/src/stem/stem_buffer.h(78): Inlining member function 'StemLineBuffer::write_pixel_partial' on object 'mp_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(82): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/WRITE_PARTIAL#1' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(82): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/WRITE_PARTIAL#1': not a valid enumeration value (CIN-93)
 # $PROJECT_HOME/src/stem/stem_buffer.h(95): Inlining member function 'StemLineBuffer::read_pixel' on object 'line_buf_b' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(99): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/READ_CH' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(240): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE3_CONV1_COL:for' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(246): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV1_IC' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(99): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/READ_CH': not a valid enumeration value (CIN-93)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(250): Pragma 'hls_pipeline_init_interval<1>' detected on '/StemProcessor/run/CONV1_OC' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(254): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/CONV1_IC': not a valid enumeration value (CIN-93)
 # $MGC_HOME/shared/include/ac_int.h(3463): Inlining routine 'operator==<1, false>' (CIN-14)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(254): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE3_CONV1_COL:for#1' (CIN-203)
 # $MGC_HOME/shared/include/ac_fixed.h(1703): Inlining routine 'operator<<24, 16, true, AC_TRN, AC_WRAP>' (CIN-14)
 # $PROJECT_HOME/src/stem/stem_buffer.h(78): Inlining member function 'StemLineBuffer::write_pixel_partial' on object 'conv1_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(82): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/WRITE_PARTIAL#2' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(82): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/WRITE_PARTIAL#2': not a valid enumeration value (CIN-93)
 # $PROJECT_HOME/src/stem/stem_buffer.h(171): Inlining member function 'StemLineBuffer::can_output_row' on object 'conv1_buf' (CIN-64)
 # $PROJECT_HOME/src/stem/stem_buffer.h(109): Inlining member function 'StemLineBuffer::extract_window_3x3' on object 'conv1_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(114): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_KR#1' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(117): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_KC#1' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(123): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_CH#1' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(283): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE4_CONV2_COL:for' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(289): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV2_IC' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(291): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV2_IC:for' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(293): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV2_IC:for:for' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(114): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/EXTRACT_KR#1': not a valid enumeration value (CIN-93)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(117): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/EXTRACT_KC#1': not a valid enumeration value (CIN-93)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(123): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/EXTRACT_CH#1': not a valid enumeration value (CIN-93)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(287): Pragma 'hls_pipeline_init_interval<1>' detected on '/StemProcessor/run/CONV2_OC' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(291): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/CONV2_IC': not a valid enumeration value (CIN-93)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(293): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/CONV2_IC:for': not a valid enumeration value (CIN-93)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(295): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/CONV2_IC:for:for': not a valid enumeration value (CIN-93)
 # $MGC_HOME/shared/include/ac_int.h(3463): Inlining routine 'operator==<1, false>' (CIN-14)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(305): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE4_CONV2_COL:for#1' (CIN-203)
 # $MGC_HOME/shared/include/ac_fixed.h(1703): Inlining routine 'operator<<24, 16, true, AC_TRN, AC_WRAP>' (CIN-14)
 # $PROJECT_HOME/src/stem/stem_buffer.h(227): Inlining member function 'StemConcatBuffer::write_path_a' on object 'concat_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(229): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/WRITE_A' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(229): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/WRITE_A': not a valid enumeration value (CIN-93)
 # $PROJECT_HOME/src/stem/stem_buffer.h(171): Inlining member function 'StemLineBuffer::can_output_row' on object 'mp_buf' (CIN-64)
 # $PROJECT_HOME/src/stem/stem_buffer.h(140): Inlining member function 'StemLineBuffer::extract_window_2x2' on object 'mp_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(146): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_MP_KR' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(149): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_MP_KC' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_buffer.h(156): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/EXTRACT_MP_CH' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(334): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE5_MP_COL:for' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(146): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/EXTRACT_MP_KR': not a valid enumeration value (CIN-93)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(149): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/EXTRACT_MP_KC': not a valid enumeration value (CIN-93)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(156): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/EXTRACT_MP_CH': not a valid enumeration value (CIN-93)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(330): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/STAGE5_MP_COL:for': not a valid enumeration value (CIN-93)
 # $PROJECT_HOME/src/stem/stem_buffer.h(238): Inlining member function 'StemConcatBuffer::write_path_b' on object 'concat_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(240): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/WRITE_B' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(240): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/WRITE_B': not a valid enumeration value (CIN-93)
 # $PROJECT_HOME/src/stem/stem_buffer.h(249): Inlining member function 'StemConcatBuffer::read_concat' on object 'concat_buf' (CIN-64)
-# $PROJECT_HOME/src/stem/stem_buffer.h(251): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/READ_CONCAT' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(368): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE6_CONV3_COL:for' (CIN-203)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(375): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/CONV3_IC' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_buffer.h(251): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/READ_CONCAT': not a valid enumeration value (CIN-93)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(366): Pragma 'hls_pipeline_init_interval<1>' detected on '/StemProcessor/run/CONV3_OC' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(370): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/CONV3_IC': not a valid enumeration value (CIN-93)
 # $MGC_HOME/shared/include/ac_int.h(3463): Inlining routine 'operator==<1, false>' (CIN-14)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(385): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE6_CONV3_COL:for#1' (CIN-203)
 # $MGC_HOME/shared/include/ac_fixed.h(1703): Inlining routine 'operator<<24, 16, true, AC_TRN, AC_WRAP>' (CIN-14)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(397): Pragma 'hls_unroll<yes>' detected on '/StemProcessor/run/STAGE6_CONV3_COL:for#2' (CIN-203)
+# Warning: $PROJECT_HOME/src/stem/stem_processor.cpp(386): Invalid pragma 'hls_unroll<factor=STEM_UNROLL_FACTOR>' detected on '/StemProcessor/run/STAGE6_CONV3_COL:for': not a valid enumeration value (CIN-93)
 # $PROJECT_HOME/src/stem/stem_processor.cpp(21): Optimizing block '/StemProcessor' ... (CIN-4)
-# $PROJECT_HOME/src/stem/stem_config.h(112): INOUT port 'config.input_height' is only used as an input. (OPT-10)
-# $PROJECT_HOME/src/stem/stem_config.h(113): INOUT port 'config.input_width' is only used as an input. (OPT-10)
-# $PROJECT_HOME/src/stem/stem_config.h(114): INOUT port 'config.use_bn' is only used as an input. (OPT-10)
-# $PROJECT_HOME/src/stem/stem_config.h(115): INOUT port 'config.use_relu' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/stem/stem_config.h(118): INOUT port 'config.input_height' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/stem/stem_config.h(119): INOUT port 'config.input_width' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/stem/stem_config.h(120): INOUT port 'config.use_bn' is only used as an input. (OPT-10)
+# $PROJECT_HOME/src/stem/stem_config.h(121): INOUT port 'config.use_relu' is only used as an input. (OPT-10)
 # $PROJECT_HOME/src/stem/stem_processor.cpp(23): INOUT port 'rgb_input' is only used as an input. (OPT-10)
 # $PROJECT_HOME/src/stem/stem_processor.cpp(24): INOUT port 'weight_stream' is only used as an input. (OPT-10)
 # $PROJECT_HOME/src/stem/stem_processor.cpp(25): INOUT port 'bn_scale' is only used as an input. (OPT-10)
 # $PROJECT_HOME/src/stem/stem_processor.cpp(26): INOUT port 'bn_bias' is only used as an input. (OPT-10)
 # $PROJECT_HOME/src/stem/stem_processor.cpp(27): INOUT port 'output_stream' is only used as an output. (OPT-11)
 # Info: $PROJECT_HOME/src/stem/stem_processor.h(27): Partition '/StemProcessor/constructor' is found empty and is optimized away. (OPT-12)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(59): Loop '/StemProcessor/run/for:for:for:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(58): Loop '/StemProcessor/run/for:for:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(55): Loop '/StemProcessor/run/for:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(54): Loop '/StemProcessor/run/for' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(70): Loop '/StemProcessor/run/for#1:for' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(68): Loop '/StemProcessor/run/for#1' iterated at most 16 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(82): Loop '/StemProcessor/run/for#2:for:for:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(81): Loop '/StemProcessor/run/for#2:for:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(78): Loop '/StemProcessor/run/for#2:for' iterated at most 16 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(77): Loop '/StemProcessor/run/for#2' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(93): Loop '/StemProcessor/run/for#3:for' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(91): Loop '/StemProcessor/run/for#3' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(105): Loop '/StemProcessor/run/if#1:for' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(106): Loop '/StemProcessor/run/if#1:for#1' iterated at most 16 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(107): Loop '/StemProcessor/run/if#1:for#2' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(108): Loop '/StemProcessor/run/if#1:for#3' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(167): Loop '/StemProcessor/run/STAGE1_READ_COL:for' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(60): Loop '/StemProcessor/run/for:for:for:for' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(59): Loop '/StemProcessor/run/for:for:for' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(56): Loop '/StemProcessor/run/for:for' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(55): Loop '/StemProcessor/run/for' iterated at most 32 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(72): Loop '/StemProcessor/run/for#1:for' iterated at most 32 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(70): Loop '/StemProcessor/run/for#1' iterated at most 16 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(85): Loop '/StemProcessor/run/for#2:for:for:for' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(84): Loop '/StemProcessor/run/for#2:for:for' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(81): Loop '/StemProcessor/run/for#2:for' iterated at most 16 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(80): Loop '/StemProcessor/run/for#2' iterated at most 32 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(97): Loop '/StemProcessor/run/for#3:for' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(95): Loop '/StemProcessor/run/for#3' iterated at most 32 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(121): Loop '/StemProcessor/run/if#1:for' iterated at most 32 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(122): Loop '/StemProcessor/run/if#1:for#1' iterated at most 16 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(123): Loop '/StemProcessor/run/if#1:for#2' iterated at most 32 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(124): Loop '/StemProcessor/run/if#1:for#3' iterated at most 32 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(183): Loop '/StemProcessor/run/STAGE1_READ_COL:for' iterated at most 3 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(66): Loop '/StemProcessor/run/WRITE_RGB' iterated at most 64 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(124): Loop '/StemProcessor/run/EXTRACT_CH' iterated at most 64 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(118): Loop '/StemProcessor/run/EXTRACT_KC' iterated at most 3 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(115): Loop '/StemProcessor/run/EXTRACT_KR' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(190): Loop '/StemProcessor/run/STAGE2_CONV0_COL:for' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(202): Loop '/StemProcessor/run/CONV0_K:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(200): Loop '/StemProcessor/run/CONV0_K' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(197): Loop '/StemProcessor/run/CONV0_IC' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(194): Loop '/StemProcessor/run/CONV0_OC' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(215): Loop '/StemProcessor/run/STAGE2_CONV0_COL:for#1' iterated at most 32 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(217): Loop '/StemProcessor/run/CONV0_K:for' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(215): Loop '/StemProcessor/run/CONV0_K' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(212): Loop '/StemProcessor/run/CONV0_IC' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(208): Loop '/StemProcessor/run/CONV0_OC' iterated at most 32 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(83): Loop '/StemProcessor/run/WRITE_PARTIAL' iterated at most 64 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(83): Loop '/StemProcessor/run/WRITE_PARTIAL#1' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(184): Loop '/StemProcessor/run/STAGE2_CONV0_COL' iterated at most 1025 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(200): Loop '/StemProcessor/run/STAGE2_CONV0_COL' iterated at most 1025 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(100): Loop '/StemProcessor/run/READ_CH' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(241): Loop '/StemProcessor/run/STAGE3_CONV1_COL:for' iterated at most 16 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(247): Loop '/StemProcessor/run/CONV1_IC' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(244): Loop '/StemProcessor/run/CONV1_OC' iterated at most 16 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(255): Loop '/StemProcessor/run/STAGE3_CONV1_COL:for#1' iterated at most 16 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(255): Loop '/StemProcessor/run/CONV1_IC' iterated at most 32 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(251): Loop '/StemProcessor/run/CONV1_OC' iterated at most 16 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(83): Loop '/StemProcessor/run/WRITE_PARTIAL#2' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(235): Loop '/StemProcessor/run/STAGE3_CONV1_COL' iterated at most 1025 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(179): Loop '/StemProcessor/run/STAGE2_ROWS' iterated at most 2 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(243): Loop '/StemProcessor/run/STAGE3_CONV1_COL' iterated at most 1025 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(195): Loop '/StemProcessor/run/STAGE2_ROWS' iterated at most 2 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(124): Loop '/StemProcessor/run/EXTRACT_CH#1' iterated at most 64 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(118): Loop '/StemProcessor/run/EXTRACT_KC#1' iterated at most 3 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(115): Loop '/StemProcessor/run/EXTRACT_KR#1' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(284): Loop '/StemProcessor/run/STAGE4_CONV2_COL:for' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(294): Loop '/StemProcessor/run/CONV2_IC:for:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(292): Loop '/StemProcessor/run/CONV2_IC:for' iterated at most 3 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(290): Loop '/StemProcessor/run/CONV2_IC' iterated at most 16 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(287): Loop '/StemProcessor/run/CONV2_OC' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(306): Loop '/StemProcessor/run/STAGE4_CONV2_COL:for#1' iterated at most 32 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(296): Loop '/StemProcessor/run/CONV2_IC:for:for' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(294): Loop '/StemProcessor/run/CONV2_IC:for' iterated at most 3 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(292): Loop '/StemProcessor/run/CONV2_IC' iterated at most 16 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(288): Loop '/StemProcessor/run/CONV2_OC' iterated at most 32 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(230): Loop '/StemProcessor/run/WRITE_A' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(278): Loop '/StemProcessor/run/STAGE4_CONV2_COL' iterated at most 513 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(273): Loop '/StemProcessor/run/STAGE4_ROWS' iterated at most 2 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(280): Loop '/StemProcessor/run/STAGE4_CONV2_COL' iterated at most 513 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(275): Loop '/StemProcessor/run/STAGE4_ROWS' iterated at most 2 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(157): Loop '/StemProcessor/run/EXTRACT_MP_CH' iterated at most 64 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(150): Loop '/StemProcessor/run/EXTRACT_MP_KC' iterated at most 2 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(147): Loop '/StemProcessor/run/EXTRACT_MP_KR' iterated at most 2 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(335): Loop '/StemProcessor/run/STAGE5_MP_COL:for' iterated at most 32 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(331): Loop '/StemProcessor/run/STAGE5_MP_COL:for' iterated at most 32 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(241): Loop '/StemProcessor/run/WRITE_B' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(329): Loop '/StemProcessor/run/STAGE5_MP_COL' iterated at most 513 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(324): Loop '/StemProcessor/run/STAGE5_ROWS' iterated at most 2 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(325): Loop '/StemProcessor/run/STAGE5_MP_COL' iterated at most 513 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(320): Loop '/StemProcessor/run/STAGE5_ROWS' iterated at most 2 times. (LOOP-2)
 # $PROJECT_HOME/src/stem/stem_buffer.h(252): Loop '/StemProcessor/run/READ_CONCAT' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(369): Loop '/StemProcessor/run/STAGE6_CONV3_COL:for' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(376): Loop '/StemProcessor/run/CONV3_IC' iterated at most 64 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(373): Loop '/StemProcessor/run/CONV3_OC' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(386): Loop '/StemProcessor/run/STAGE6_CONV3_COL:for#1' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(398): Loop '/StemProcessor/run/STAGE6_CONV3_COL:for#2' iterated at most 32 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(362): Loop '/StemProcessor/run/STAGE6_CONV3_COL' iterated at most 513 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(356): Loop '/StemProcessor/run/STAGE6_ROWS' iterated at most 2 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(153): Loop '/StemProcessor/run/PIPELINE_MAIN' iterated at most 2049 times. (LOOP-2)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(190): Detected constant initialization of array 'STAGE2_CONV0_COL:acc#1', optimizing loop 'STAGE2_CONV0_COL:for' (LOOP-12)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(241): Detected constant initialization of array 'STAGE3_CONV1_COL:acc#1', optimizing loop 'STAGE3_CONV1_COL:for' (LOOP-12)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(284): Detected constant initialization of array 'STAGE4_CONV2_COL:acc#1', optimizing loop 'STAGE4_CONV2_COL:for' (LOOP-12)
-# $PROJECT_HOME/src/stem/stem_processor.cpp(369): Detected constant initialization of array 'STAGE6_CONV3_COL:acc#1', optimizing loop 'STAGE6_CONV3_COL:for' (LOOP-12)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(371): Loop '/StemProcessor/run/CONV3_IC' iterated at most 64 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(367): Loop '/StemProcessor/run/CONV3_OC' iterated at most 32 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(387): Loop '/StemProcessor/run/STAGE6_CONV3_COL:for' iterated at most 32 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(358): Loop '/StemProcessor/run/STAGE6_CONV3_COL' iterated at most 513 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(352): Loop '/StemProcessor/run/STAGE6_ROWS' iterated at most 2 times. (LOOP-2)
+# $PROJECT_HOME/src/stem/stem_processor.cpp(169): Loop '/StemProcessor/run/PIPELINE_MAIN' iterated at most 2049 times. (LOOP-2)
 # Info: Merged 'line_buf_a.can_output_row:select#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176) to 'line_buf_a.can_output_row:sel#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176). (OPT-16)
 # Info: Merged 'conv1_buf.can_output_row:select#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176) to 'conv1_buf.can_output_row:sel#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176). (OPT-16)
 # Info: Merged 'mp_buf.can_output_row:select#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176) to 'mp_buf.can_output_row:sel#1' at $PROJECT_HOME/src/stem/stem_buffer.h(176). (OPT-16)
-# Info: Running transformation 'compile' on solution 'StemProcessor.v1': elapsed time 29.95 seconds, memory usage 1242288kB, peak memory usage 1297584kB (SOL-15)
+# Info: Running transformation 'compile' on solution 'StemProcessor.v1': elapsed time 29.95 seconds, memory usage 1242288kB, peak memory usage 1461436kB (SOL-15)
 # Design 'StemProcessor' was read (SOL-1)
 # Makefile for Original Design + Testbench written to file './scverify/Verify_orig_cxx_osci.mk'
 # Info: CDesignChecker Shell script written to '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/stem_processor/StemProcessor.v1/CDesignChecker/design_checker.sh'
-# Info: Completed transformation 'compile' on solution 'StemProcessor.v1': elapsed time 35.93 seconds, memory usage 1307824kB, peak memory usage 1307824kB (SOL-9)
-# Info: Design complexity at end of 'compile': Total ops = 1090, Real ops = 285, Vars = 190 (SOL-21)
+# Info: Completed transformation 'compile' on solution 'StemProcessor.v1': elapsed time 34.17 seconds, memory usage 1242288kB, peak memory usage 1461436kB (SOL-9)
+# Info: Design complexity at end of 'compile': Total ops = 1042, Real ops = 285, Vars = 186 (SOL-21)
 # > flow package require /SCVerify
 # 10.4
 # > set ccs_fd [open ./stem_processor.ccs w]
