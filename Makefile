@@ -126,7 +126,13 @@ block-gui:
 
 # Run stem processor in GUI mode and save full console log
 stem: stem-clean
-	cd Binary_cnn && mkdir -p logs && catapult -gui -file scripts/run_stem_catapult_gui.tcl 2>&1 | tee logs/catapult_stem.log
+	cd Binary_cnn && mkdir -p logs && \
+	if [ -z "$$DISPLAY" ]; then \
+		echo "[stem] DISPLAY is empty. Enable X11 forwarding (e.g., MobaXterm X11) and retry."; \
+		exit 1; \
+	fi; \
+	echo "[stem] Launching Catapult GUI. Log: Binary_cnn/logs/catapult_stem.log"; \
+	catapult -gui -file scripts/run_stem_catapult_gui.tcl > logs/catapult_stem.log 2>&1
 
 # Alias (same as make stem)
 stem-log: stem
