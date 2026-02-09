@@ -124,23 +124,21 @@ block-gui:
 # Stem Processor Targets
 # ============================================================================
 
-# Run stem processor in GUI mode and save full console log
+# Run stem processor compile flow, then open GUI project file
 stem: stem-clean
-	cd Binary_cnn && mkdir -p logs && \
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
+	cd Binary_cnn && \
 	if [ -z "$$DISPLAY" ]; then \
-		echo "[stem] DISPLAY is empty. Enable X11 forwarding (e.g., MobaXterm X11) and retry."; \
-		exit 1; \
+		echo "[stem] Compile finished. DISPLAY is empty, skipping GUI open."; \
+		echo "[stem] Open later with: catapult stem_processor.ccs"; \
+		exit 0; \
 	fi; \
-	echo "[stem] Launching Catapult GUI. Log: Binary_cnn/logs/catapult_stem.log"; \
-	catapult -gui -file scripts/run_stem_catapult_gui.tcl > logs/catapult_stem.log 2>&1 & \
-	CATAPULT_PID=$$!; \
-	sleep 2; \
-	if ps -p $$CATAPULT_PID >/dev/null 2>&1; then \
-		echo "[stem] Catapult GUI started (PID=$$CATAPULT_PID)."; \
-		echo "[stem] Monitor log: tail -f Binary_cnn/logs/catapult_stem.log"; \
+	PRJ=$$(ls -t stem_processor*.ccs 2>/dev/null | head -n 1); \
+	if [ -n "$$PRJ" ]; then \
+		echo "[stem] Opening GUI project: $$PRJ"; \
+		catapult "$$PRJ" & \
 	else \
-		echo "[stem] GUI process exited early. Check log: Binary_cnn/logs/catapult_stem.log"; \
-		tail -n 40 logs/catapult_stem.log || true; \
+		echo "[stem] Could not find stem_processor*.ccs project file."; \
 		exit 1; \
 	fi
 
