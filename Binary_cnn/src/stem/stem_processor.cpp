@@ -50,6 +50,7 @@ void StemProcessor::run(
     // ================================================================
 
     // Conv0 weights: 3x3, IC=3, OC=32 ??864 bits
+    #pragma hls_register
     stem_bw_t w0[32][3][3][3];
     for (int oc = 0; oc < 32; oc++) {
         for (int ic = 0; ic < 3; ic++) {
@@ -64,6 +65,7 @@ void StemProcessor::run(
     }
 
     // Conv1 weights: 1x1, IC=32, OC=16 ??512 bits
+    #pragma hls_register
     stem_bw_t w1[16][32];
     for (int oc = 0; oc < 16; oc++) {
         stem_packed_bw_t packed = weight_stream.read();
@@ -73,6 +75,7 @@ void StemProcessor::run(
     }
 
     // Conv2 weights: 3x3, IC=16, OC=32 ??4608 bits
+    #pragma hls_register
     stem_bw_t w2[32][16][3][3];
     for (int oc = 0; oc < 32; oc++) {
         for (int ic = 0; ic < 16; ic++) {
@@ -87,6 +90,7 @@ void StemProcessor::run(
     }
 
     // Conv3 weights: 1x1, IC=64, OC=32 ??2048 bits
+    #pragma hls_register
     stem_bw_t w3[32][64];
     for (int oc = 0; oc < 32; oc++) {
         stem_packed_bw_t packed = weight_stream.read();
@@ -96,10 +100,22 @@ void StemProcessor::run(
     }
 
     // BN parameters
-    stem_bn_t bn0_scale[32], bn0_bias[32];
-    stem_bn_t bn1_scale[16], bn1_bias[16];
-    stem_bn_t bn2_scale[32], bn2_bias[32];
-    stem_bn_t bn3_scale[32], bn3_bias[32];
+    #pragma hls_register
+    stem_bn_t bn0_scale[32];
+    #pragma hls_register
+    stem_bn_t bn0_bias[32];
+    #pragma hls_register
+    stem_bn_t bn1_scale[16];
+    #pragma hls_register
+    stem_bn_t bn1_bias[16];
+    #pragma hls_register
+    stem_bn_t bn2_scale[32];
+    #pragma hls_register
+    stem_bn_t bn2_bias[32];
+    #pragma hls_register
+    stem_bn_t bn3_scale[32];
+    #pragma hls_register
+    stem_bn_t bn3_bias[32];
 
     if (config.use_bn) {
         for (int ch = 0; ch < 32; ch++) { bn0_scale[ch] = bn_scale.read(); bn0_bias[ch] = bn_bias.read(); }
