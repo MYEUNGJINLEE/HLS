@@ -2,7 +2,7 @@
 .SILENT:
 
 # Update local repository to latest origin/dev (stash handles unstaged changes)
-update: ; @git stash push -u -m "auto-stash: make update" >/dev/null || true; git fetch origin; git checkout dev; git pull --no-rebase origin dev; git stash pop >/dev/null || true
+update: ; @git stash push -u -m "auto-stash: make update" >/dev/null 2>&1 || git stash save -u "auto-stash: make update" >/dev/null 2>&1 || true; git fetch origin; git checkout dev; git pull --no-rebase origin dev; git stash pop >/dev/null 2>&1 || true
 
 # Create local weight directory for stem verification files
 weight-dir:
