@@ -132,10 +132,21 @@ stem: stem-clean
 		exit 1; \
 	fi; \
 	echo "[stem] Launching Catapult GUI. Log: Binary_cnn/logs/catapult_stem.log"; \
-	catapult -gui -file scripts/run_stem_catapult_gui.tcl > logs/catapult_stem.log 2>&1
+	catapult -gui -file scripts/run_stem_catapult_gui.tcl > logs/catapult_stem.log 2>&1 & \
+	CATAPULT_PID=$$!; \
+	sleep 2; \
+	if ps -p $$CATAPULT_PID >/dev/null 2>&1; then \
+		echo "[stem] Catapult GUI started (PID=$$CATAPULT_PID)."; \
+		echo "[stem] Monitor log: tail -f Binary_cnn/logs/catapult_stem.log"; \
+	else \
+		echo "[stem] GUI process exited early. Check log: Binary_cnn/logs/catapult_stem.log"; \
+		tail -n 40 logs/catapult_stem.log || true; \
+		exit 1; \
+	fi
 
-# Alias (same as make stem)
-stem-log: stem
+# Run stem processor in batch mode with full log
+stem-log: stem-clean
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
 
 # Run stem processor testbench in auto mode
 # - all 3 files exist: stem-tb-weight
