@@ -23,95 +23,67 @@ go analyze
 # ============================================================================
 # Discover Design Hierarchy
 # ============================================================================
-# Print the design tree so we can find correct paths for memory directives.
-puts "======== DESIGN HIERARCHY ========"
-puts "Top-level children:"
-foreach child [solution design get -child /] {
-    puts "  $child"
-    catch {
-        foreach grandchild [solution design get -child $child] {
-            puts "    $grandchild"
-        }
-    }
-}
-puts "=================================="
+puts "======== DESIGN HIERARCHY DEBUG ========"
+catch {puts "solution design get: [solution design get]"}
+catch {puts "directive get -rec: [directive get -rec]"}
+puts "========================================"
 
 # ============================================================================
 # Memory Banking Directives
 # ============================================================================
-# Force SRAM mapping to prevent 'memories' pass from exploring all
-# banking/port configurations (which caused 10+ hour synthesis hangs).
-#
-# Path format depends on Catapult version. We try the most common formats.
-# After go analyze, check the log for "DESIGN HIERARCHY" to verify paths.
+# Force SRAM mapping to prevent 'memories' pass exploration.
+# Try multiple path formats since naming depends on Catapult version.
 # ============================================================================
 
-# Try to discover the correct top-level path prefix
-set top_path ""
-foreach child [solution design get -child /] {
-    # The top design element containing 'run' is our target
-    if {[string match "*StemProcessor*" $child] || [string match "*run*" $child]} {
-        set top_path $child
-        puts "Found top path: $top_path"
+# Buffer paths to set (member.array suffix)
+set member_buffers {
+    line_buf_a.buffer
+    line_buf_b.buffer
+    concat_buf.path_a
+    concat_buf.path_b
+}
+set local_buffers {
+    run/conv1_buf.buffer
+    run/mp_buf.buffer
+}
+
+# Possible top-level path prefixes (try each until one works)
+set path_prefixes {
+    /StemProcessor
+    /StemProcessor/run
+    /stem_processor/StemProcessor
+    /stem_processor/StemProcessor/run
+}
+
+set applied 0
+foreach prefix $path_prefixes {
+    set test_path "${prefix}/line_buf_a.buffer:rsc"
+    puts "Testing prefix: $prefix ..."
+    if {![catch {directive set $test_path -MAP_TO_MODULE {BLOCK_1R1W_RBW}}]} {
+        puts "  SUCCESS - using prefix: $prefix"
+        set applied 1
+        # Apply remaining member buffers (skip line_buf_a, already done)
+        foreach buf {line_buf_b.buffer concat_buf.path_a concat_buf.path_b} {
+            catch {directive set ${prefix}/${buf}:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err
+            puts "  ${prefix}/${buf}:rsc -> $err"
+        }
+        # Apply local buffers (V1 has conv1_buf and mp_buf as locals in run())
+        foreach buf $local_buffers {
+            catch {directive set ${prefix}/${buf}:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err
+            puts "  ${prefix}/${buf}:rsc -> $err"
+        }
         break
-    }
-}
-
-# If we couldn't find it, try common patterns
-if {$top_path eq ""} {
-    # List all paths to help debug
-    puts "WARNING: Could not auto-detect top path. Listing all design elements:"
-    catch {
-        foreach item [solution design get -child / -rec] {
-            puts "  $item"
-        }
-    }
-    # Fall through to go compile without directives
-    puts "Skipping memory directives - check hierarchy paths in log"
-    go compile
-} else {
-    # Apply directives with discovered path
-    puts "Applying memory directives with prefix: $top_path"
-
-    # Try applying directives - wrap each in catch to continue on error
-    set directive_errors 0
-
-    # Class member buffers
-    foreach {varpath desc} {
-        line_buf_a.buffer   "Conv0 input window buffer"
-        line_buf_b.buffer   "Conv0 output / Conv1 input"
-        concat_buf.path_a   "Concat path A"
-        concat_buf.path_b   "Concat path B"
-    } {
-        set full_path "${top_path}/${varpath}:rsc"
-        puts "  Trying: directive set $full_path -MAP_TO_MODULE BLOCK_1R1W_RBW  ($desc)"
-        if {[catch {directive set $full_path -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err]} {
-            puts "  FAILED: $err"
-            incr directive_errors
-        }
-    }
-
-    # Local buffers inside run() function
-    foreach {varpath desc} {
-        run/conv1_buf.buffer  "Conv1 output (local)"
-        run/mp_buf.buffer     "MaxPool buffer (local)"
-    } {
-        set full_path "${top_path}/${varpath}:rsc"
-        puts "  Trying: directive set $full_path -MAP_TO_MODULE BLOCK_1R1W_RBW  ($desc)"
-        if {[catch {directive set $full_path -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err]} {
-            puts "  FAILED: $err"
-            incr directive_errors
-        }
-    }
-
-    if {$directive_errors > 0} {
-        puts "WARNING: $directive_errors directive(s) failed. Check paths above."
     } else {
-        puts "All memory directives applied successfully."
+        puts "  FAILED"
     }
-
-    go compile
 }
+
+if {!$applied} {
+    puts "WARNING: No valid path prefix found. Proceeding without memory directives."
+    puts "Check 'DESIGN HIERARCHY DEBUG' section above for available paths."
+}
+
+go compile
 
 # Optional: generate SCVerify build/run scripts
 flow package require /SCVerify

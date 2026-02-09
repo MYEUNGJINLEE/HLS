@@ -23,72 +23,60 @@ go analyze
 # ============================================================================
 # Discover Design Hierarchy
 # ============================================================================
-puts "======== DESIGN HIERARCHY ========"
-puts "Top-level children:"
-foreach child [solution design get -child /] {
-    puts "  $child"
-    catch {
-        foreach grandchild [solution design get -child $child] {
-            puts "    $grandchild"
-        }
-    }
-}
-puts "=================================="
+puts "======== DESIGN HIERARCHY DEBUG ========"
+catch {puts "solution design get: [solution design get]"}
+catch {puts "directive get -rec: [directive get -rec]"}
+puts "========================================"
 
 # ============================================================================
 # Memory Banking Directives
 # ============================================================================
 # Force SRAM mapping to prevent 'memories' pass exploration.
-# Path is auto-detected from design hierarchy after go analyze.
+# Try multiple path formats since naming depends on Catapult version.
 # ============================================================================
 
-set top_path ""
-foreach child [solution design get -child /] {
-    if {[string match "*StemProcessor*" $child] || [string match "*run*" $child]} {
-        set top_path $child
-        puts "Found top path: $top_path"
+# All buffers are class members in V2
+set v2_buffers {
+    line_buf_a.buffer
+    line_buf_b.buffer
+    conv1_buf.buffer
+    mp_buf.buffer
+    concat_buf.path_a
+    concat_buf.path_b
+}
+
+# Possible top-level path prefixes
+set path_prefixes {
+    /StemProcessor
+    /StemProcessor/run
+    /stem_v2_processor/StemProcessor
+    /stem_v2_processor/StemProcessor/run
+}
+
+set applied 0
+foreach prefix $path_prefixes {
+    set test_path "${prefix}/line_buf_a.buffer:rsc"
+    puts "Testing prefix: $prefix ..."
+    if {![catch {directive set $test_path -MAP_TO_MODULE {BLOCK_1R1W_RBW}}]} {
+        puts "  SUCCESS - using prefix: $prefix"
+        set applied 1
+        # Apply remaining buffers (skip line_buf_a, already done)
+        foreach buf {line_buf_b.buffer conv1_buf.buffer mp_buf.buffer concat_buf.path_a concat_buf.path_b} {
+            catch {directive set ${prefix}/${buf}:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err
+            puts "  ${prefix}/${buf}:rsc -> $err"
+        }
         break
-    }
-}
-
-if {$top_path eq ""} {
-    puts "WARNING: Could not auto-detect top path. Listing all design elements:"
-    catch {
-        foreach item [solution design get -child / -rec] {
-            puts "  $item"
-        }
-    }
-    puts "Skipping memory directives - check hierarchy paths in log"
-    go compile
-} else {
-    puts "Applying memory directives with prefix: $top_path"
-    set directive_errors 0
-
-    # All buffers are class members in V2
-    foreach {varpath desc} {
-        line_buf_a.buffer   "Conv0 input (160KB)"
-        line_buf_b.buffer   "Conv0 output (160KB)"
-        conv1_buf.buffer    "Conv1 output (160KB)"
-        mp_buf.buffer       "MaxPool buffer (160KB)"
-        concat_buf.path_a   "Concat path A (20KB)"
-        concat_buf.path_b   "Concat path B (20KB)"
-    } {
-        set full_path "${top_path}/${varpath}:rsc"
-        puts "  Trying: directive set $full_path -MAP_TO_MODULE BLOCK_1R1W_RBW  ($desc)"
-        if {[catch {directive set $full_path -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err]} {
-            puts "  FAILED: $err"
-            incr directive_errors
-        }
-    }
-
-    if {$directive_errors > 0} {
-        puts "WARNING: $directive_errors directive(s) failed. Check paths above."
     } else {
-        puts "All memory directives applied successfully."
+        puts "  FAILED"
     }
-
-    go compile
 }
+
+if {!$applied} {
+    puts "WARNING: No valid path prefix found. Proceeding without memory directives."
+    puts "Check 'DESIGN HIERARCHY DEBUG' section above for available paths."
+}
+
+go compile
 
 # Optional: generate SCVerify build/run scripts
 flow package require /SCVerify
