@@ -1,10 +1,12 @@
 .PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean stem stem-log stem-gui stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean clean
 
-# Update local repository to latest origin/dev
+# Update local repository to latest origin/dev (stash handles unstaged changes)
 update:
+	git stash
 	git fetch origin
 	git checkout dev
-	git pull origin dev
+	git pull --no-rebase origin dev
+	git stash pop || true
 
 # Create local weight directory for stem verification files
 weight-dir:
