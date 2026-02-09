@@ -7,8 +7,8 @@
 // Architecture: Row-level pipelining across all 5 layers
 //
 // Data Flow:
-//   RGB Input ??Conv0 ???�→ Conv1 ??Conv2 ???�→ Concat ??Conv3 ??Output
-//                       ?�→ MaxPool ?�?�?�?�?�?�?�?�??
+//   RGB Input -> Conv0 -> Conv1 -> Conv2 -> Concat -> Conv3 -> Output
+//                    -> MaxPool -----------------------------/
 //
 // Pipelining Strategy:
 //   - All weights loaded upfront (small due to binary weights)
@@ -363,7 +363,7 @@ void StemProcessor::run(
                 stem_out_t conv3_out[STEM_CH_PARALLEL];
 
                 CONV3_OC:
-                #pragma hls_pipeline_init_interval 1
+                #pragma hls_pipeline_init_interval 2
                 for (int oc = 0; oc < 32; oc++) {
                     stem_acc_t acc = 0;
                     CONV3_IC:
