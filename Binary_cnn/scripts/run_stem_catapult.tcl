@@ -105,4 +105,6 @@ puts $ccs_fd {if {[info script] != {} && [file isdirectory [file rootname [info 
 }}
 close $ccs_fd
 
-exit
+if {![info exists KEEP_GUI_OPEN] || !$KEEP_GUI_OPEN} {
+  exit
+}

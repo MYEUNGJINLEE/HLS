@@ -1,12 +1,7 @@
-.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean stem stem-log stem-gui stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean clean
+.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean stem stem-log stem-gui stem-gui-build stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean clean
 
 # Update local repository to latest origin/dev (stash handles unstaged changes)
-update:
-	git stash
-	git fetch origin
-	git checkout dev
-	git pull --no-rebase origin dev
-	git stash pop || true
+update: ; @git stash push -u -m "auto-stash: make update" >/dev/null || true; git fetch origin; git checkout dev; git pull --no-rebase origin dev; git stash pop >/dev/null || true
 
 # Create local weight directory for stem verification files
 weight-dir:
@@ -128,12 +123,13 @@ block-gui:
 # Stem Processor Targets
 # ============================================================================
 
-# Run stem processor Catapult in batch mode with log (auto-cleans old project)
+# Run stem processor in GUI mode (analyze/compile and keep GUI open)
 stem: stem-clean
-	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
+	cd Binary_cnn && catapult -gui -file scripts/run_stem_catapult_gui.tcl
 
-# Alias for stem
-stem-log: stem
+# Run stem processor in batch mode with full log
+stem-log: stem-clean
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
 
 # Run stem processor testbench in auto mode
 # - all 3 files exist: stem-tb-weight
@@ -324,7 +320,8 @@ stem2-gui:
 
 # Run stem processor with GUI
 stem-gui:
-	cd Binary_cnn && PRJ=$$(ls -t stem_processor*.ccs 2>/dev/null | head -n 1); \
+	cd Binary_cnn && PRJ="$$FILE"; \
+	if [ -z "$$PRJ" ]; then PRJ=$$(ls -t stem_processor*.ccs 2>/dev/null | head -n 1); fi; \
 	if [ -z "$$PRJ" ]; then \
 		echo "No stem_processor*.ccs found. Running batch flow once to create project..."; \
 		catapult -shell -file scripts/run_stem_catapult.tcl; \
@@ -335,3 +332,6 @@ stem-gui:
 	else \
 		echo "Could not find stem_processor*.ccs project file."; exit 1; \
 	fi
+
+# Alias (same as make stem)
+stem-gui-build: stem
