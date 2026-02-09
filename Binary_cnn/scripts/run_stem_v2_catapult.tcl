@@ -21,55 +21,74 @@ solution file add ./src/stem_v2/stem_v2_processor_tb.cpp -type C++ -exclude true
 go analyze
 
 # ============================================================================
+# Discover Design Hierarchy
+# ============================================================================
+puts "======== DESIGN HIERARCHY ========"
+puts "Top-level children:"
+foreach child [solution design get -child /] {
+    puts "  $child"
+    catch {
+        foreach grandchild [solution design get -child $child] {
+            puts "    $grandchild"
+        }
+    }
+}
+puts "=================================="
+
+# ============================================================================
 # Memory Banking Directives
 # ============================================================================
-#
-# Force SRAM mapping for all line buffers.
-# This prevents the 'memories' pass from exploring all possible
-# banking/port configurations, which caused 10+ hour synthesis hangs in V1.
-#
-# BLOCK_1R1W_RBW = Single-port RAM with 1 read + 1 write per cycle
-# (Read-Before-Write behavior)
-#
-# Without these directives, Catapult tries every possible configuration:
-#   - Register vs RAM
-#   - 1-port vs 2-port vs multi-port
-#   - Banking factor 1, 2, 4, 8, ...
-#   - Channel-dim vs col-dim vs row-dim banking
-#   = thousands of combinations per buffer x 4 buffers = explosion
-#
-# With directives: Catapult uses the specified mapping directly.
+# Force SRAM mapping to prevent 'memories' pass exploration.
+# Path is auto-detected from design hierarchy after go analyze.
 # ============================================================================
 
-# Line Buffer A: Conv0 input (RGB window buffer)
-# [4][640][64] x 8bit = 160KB
-directive set /StemProcessor/line_buf_a.buffer:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
+set top_path ""
+foreach child [solution design get -child /] {
+    if {[string match "*StemProcessor*" $child] || [string match "*run*" $child]} {
+        set top_path $child
+        puts "Found top path: $top_path"
+        break
+    }
+}
 
-# Line Buffer B: Conv0 output (Conv1 input)
-# [4][640][64] x 8bit = 160KB
-directive set /StemProcessor/line_buf_b.buffer:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
+if {$top_path eq ""} {
+    puts "WARNING: Could not auto-detect top path. Listing all design elements:"
+    catch {
+        foreach item [solution design get -child / -rec] {
+            puts "  $item"
+        }
+    }
+    puts "Skipping memory directives - check hierarchy paths in log"
+    go compile
+} else {
+    puts "Applying memory directives with prefix: $top_path"
+    set directive_errors 0
 
-# Conv1 Buffer: Conv1 output (Conv2 input)
-# [4][640][64] x 8bit = 160KB
-directive set /StemProcessor/conv1_buf.buffer:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
+    # All buffers are class members in V2
+    foreach {varpath desc} {
+        line_buf_a.buffer   "Conv0 input (160KB)"
+        line_buf_b.buffer   "Conv0 output (160KB)"
+        conv1_buf.buffer    "Conv1 output (160KB)"
+        mp_buf.buffer       "MaxPool buffer (160KB)"
+        concat_buf.path_a   "Concat path A (20KB)"
+        concat_buf.path_b   "Concat path B (20KB)"
+    } {
+        set full_path "${top_path}/${varpath}:rsc"
+        puts "  Trying: directive set $full_path -MAP_TO_MODULE BLOCK_1R1W_RBW  ($desc)"
+        if {[catch {directive set $full_path -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err]} {
+            puts "  FAILED: $err"
+            incr directive_errors
+        }
+    }
 
-# MaxPool Buffer: Conv0 output copy for MaxPool
-# [4][640][64] x 8bit = 160KB
-directive set /StemProcessor/mp_buf.buffer:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
+    if {$directive_errors > 0} {
+        puts "WARNING: $directive_errors directive(s) failed. Check paths above."
+    } else {
+        puts "All memory directives applied successfully."
+    }
 
-# Concat Buffer Path A
-# [640][32] x 8bit = 20KB
-directive set /StemProcessor/concat_buf.path_a:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
-
-# Concat Buffer Path B
-# [640][32] x 8bit = 20KB
-directive set /StemProcessor/concat_buf.path_b:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
-
-# ============================================================================
-# Compile with directives applied
-# ============================================================================
-
-go compile
+    go compile
+}
 
 # Optional: generate SCVerify build/run scripts
 flow package require /SCVerify

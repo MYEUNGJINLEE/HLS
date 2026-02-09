@@ -21,33 +21,97 @@ solution file add ./src/stem/stem_processor_tb.cpp -type C++ -exclude true
 go analyze
 
 # ============================================================================
+# Discover Design Hierarchy
+# ============================================================================
+# Print the design tree so we can find correct paths for memory directives.
+puts "======== DESIGN HIERARCHY ========"
+puts "Top-level children:"
+foreach child [solution design get -child /] {
+    puts "  $child"
+    catch {
+        foreach grandchild [solution design get -child $child] {
+            puts "    $grandchild"
+        }
+    }
+}
+puts "=================================="
+
+# ============================================================================
 # Memory Banking Directives
 # ============================================================================
 # Force SRAM mapping to prevent 'memories' pass from exploring all
 # banking/port configurations (which caused 10+ hour synthesis hangs).
 #
-# Class member buffers:
-#   line_buf_a: [8][640][64] = 320KB (Conv0 input window buffer)
-#   line_buf_b: [8][640][64] = 320KB (Conv0 output / Conv1 input)
-#   concat_buf: [640][32] x 2 = 40KB (Conv2 + MaxPool concat)
-#
-# Local buffers in run():
-#   conv1_buf:  [8][640][64] = 320KB (Conv1 output / Conv2 input)
-#   mp_buf:     [8][640][64] = 320KB (Conv0 output copy for MaxPool)
+# Path format depends on Catapult version. We try the most common formats.
+# After go analyze, check the log for "DESIGN HIERARCHY" to verify paths.
 # ============================================================================
 
-# Class member buffers
-directive set /StemProcessor/line_buf_a.buffer:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
-directive set /StemProcessor/line_buf_b.buffer:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
-directive set /StemProcessor/concat_buf.path_a:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
-directive set /StemProcessor/concat_buf.path_b:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
+# Try to discover the correct top-level path prefix
+set top_path ""
+foreach child [solution design get -child /] {
+    # The top design element containing 'run' is our target
+    if {[string match "*StemProcessor*" $child] || [string match "*run*" $child]} {
+        set top_path $child
+        puts "Found top path: $top_path"
+        break
+    }
+}
 
-# Local buffers inside run() function
-directive set /StemProcessor/run/conv1_buf.buffer:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
-directive set /StemProcessor/run/mp_buf.buffer:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}
+# If we couldn't find it, try common patterns
+if {$top_path eq ""} {
+    # List all paths to help debug
+    puts "WARNING: Could not auto-detect top path. Listing all design elements:"
+    catch {
+        foreach item [solution design get -child / -rec] {
+            puts "  $item"
+        }
+    }
+    # Fall through to go compile without directives
+    puts "Skipping memory directives - check hierarchy paths in log"
+    go compile
+} else {
+    # Apply directives with discovered path
+    puts "Applying memory directives with prefix: $top_path"
 
-# Compile with directives applied
-go compile
+    # Try applying directives - wrap each in catch to continue on error
+    set directive_errors 0
+
+    # Class member buffers
+    foreach {varpath desc} {
+        line_buf_a.buffer   "Conv0 input window buffer"
+        line_buf_b.buffer   "Conv0 output / Conv1 input"
+        concat_buf.path_a   "Concat path A"
+        concat_buf.path_b   "Concat path B"
+    } {
+        set full_path "${top_path}/${varpath}:rsc"
+        puts "  Trying: directive set $full_path -MAP_TO_MODULE BLOCK_1R1W_RBW  ($desc)"
+        if {[catch {directive set $full_path -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err]} {
+            puts "  FAILED: $err"
+            incr directive_errors
+        }
+    }
+
+    # Local buffers inside run() function
+    foreach {varpath desc} {
+        run/conv1_buf.buffer  "Conv1 output (local)"
+        run/mp_buf.buffer     "MaxPool buffer (local)"
+    } {
+        set full_path "${top_path}/${varpath}:rsc"
+        puts "  Trying: directive set $full_path -MAP_TO_MODULE BLOCK_1R1W_RBW  ($desc)"
+        if {[catch {directive set $full_path -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err]} {
+            puts "  FAILED: $err"
+            incr directive_errors
+        }
+    }
+
+    if {$directive_errors > 0} {
+        puts "WARNING: $directive_errors directive(s) failed. Check paths above."
+    } else {
+        puts "All memory directives applied successfully."
+    }
+
+    go compile
+}
 
 # Optional: generate SCVerify build/run scripts
 flow package require /SCVerify
