@@ -284,7 +284,7 @@ void StemProcessor::run(
                 stem_out_t conv2_out[STEM_CH_PARALLEL];
 
                 CONV2_OC:
-                #pragma hls_pipeline_init_interval 1
+                #pragma hls_pipeline_init_interval 2
                 for (int oc = 0; oc < 32; oc++) {
                     stem_acc_t acc = 0;
                     CONV2_IC:
