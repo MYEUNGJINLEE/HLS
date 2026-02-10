@@ -153,6 +153,14 @@ void StemProcessor::run(
     int mp_out_row = 0;      // Next MaxPool output row to produce
     int conv3_out_row = 0;   // Next Conv3 output row to produce
 
+    // Row-token staging to decouple producer (conv2/maxpool) and consumer (conv3).
+    stem_act_t conv2_row_stage[STEM_MAX_WIDTH][32];
+    stem_act_t mp_row_stage[STEM_MAX_WIDTH][32];
+    bool conv2_row_valid = false;
+    bool mp_row_valid = false;
+    int conv2_row_idx = -1;
+    int mp_row_idx = -1;
+
     // Max output rows producible per main-loop iteration
     // 3x3 s=2: 1 output per 2 inputs ??max 1 per iter
     // 1x1: 1 output per input ??max 1 per iter
@@ -179,7 +187,7 @@ void StemProcessor::run(
                 stem_packed_rgb_t packed_rgb = rgb_input.read();
                 stem_act_t rgb[3];
 
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                STEM_UNROLL_PRAGMA
                 for (int ch = 0; ch < 3; ch++) {
                     rgb[ch].set_slc(0, packed_rgb.slc<8>(ch * 8));
                 }
@@ -202,18 +210,19 @@ void StemProcessor::run(
                 line_buf_a.extract_window_3x3(conv0_out_row, col, window);
 
                 stem_out_t conv0_out[STEM_CH_PARALLEL];
+                stem_acc_t conv0_acc[32];
 
-                CONV0_OC:
+                CONV0_ACC_OC:
                 #pragma hls_pipeline_init_interval 2
                 for (int oc = 0; oc < 32; oc++) {
                     stem_acc_t acc = 0;
                     CONV0_IC:
-                    #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                    STEM_UNROLL_PRAGMA
                     for (int ic = 0; ic < 3; ic++) {
                         CONV0_K:
-                        #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                        STEM_UNROLL_PRAGMA
                         for (int kr = 0; kr < 3; kr++) {
-                            #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                            STEM_UNROLL_PRAGMA
                             for (int kc = 0; kc < 3; kc++) {
                                 if (w0[oc][ic][kr][kc] == 0)
                                     acc += window.data[kr][kc][ic];
@@ -222,11 +231,18 @@ void StemProcessor::run(
                             }
                         }
                     }
-                    if (config.use_bn) acc = acc * bn0_scale[oc] + bn0_bias[oc];
-                    if (config.use_relu && acc < 0) acc = 0;
-                    if (acc > 7.9375) acc = 7.9375;
-                    if (acc < -8.0) acc = -8.0;
-                    conv0_out[oc] = (stem_out_t)acc;
+                    conv0_acc[oc] = acc;
+                }
+
+                CONV0_POST_OC:
+                #pragma hls_pipeline_init_interval 2
+                for (int oc = 0; oc < 32; oc++) {
+                    stem_acc_t val = conv0_acc[oc];
+                    if (config.use_bn) val = val * bn0_scale[oc] + bn0_bias[oc];
+                    if (config.use_relu && val < 0) val = 0;
+                    if (val > 7.9375) val = 7.9375;
+                    if (val < -8.0) val = -8.0;
+                    conv0_out[oc] = (stem_out_t)val;
                 }
 
                 // Write to Conv1 buffer AND MaxPool buffer
@@ -245,22 +261,30 @@ void StemProcessor::run(
                 line_buf_b.read_pixel(c1_row, col, input);
 
                 stem_out_t conv1_out[STEM_CH_PARALLEL];
+                stem_acc_t conv1_acc[16];
 
-                CONV1_OC:
+                CONV1_ACC_OC:
                 #pragma hls_pipeline_init_interval 2
                 for (int oc = 0; oc < 16; oc++) {
                     stem_acc_t acc = 0;
                     CONV1_IC:
-                    #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                    STEM_UNROLL_PRAGMA
                     for (int ic = 0; ic < 32; ic++) {
                         if (w1[oc][ic] == 0) acc += input[ic];
                         else acc -= input[ic];
                     }
-                    if (config.use_bn) acc = acc * bn1_scale[oc] + bn1_bias[oc];
-                    if (config.use_relu && acc < 0) acc = 0;
-                    if (acc > 7.9375) acc = 7.9375;
-                    if (acc < -8.0) acc = -8.0;
-                    conv1_out[oc] = (stem_out_t)acc;
+                    conv1_acc[oc] = acc;
+                }
+
+                CONV1_POST_OC:
+                #pragma hls_pipeline_init_interval 2
+                for (int oc = 0; oc < 16; oc++) {
+                    stem_acc_t val = conv1_acc[oc];
+                    if (config.use_bn) val = val * bn1_scale[oc] + bn1_bias[oc];
+                    if (config.use_relu && val < 0) val = 0;
+                    if (val > 7.9375) val = 7.9375;
+                    if (val < -8.0) val = -8.0;
+                    conv1_out[oc] = (stem_out_t)val;
                 }
 
                 conv1_buf.write_pixel_partial(c1_row, col, conv1_out, 16);
@@ -269,59 +293,74 @@ void StemProcessor::run(
         }
 
         // ----------------------------------------------------------------
-        // Stage 6: Produce Conv3 output rows (consume rows from prior iterations)
+        // Stage 6: Consume one ready staged row pair and run Conv3
         // ----------------------------------------------------------------
-        int concat_ready_row = (conv2_out_row < mp_out_row) ? conv2_out_row : mp_out_row;
-
         STAGE6_ROWS:
         for (int s6 = 0; s6 < MAX_STAGE_ROWS; s6++) {
             if (conv3_out_row >= conv3_out_h) break;
-            // Check if we have enough concat rows (1x1 only needs current row)
-            if (conv3_out_row >= concat_ready_row && concat_ready_row < conv3_out_h) break;
+            if (!conv2_row_valid || !mp_row_valid) break;
+            if (conv2_row_idx != conv3_out_row || mp_row_idx != conv3_out_row) break;
 
             STAGE6_CONV3_COL:
             for (int col = 0; col < conv3_out_w; col++) {
-                // Read pixel directly from concat buffer (1x1 conv)
                 stem_act_t pixel[STEM_CH_PARALLEL];
-                concat_buf.read_concat(col, pixel);
+                STEM_UNROLL_PRAGMA
+                for (int ch = 0; ch < 32; ch++) {
+                    pixel[ch] = conv2_row_stage[col][ch];
+                    pixel[ch + 32] = mp_row_stage[col][ch];
+                }
 
                 stem_out_t conv3_out[STEM_CH_PARALLEL];
+                stem_acc_t conv3_acc[32];
 
-                CONV3_OC:
+                CONV3_ACC_OC:
                 #pragma hls_pipeline_init_interval 2
                 for (int oc = 0; oc < 32; oc++) {
                     stem_acc_t acc = 0;
                     CONV3_IC:
-                    #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                    STEM_UNROLL_PRAGMA
                     for (int ic = 0; ic < 64; ic++) {
                         if (w3[oc][ic] == 0)
                             acc += pixel[ic];
                         else
                             acc -= pixel[ic];
                     }
-                    if (config.use_bn) acc = acc * bn3_scale[oc] + bn3_bias[oc];
-                    if (config.use_relu && acc < 0) acc = 0;
-                    if (acc > 7.9375) acc = 7.9375;
-                    if (acc < -8.0) acc = -8.0;
-                    conv3_out[oc] = (stem_out_t)acc;
+                    conv3_acc[oc] = acc;
+                }
+
+                CONV3_POST_OC:
+                #pragma hls_pipeline_init_interval 2
+                for (int oc = 0; oc < 32; oc++) {
+                    stem_acc_t val = conv3_acc[oc];
+                    if (config.use_bn) val = val * bn3_scale[oc] + bn3_bias[oc];
+                    if (config.use_relu && val < 0) val = 0;
+                    if (val > 7.9375) val = 7.9375;
+                    if (val < -8.0) val = -8.0;
+                    conv3_out[oc] = (stem_out_t)val;
                 }
 
                 // Pack and output
                 stem_packed_act_t packed = 0;
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                STEM_UNROLL_PRAGMA
                 for (int ch = 0; ch < 32; ch++) {
                     packed.set_slc(ch * 8, conv3_out[ch].slc<8>(0));
                 }
                 output_stream.write(packed);
             }
+
+            conv2_row_valid = false;
+            mp_row_valid = false;
+            conv2_row_idx = -1;
+            mp_row_idx = -1;
             conv3_out_row++;
         }
 
         // ----------------------------------------------------------------
-        // Stage 4: Produce Conv2 output rows (when buffer ready)
+        // Stage 4: Produce one Conv2 row into staging buffer
         // ----------------------------------------------------------------
         STAGE4_ROWS:
         for (int s4 = 0; s4 < MAX_STAGE_ROWS; s4++) {
+            if (conv2_row_valid) break;
             if (conv2_out_row >= conv2_out_h) break;
             if (!conv1_buf.can_output_row(conv2_out_row, conv1_out_row)) break;
 
@@ -331,17 +370,18 @@ void StemProcessor::run(
                 conv1_buf.extract_window_3x3(conv2_out_row, col, window);
 
                 stem_out_t conv2_out[STEM_CH_PARALLEL];
+                stem_acc_t conv2_acc[32];
 
-                CONV2_OC:
+                CONV2_ACC_OC:
                 #pragma hls_pipeline_init_interval 2
                 for (int oc = 0; oc < 32; oc++) {
                     stem_acc_t acc = 0;
                     CONV2_IC:
-                    #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                    STEM_UNROLL_PRAGMA
                     for (int ic = 0; ic < 16; ic++) {
-                        #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                        STEM_UNROLL_PRAGMA
                         for (int kr = 0; kr < 3; kr++) {
-                            #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                            STEM_UNROLL_PRAGMA
                             for (int kc = 0; kc < 3; kc++) {
                                 if (w2[oc][ic][kr][kc] == 0)
                                     acc += window.data[kr][kc][ic];
@@ -350,23 +390,36 @@ void StemProcessor::run(
                             }
                         }
                     }
-                    if (config.use_bn) acc = acc * bn2_scale[oc] + bn2_bias[oc];
-                    if (config.use_relu && acc < 0) acc = 0;
-                    if (acc > 7.9375) acc = 7.9375;
-                    if (acc < -8.0) acc = -8.0;
-                    conv2_out[oc] = (stem_out_t)acc;
+                    conv2_acc[oc] = acc;
                 }
 
-                concat_buf.write_path_a(col, conv2_out, 32);
+                CONV2_POST_OC:
+                #pragma hls_pipeline_init_interval 2
+                for (int oc = 0; oc < 32; oc++) {
+                    stem_acc_t val = conv2_acc[oc];
+                    if (config.use_bn) val = val * bn2_scale[oc] + bn2_bias[oc];
+                    if (config.use_relu && val < 0) val = 0;
+                    if (val > 7.9375) val = 7.9375;
+                    if (val < -8.0) val = -8.0;
+                    conv2_out[oc] = (stem_out_t)val;
+                }
+
+                STEM_UNROLL_PRAGMA
+                for (int ch = 0; ch < 32; ch++) {
+                    conv2_row_stage[col][ch] = conv2_out[ch];
+                }
             }
+            conv2_row_idx = conv2_out_row;
+            conv2_row_valid = true;
             conv2_out_row++;
         }
 
         // ----------------------------------------------------------------
-        // Stage 5: Produce MaxPool output rows (parallel with Conv2)
+        // Stage 5: Produce one MaxPool row into staging buffer
         // ----------------------------------------------------------------
         STAGE5_ROWS:
         for (int s5 = 0; s5 < MAX_STAGE_ROWS; s5++) {
+            if (mp_row_valid) break;
             if (mp_out_row >= mp_out_h) break;
             if (!mp_buf.can_output_row(mp_out_row, conv0_out_row)) break;
 
@@ -376,7 +429,7 @@ void StemProcessor::run(
                 mp_buf.extract_window_2x2(mp_out_row, col, window);
 
                 stem_act_t mp_out[STEM_CH_PARALLEL];
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                STEM_UNROLL_PRAGMA
                 for (int ch = 0; ch < 32; ch++) {
                     stem_act_t v00 = window[0][0][ch];
                     stem_act_t v01 = window[0][1][ch];
@@ -387,8 +440,13 @@ void StemProcessor::run(
                     mp_out[ch] = (max01 > max23) ? max01 : max23;
                 }
 
-                concat_buf.write_path_b(col, mp_out, 32);
+                STEM_UNROLL_PRAGMA
+                for (int ch = 0; ch < 32; ch++) {
+                    mp_row_stage[col][ch] = mp_out[ch];
+                }
             }
+            mp_row_idx = mp_out_row;
+            mp_row_valid = true;
             mp_out_row++;
         }
     }
@@ -411,12 +469,12 @@ void StemProcessor::compute_conv3x3(
         stem_acc_t acc = 0;
         if (oc < valid_oc) {
             CONV3x3_IC:
-            #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+            STEM_UNROLL_PRAGMA
             for (int ic = 0; ic < STEM_CH_PARALLEL; ic++) {
                 if (ic < valid_ic) {
-                    #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                    STEM_UNROLL_PRAGMA
                     for (int kr = 0; kr < 3; kr++) {
-                        #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                        STEM_UNROLL_PRAGMA
                         for (int kc = 0; kc < 3; kc++) {
                             if (weights[oc][ic][kr][kc] == 0)
                                 acc += window.data[kr][kc][ic];
@@ -444,7 +502,7 @@ void StemProcessor::compute_conv1x1(
         stem_acc_t acc = 0;
         if (oc < valid_oc) {
             CONV1x1_IC:
-            #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+            STEM_UNROLL_PRAGMA
             for (int ic = 0; ic < STEM_CH_PARALLEL; ic++) {
                 if (ic < valid_ic) {
                     if (weights[oc][ic] == 0) acc += input[ic];
@@ -461,7 +519,7 @@ void StemProcessor::compute_maxpool2x2(
     stem_act_t output[STEM_CH_PARALLEL],
     int valid_ch
 ) {
-    #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+    STEM_UNROLL_PRAGMA
     for (int ch = 0; ch < STEM_CH_PARALLEL; ch++) {
         if (ch < valid_ch) {
             stem_act_t v00 = window[0][0][ch];
@@ -486,7 +544,7 @@ void StemProcessor::apply_bn_relu(
     stem_out_t output[STEM_CH_PARALLEL],
     int valid_ch
 ) {
-    #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+    STEM_UNROLL_PRAGMA
     for (int ch = 0; ch < STEM_CH_PARALLEL; ch++) {
         stem_acc_t val = input[ch];
         if (ch < valid_ch) {

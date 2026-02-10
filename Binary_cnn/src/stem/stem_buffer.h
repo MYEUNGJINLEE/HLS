@@ -49,7 +49,7 @@ public:
         int buf_row = row & STEM_LINE_MASK;
 
         WRITE_CH:
-        #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+        STEM_UNROLL_PRAGMA
         for (int ch = 0; ch < STEM_CH_PARALLEL; ch++) {
             buffer[buf_row][col][ch] = data[ch];
         }
@@ -62,7 +62,7 @@ public:
         int buf_row = row & STEM_LINE_MASK;
 
         WRITE_RGB:
-        #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+        STEM_UNROLL_PRAGMA
         for (int ch = 0; ch < STEM_CH_PARALLEL; ch++) {
             if (ch < 3) {
                 buffer[buf_row][col][ch] = rgb[ch];
@@ -79,7 +79,7 @@ public:
         int buf_row = row & STEM_LINE_MASK;
 
         WRITE_PARTIAL:
-        #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+        STEM_UNROLL_PRAGMA
         for (int ch = 0; ch < STEM_CH_PARALLEL; ch++) {
             if (ch < valid_ch) {
                 buffer[buf_row][col][ch] = data[ch];
@@ -96,7 +96,7 @@ public:
         int buf_row = row & STEM_LINE_MASK;
 
         READ_CH:
-        #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+        STEM_UNROLL_PRAGMA
         for (int ch = 0; ch < STEM_CH_PARALLEL; ch++) {
             data[ch] = buffer[buf_row][col][ch];
         }
@@ -111,16 +111,16 @@ public:
         int in_col_start = out_col * str - pad;
 
         EXTRACT_KR:
-        #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+        STEM_UNROLL_PRAGMA
         for (int kr = 0; kr < 3; kr++) {
             EXTRACT_KC:
-            #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+            STEM_UNROLL_PRAGMA
             for (int kc = 0; kc < 3; kc++) {
                 int in_row = in_row_start + kr;
                 int in_col = in_col_start + kc;
 
                 EXTRACT_CH:
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                STEM_UNROLL_PRAGMA
                 for (int ch = 0; ch < STEM_CH_PARALLEL; ch++) {
                     if (in_row < 0 || in_row >= img_height ||
                         in_col < 0 || in_col >= img_width) {
@@ -143,17 +143,17 @@ public:
         int in_col_start = out_col * 2;
 
         EXTRACT_MP_KR:
-        #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+        STEM_UNROLL_PRAGMA
         for (int kr = 0; kr < 2; kr++) {
             EXTRACT_MP_KC:
-            #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+            STEM_UNROLL_PRAGMA
             for (int kc = 0; kc < 2; kc++) {
                 int in_row = in_row_start + kr;
                 int in_col = in_col_start + kc;
                 int buf_row = in_row & STEM_LINE_MASK;
 
                 EXTRACT_MP_CH:
-                #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+                STEM_UNROLL_PRAGMA
                 for (int ch = 0; ch < STEM_CH_PARALLEL; ch++) {
                     if (in_row < img_height && in_col < img_width) {
                         window[kr][kc][ch] = buffer[buf_row][in_col][ch];
@@ -226,7 +226,7 @@ public:
     // Store Path A result (32 channels)
     void write_path_a(int col, const stem_act_t data[STEM_CH_PARALLEL], int valid_ch) {
         WRITE_A:
-        #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+        STEM_UNROLL_PRAGMA
         for (int ch = 0; ch < STEM_CH_PARALLEL; ch++) {
             if (ch < valid_ch) {
                 path_a[col][ch] = data[ch];
@@ -237,7 +237,7 @@ public:
     // Store Path B result (32 channels)
     void write_path_b(int col, const stem_act_t data[STEM_CH_PARALLEL], int valid_ch) {
         WRITE_B:
-        #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+        STEM_UNROLL_PRAGMA
         for (int ch = 0; ch < STEM_CH_PARALLEL; ch++) {
             if (ch < valid_ch) {
                 path_b[col][ch] = data[ch];
@@ -248,7 +248,7 @@ public:
     // Read concatenated result (64 channels)
     void read_concat(int col, stem_act_t data[STEM_CH_PARALLEL]) {
         READ_CONCAT:
-        #pragma hls_unroll factor=STEM_UNROLL_FACTOR
+        STEM_UNROLL_PRAGMA
         for (int ch = 0; ch < STEM_CH_PARALLEL; ch++) {
             if (ch < 32) {
                 data[ch] = path_a[col][ch];  // First 32ch from Path A

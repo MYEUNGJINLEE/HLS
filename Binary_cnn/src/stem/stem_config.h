@@ -39,6 +39,20 @@ static const int STEM_LINE_MASK   = STEM_LINE_ROWS - 1;  // For & operation
 #define STEM_UNROLL_FACTOR 1
 #endif
 
+// Catapult does not reliably parse macro tokens inside pragma factor fields.
+// Use _Pragma with literal factors to keep pragma expansion deterministic.
+#if STEM_UNROLL_FACTOR == 1
+#define STEM_UNROLL_PRAGMA _Pragma("hls_unroll factor=1")
+#elif STEM_UNROLL_FACTOR == 2
+#define STEM_UNROLL_PRAGMA _Pragma("hls_unroll factor=2")
+#elif STEM_UNROLL_FACTOR == 4
+#define STEM_UNROLL_PRAGMA _Pragma("hls_unroll factor=4")
+#elif STEM_UNROLL_FACTOR == 8
+#define STEM_UNROLL_PRAGMA _Pragma("hls_unroll factor=8")
+#else
+#error "Unsupported STEM_UNROLL_FACTOR. Use one of: 1, 2, 4, 8."
+#endif
+
 // Max rows processed per stage in one main-loop iteration.
 // Lower value reduces cross-stage memory dependency pressure.
 #ifndef STEM_MAX_STAGE_ROWS

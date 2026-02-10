@@ -35,55 +35,80 @@ puts "========================================"
 # Try multiple path formats since naming depends on Catapult version.
 # ============================================================================
 
-# Buffer paths to set (member.array suffix)
-set member_buffers {
-    line_buf_a.buffer
-    line_buf_b.buffer
-    concat_buf.path_a
-    concat_buf.path_b
-}
-set local_buffers {
-    run/conv1_buf.buffer
-    run/mp_buf.buffer
+proc map_buffer_resource {label keys roots} {
+    foreach root $roots {
+        foreach key $keys {
+            set path "${root}/${key}:rsc"
+            if {![catch {directive set $path -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err]} {
+                puts "MAP OK  : ${label} -> ${path}"
+                return 1
+            }
+        }
+    }
+    puts "MAP FAIL: ${label}"
+    return 0
 }
 
-# Possible top-level path prefixes (try each until one works)
-set path_prefixes {
+# Build candidate roots from discovered design names + known fallbacks.
+set roots {
     /StemProcessor
     /StemProcessor/run
     /stem_processor/StemProcessor
     /stem_processor/StemProcessor/run
 }
-
-set applied 0
-foreach prefix $path_prefixes {
-    set test_path "${prefix}/line_buf_a.buffer:rsc"
-    puts "Testing prefix: $prefix ..."
-    if {![catch {directive set $test_path -MAP_TO_MODULE {BLOCK_1R1W_RBW}}]} {
-        puts "  SUCCESS - using prefix: $prefix"
-        set applied 1
-        # Apply remaining member buffers (skip line_buf_a, already done)
-        foreach buf {line_buf_b.buffer concat_buf.path_a concat_buf.path_b} {
-            catch {directive set ${prefix}/${buf}:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err
-            puts "  ${prefix}/${buf}:rsc -> $err"
-        }
-        # Apply local buffers (V1 has conv1_buf and mp_buf as locals in run())
-        foreach buf $local_buffers {
-            catch {directive set ${prefix}/${buf}:rsc -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err
-            puts "  ${prefix}/${buf}:rsc -> $err"
-        }
-        break
-    } else {
-        puts "  FAILED"
-    }
+set design_names {}
+catch {set design_names [solution design get]}
+foreach d $design_names {
+    if {[string first "::" $d] >= 0} { continue }
+    lappend roots "/$d"
+    lappend roots "/$d/run"
 }
+set roots [lsort -unique $roots]
+puts "Memory mapping roots: $roots"
 
-if {!$applied} {
-    puts "WARNING: No valid path prefix found. Proceeding without memory directives."
-    puts "Check 'DESIGN HIERARCHY DEBUG' section above for available paths."
+set map_total 0
+set map_ok 0
+
+incr map_total
+if {[map_buffer_resource "line_buf_a.buffer" {line_buf_a.buffer line_buf_a/buffer} $roots]} { incr map_ok }
+incr map_total
+if {[map_buffer_resource "line_buf_b.buffer" {line_buf_b.buffer line_buf_b/buffer} $roots]} { incr map_ok }
+incr map_total
+if {[map_buffer_resource "conv1_buf.buffer" {conv1_buf.buffer conv1_buf/buffer run/conv1_buf.buffer run/conv1_buf/buffer} $roots]} { incr map_ok }
+incr map_total
+if {[map_buffer_resource "mp_buf.buffer" {mp_buf.buffer mp_buf/buffer run/mp_buf.buffer run/mp_buf/buffer} $roots]} { incr map_ok }
+incr map_total
+if {[map_buffer_resource "concat_buf.path_a" {concat_buf.path_a concat_buf/path_a} $roots]} { incr map_ok }
+incr map_total
+if {[map_buffer_resource "concat_buf.path_b" {concat_buf.path_b concat_buf/path_b} $roots]} { incr map_ok }
+
+puts "Memory directive mapping summary: ${map_ok}/${map_total} resources mapped."
+
+# Keep clock overhead explicit to avoid SCHD-22 style schedule blockers.
+if {[catch {directive set -CLOCK_OVERHEAD 0} clk_err]} {
+    puts "CLOCK_OVERHEAD set failed: $clk_err"
+} else {
+    puts "CLOCK_OVERHEAD set to 0"
 }
 
 go compile
+
+# Archive key reports so timing/schedule changes are traceable across runs.
+set report_dir ./logs/reports
+catch {file mkdir ./logs}
+catch {file mkdir $report_dir}
+set sols [lsort -dictionary [glob -nocomplain ./stem_processor/StemProcessor.v* ./stem_processor/solution.v*]]
+if {[llength $sols] > 0} {
+    set sol [lindex $sols end]
+    foreach f {messages.txt schedule.txt schedule.rpt architect.rpt compile.rpt} {
+        set src "${sol}/${f}"
+        if {[file exists $src]} {
+            set dst "${report_dir}/stem_${f}"
+            catch {file copy -force $src $dst}
+            puts "Archived report: $src -> $dst"
+        }
+    }
+}
 
 # Optional: generate SCVerify build/run scripts
 flow package require /SCVerify
