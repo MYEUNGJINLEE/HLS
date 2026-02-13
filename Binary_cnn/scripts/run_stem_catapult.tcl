@@ -247,6 +247,110 @@ map_to_register "out_grp" {
     MAIN_LOOP:if#1:for:out_grp
 } $roots
 
+# ---- Weight arrays (function-level locals in run()) ----
+# These are accessed in parallel from unrolled loops and MUST be registers.
+# w0[32][3][3][3]=864, w1[16][32]=512, w2[32][16][3][3]=4608, w3[32][64]=2048
+map_to_register "w0" {
+    run/w0 w0
+    run/MAIN_LOOP:w0 MAIN_LOOP:w0
+} $roots
+
+map_to_register "w1" {
+    run/w1 w1
+    run/MAIN_LOOP:w1 MAIN_LOOP:w1
+} $roots
+
+map_to_register "w2" {
+    run/w2 w2
+    run/MAIN_LOOP:w2 MAIN_LOOP:w2
+} $roots
+
+map_to_register "w3" {
+    run/w3 w3
+    run/MAIN_LOOP:w3 MAIN_LOOP:w3
+} $roots
+
+# ---- Shift arrays ----
+map_to_register "shift0" {
+    run/shift0 shift0
+    run/MAIN_LOOP:shift0 MAIN_LOOP:shift0
+} $roots
+
+map_to_register "shift1" {
+    run/shift1 shift1
+    run/MAIN_LOOP:shift1 MAIN_LOOP:shift1
+} $roots
+
+map_to_register "shift2" {
+    run/shift2 shift2
+    run/MAIN_LOOP:shift2 MAIN_LOOP:shift2
+} $roots
+
+map_to_register "shift3" {
+    run/shift3 shift3
+    run/MAIN_LOOP:shift3 MAIN_LOOP:shift3
+} $roots
+
+# ---- Bias arrays ----
+map_to_register "bias0" {
+    run/bias0 bias0
+    run/MAIN_LOOP:bias0 MAIN_LOOP:bias0
+} $roots
+
+map_to_register "bias1" {
+    run/bias1 bias1
+    run/MAIN_LOOP:bias1 MAIN_LOOP:bias1
+} $roots
+
+map_to_register "bias2" {
+    run/bias2 bias2
+    run/MAIN_LOOP:bias2 MAIN_LOOP:bias2
+} $roots
+
+map_to_register "bias3" {
+    run/bias3 bias3
+    run/MAIN_LOOP:bias3 MAIN_LOOP:bias3
+} $roots
+
+# ---- Loop-local accumulators (Stage 2+3: Conv0/Conv1) ----
+map_to_register "acc_partial_conv0" {
+    run/MAIN_LOOP:if#1:for:acc_partial_conv0
+    MAIN_LOOP:if#1:for:acc_partial_conv0
+} $roots
+
+map_to_register "acc_partial_conv1" {
+    run/MAIN_LOOP:if#1:for:acc_partial_conv1
+    MAIN_LOOP:if#1:for:acc_partial_conv1
+} $roots
+
+# ---- Loop-local accumulators (Stage 4: Conv2) ----
+map_to_register "acc_spatial" {
+    run/MAIN_LOOP:if#3:for:acc_spatial
+    MAIN_LOOP:if#3:for:acc_spatial
+} $roots
+
+# ---- Loop-local accumulators (Stage 6: Conv3) ----
+map_to_register "acc_partial_conv3" {
+    run/MAIN_LOOP:if#5:for:acc_partial
+    MAIN_LOOP:if#5:for:acc_partial
+} $roots
+
+# ---- Window arrays (used in multiple stages) ----
+map_to_register "window_conv0" {
+    run/MAIN_LOOP:if#1:for:window
+    MAIN_LOOP:if#1:for:window
+} $roots
+
+map_to_register "window_conv2" {
+    run/MAIN_LOOP:if#3:for:window
+    MAIN_LOOP:if#3:for:window
+} $roots
+
+map_to_register "window_mp" {
+    run/MAIN_LOOP:if#4:for:window
+    MAIN_LOOP:if#4:for:window
+} $roots
+
 puts "======== REGISTER/RAM MAPPINGS COMPLETE ========"
 
 # ============================================================================
