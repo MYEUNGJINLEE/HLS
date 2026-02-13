@@ -138,6 +138,100 @@ if {[catch {directive set -CLOCK_OVERHEAD 0} clk_err]} {
 }
 
 # ============================================================================
+# Register vs RAM Mapping
+# ============================================================================
+# Small arrays (accumulators, local buffers) -> registers
+# Large arrays (line buffers, row staging) -> BRAM
+# This prevents Catapult from inferring BRAM for small parallel-access arrays.
+# ============================================================================
+
+puts "======== APPLYING REGISTER/RAM MAPPINGS ========"
+
+proc map_to_register {label keys roots} {
+    foreach root $roots {
+        foreach key $keys {
+            set path "${root}/${key}:rsc"
+            if {![catch {directive set $path -MAP_TO_MODULE {[Register]}} err]} {
+                puts "REG OK  : ${label} -> ${path}"
+                return 1
+            }
+        }
+    }
+    puts "REG SKIP: ${label}"
+    return 0
+}
+
+# Partial accumulator arrays (small, need full parallel access -> registers)
+map_to_register "Conv0 partial acc" {
+    run/MAIN_LOOP:if#1:for:acc_partial_conv0
+    MAIN_LOOP:if#1:for:acc_partial_conv0
+    run/MAIN_LOOP:if#1:for:CONV0_IC:for:acc_partial_conv0
+    MAIN_LOOP:if#1:for:CONV0_IC:for:acc_partial_conv0
+} $roots
+
+map_to_register "Conv1 partial acc" {
+    run/MAIN_LOOP:if#1:for:acc_partial_conv1
+    MAIN_LOOP:if#1:for:acc_partial_conv1
+    run/MAIN_LOOP:if#1:for:CONV1_IC_GRP:for:acc_partial_conv1
+    MAIN_LOOP:if#1:for:CONV1_IC_GRP:for:acc_partial_conv1
+} $roots
+
+map_to_register "Conv2 spatial acc" {
+    run/MAIN_LOOP:if#3:if:for:acc_spatial
+    MAIN_LOOP:if#3:if:for:acc_spatial
+    run/MAIN_LOOP:if#3:if:for:CONV2_IC_GRP:for:acc_spatial
+    MAIN_LOOP:if#3:if:for:CONV2_IC_GRP:for:acc_spatial
+} $roots
+
+map_to_register "Conv3 partial acc" {
+    run/MAIN_LOOP:if#5:if:for:acc_partial
+    MAIN_LOOP:if#5:if:for:acc_partial
+    run/MAIN_LOOP:if#5:if:for:CONV3_IC_GRP:for:acc_partial
+    MAIN_LOOP:if#5:if:for:CONV3_IC_GRP:for:acc_partial
+} $roots
+
+# Conv3 preload local arrays (fully partitioned registers)
+map_to_register "conv2_local" {
+    run/MAIN_LOOP:if#5:if:for:conv2_local
+    MAIN_LOOP:if#5:if:for:conv2_local
+    run/conv2_local
+} $roots
+
+map_to_register "mp_local" {
+    run/MAIN_LOOP:if#5:if:for:mp_local
+    MAIN_LOOP:if#5:if:for:mp_local
+    run/mp_local
+} $roots
+
+# MaxPool poststore result array
+map_to_register "mp_result" {
+    run/MAIN_LOOP:if#4:if:for:mp_result
+    MAIN_LOOP:if#4:if:for:mp_result
+    run/mp_result
+} $roots
+
+# Output channel array
+map_to_register "out_ch" {
+    run/MAIN_LOOP:if#5:if:for:out_ch
+    MAIN_LOOP:if#5:if:for:out_ch
+    run/out_ch
+} $roots
+
+# Conv0 output pixels
+map_to_register "conv0_pix" {
+    run/MAIN_LOOP:if#1:for:conv0_pix
+    MAIN_LOOP:if#1:for:conv0_pix
+} $roots
+
+# Conv1 output group
+map_to_register "out_grp" {
+    run/MAIN_LOOP:if#1:for:out_grp
+    MAIN_LOOP:if#1:for:out_grp
+} $roots
+
+puts "======== REGISTER/RAM MAPPINGS COMPLETE ========"
+
+# ============================================================================
 # Loop Scheduling and Dependence Directives
 # ============================================================================
 # Help scheduler by breaking false dependencies on partial accumulator arrays.

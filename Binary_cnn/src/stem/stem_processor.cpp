@@ -484,8 +484,11 @@ void StemProcessor::run(
         if (mp_out_row < mp_out_h && mp_buf.can_output_row(mp_out_row, conv0_out_row)) {
             const int mp_slot = mp_out_row & 1;
             if (!mp_row_valid[mp_slot]) {
-                #pragma hls_pipeline_init_interval 2
                 for (int col = 0; col < mp_out_w; col++) {
+                    // Compute MaxPool into local registers first
+                    stem_act_t mp_result[MP_OUT_CH];
+                    #pragma hls_array_partition variable=mp_result complete
+
                     for (int grp = 0; grp < CH_GRP32; grp++) {
                         stem_act_t window[2][2][STEM_MP_PAR];
                         #pragma hls_array_partition variable=window complete dim=3
@@ -504,8 +507,15 @@ void StemProcessor::run(
                             if (window[1][1][ch] > v) {
                                 v = window[1][1][ch];
                             }
-                            mp_row_stage[mp_slot][col][ch_base + ch] = v;
+                            mp_result[ch_base + ch] = v;
                         }
+                    }
+
+                    // Poststore: sequential write to BRAM (1 port sufficient)
+                    POSTSTORE_MP:
+                    #pragma hls_pipeline_init_interval 1
+                    for (int ch = 0; ch < MP_OUT_CH; ch++) {
+                        mp_row_stage[mp_slot][col][ch] = mp_result[ch];
                     }
                 }
 
