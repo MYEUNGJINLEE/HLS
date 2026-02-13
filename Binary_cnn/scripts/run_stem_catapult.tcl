@@ -247,28 +247,9 @@ map_to_register "out_grp" {
     MAIN_LOOP:if#1:for:out_grp
 } $roots
 
-# ---- Weight arrays (function-level locals in run()) ----
-# These are accessed in parallel from unrolled loops and MUST be registers.
-# w0[32][3][3][3]=864, w1[16][32]=512, w2[32][16][3][3]=4608, w3[32][64]=2048
-map_to_register "w0" {
-    run/w0 w0
-    run/MAIN_LOOP:w0 MAIN_LOOP:w0
-} $roots
-
-map_to_register "w1" {
-    run/w1 w1
-    run/MAIN_LOOP:w1 MAIN_LOOP:w1
-} $roots
-
-map_to_register "w2" {
-    run/w2 w2
-    run/MAIN_LOOP:w2 MAIN_LOOP:w2
-} $roots
-
-map_to_register "w3" {
-    run/w3 w3
-    run/MAIN_LOOP:w3 MAIN_LOOP:w3
-} $roots
+# ---- Weight arrays: w0-w3 stay in BRAM ----
+# Parallel access is handled via preload tiles (w0_tile, w1_tile, w2_tile, w3_tile)
+# in C++ code.  No register mapping needed for the original weight arrays.
 
 # ---- Shift arrays ----
 map_to_register "shift0" {
