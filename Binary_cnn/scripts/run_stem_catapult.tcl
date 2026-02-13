@@ -10,10 +10,9 @@ solution new -state initial
 solution options defaults
 
 # Useful default flow options
-solution options set /Flows/Enable-SCVerify yes
 solution options set /Output/GenerateCycleNetlist false
 
-# Design + testbench files
+# Design + testbench registration (TB excluded from synthesis flow)
 solution file add ./src/stem/stem_processor.cpp -type C++
 solution file add ./src/stem/stem_processor_tb.cpp -type C++ -exclude true
 
@@ -49,6 +48,20 @@ proc map_buffer_resource {label keys roots} {
     return 0
 }
 
+proc apply_array_partition {label keys roots dim factor} {
+    foreach root $roots {
+        foreach key $keys {
+            set path "${root}/${key}:rsc"
+            if {![catch {directive set $path -ARRAY_PARTITION cyclic -dim $dim -factor $factor} err]} {
+                puts "PARTITION OK  : ${label} -> ${path}"
+                return 1
+            }
+        }
+    }
+    puts "PARTITION FAIL: ${label}"
+    return 0
+}
+
 # Build candidate roots from discovered design names + known fallbacks.
 set roots {
     /StemProcessor
@@ -70,19 +83,25 @@ set map_total 0
 set map_ok 0
 
 incr map_total
-if {[map_buffer_resource "line_buf_a.buffer" {line_buf_a.buffer line_buf_a/buffer} $roots]} { incr map_ok }
-incr map_total
-if {[map_buffer_resource "line_buf_b.buffer" {line_buf_b.buffer line_buf_b/buffer} $roots]} { incr map_ok }
+if {[map_buffer_resource "line_buf_a.buffer" {line_buf_a.buffer line_buf_a/buffer run/line_buf_a.buffer run/line_buf_a/buffer} $roots]} { incr map_ok }
 incr map_total
 if {[map_buffer_resource "conv1_buf.buffer" {conv1_buf.buffer conv1_buf/buffer run/conv1_buf.buffer run/conv1_buf/buffer} $roots]} { incr map_ok }
 incr map_total
 if {[map_buffer_resource "mp_buf.buffer" {mp_buf.buffer mp_buf/buffer run/mp_buf.buffer run/mp_buf/buffer} $roots]} { incr map_ok }
-incr map_total
-if {[map_buffer_resource "concat_buf.path_a" {concat_buf.path_a concat_buf/path_a} $roots]} { incr map_ok }
-incr map_total
-if {[map_buffer_resource "concat_buf.path_b" {concat_buf.path_b concat_buf/path_b} $roots]} { incr map_ok }
 
 puts "Memory directive mapping summary: ${map_ok}/${map_total} resources mapped."
+
+# Array partitioning for parallel channel access (dim=4 is inner channel index).
+# Use discovered hierarchy roots; do not hardcode /StemProcessor/run paths.
+set part_total 0
+set part_ok 0
+incr part_total
+if {[apply_array_partition "line_buf_a.buffer" {line_buf_a.buffer line_buf_a/buffer run/line_buf_a.buffer run/line_buf_a/buffer} $roots 4 8]} { incr part_ok }
+incr part_total
+if {[apply_array_partition "conv1_buf.buffer" {conv1_buf.buffer conv1_buf/buffer run/conv1_buf.buffer run/conv1_buf/buffer} $roots 4 8]} { incr part_ok }
+incr part_total
+if {[apply_array_partition "mp_buf.buffer" {mp_buf.buffer mp_buf/buffer run/mp_buf.buffer run/mp_buf/buffer} $roots 4 8]} { incr part_ok }
+puts "Array partition summary: ${part_ok}/${part_total} resources partitioned."
 
 # Keep clock overhead explicit to avoid SCHD-22 style schedule blockers.
 if {[catch {directive set -CLOCK_OVERHEAD 0} clk_err]} {
@@ -91,27 +110,56 @@ if {[catch {directive set -CLOCK_OVERHEAD 0} clk_err]} {
     puts "CLOCK_OVERHEAD set to 0"
 }
 
-go compile
+# ============================================================================
+# Loop Scheduling and Dependence Directives
+# ============================================================================
+# Help scheduler by breaking false dependencies on partial accumulator arrays.
+# These arrays are used to flatten nested accumulator loops and eliminate
+# feedback paths that cause SCHD-3 errors.
+# ============================================================================
 
-# Archive key reports so timing/schedule changes are traceable across runs.
-set report_dir ./logs/reports
-catch {file mkdir ./logs}
-catch {file mkdir $report_dir}
-set sols [lsort -dictionary [glob -nocomplain ./stem_processor/StemProcessor.v* ./stem_processor/solution.v*]]
-if {[llength $sols] > 0} {
-    set sol [lindex $sols end]
-    foreach f {messages.txt schedule.txt schedule.rpt architect.rpt compile.rpt} {
-        set src "${sol}/${f}"
-        if {[file exists $src]} {
-            set dst "${report_dir}/stem_${f}"
-            catch {file copy -force $src $dst}
-            puts "Archived report: $src -> $dst"
+puts "======== APPLYING LOOP DEPENDENCE DIRECTIVES ========"
+
+# Helper proc to set loop dependence directives
+proc set_loop_dependence {label keys roots} {
+    foreach root $roots {
+        foreach key $keys {
+            set path "${root}/${key}"
+            if {![catch {directive set $path -DEPENDENCE_TYPE inter -DEPENDENCE false} err]} {
+                puts "DEPENDENCE OK  : ${label} -> ${path}"
+                return 1
+            }
         }
     }
+    puts "DEPENDENCE SKIP: ${label} (path not found, pragma may suffice)"
+    return 0
 }
 
-# Optional: generate SCVerify build/run scripts
-flow package require /SCVerify
+# Try to set false inter-iteration dependence on partial accumulator arrays
+# This helps the scheduler understand that loop iterations are independent.
+set_loop_dependence "Conv0 partial acc" {
+    run/MAIN_LOOP:if#1:for:CONV0_IC:for:acc_partial_conv0
+    MAIN_LOOP:if#1:for:CONV0_IC:for:acc_partial_conv0
+} $roots
+
+set_loop_dependence "Conv1 partial acc" {
+    run/MAIN_LOOP:if#1:for:CONV1_IC_GRP:for:acc_partial_conv1
+    MAIN_LOOP:if#1:for:CONV1_IC_GRP:for:acc_partial_conv1
+} $roots
+
+set_loop_dependence "Conv2 partial acc" {
+    run/MAIN_LOOP:if#3:if:for:CONV2_IC_GRP:for:acc_spatial
+    MAIN_LOOP:if#3:if:for:CONV2_IC_GRP:for:acc_spatial
+} $roots
+
+set_loop_dependence "Conv3 partial acc" {
+    run/MAIN_LOOP:if#5:if:for:CONV3_IC_GRP:for:acc_partial
+    MAIN_LOOP:if#5:if:for:CONV3_IC_GRP:for:acc_partial
+} $roots
+
+puts "======== LOOP DIRECTIVES COMPLETE ========"
+
+go compile
 
 # Generate .ccs launcher so GUI can reopen project
 set ccs_fd [open ./stem_processor.ccs w]

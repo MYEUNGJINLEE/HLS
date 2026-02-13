@@ -2,11 +2,10 @@
 #define STEM_CONFIG_H
 
 #include <ac_int.h>
-#include <ac_fixed.h>
 #include <ac_channel.h>
 
 // ============================================================================
-// Stem Layer Configuration
+// Stem Layer Configuration (Binary Weight + int8 + Shift-Scale)
 // ============================================================================
 //
 // YOLO Stem Structure:
@@ -18,9 +17,9 @@
 //                       └─→ Conv3: 1x1 (64→32) → 160x160x32
 //
 // Hardware Strategy:
-//   - Single Conv Engine (64x64 PE) reused for all layers
-//   - 2 Line Buffers (ping-pong)
-//   - Sequential processing: Conv0 → Conv1 → Conv2 → MaxPool → Conv3
+//   - Multi-engine, channel-grouped dataflow
+//   - int8 activations, binary weights (±1)
+//   - Scale via shift-only, bias added before ReLU/clamp
 //
 // ============================================================================
 
@@ -28,54 +27,76 @@
 // Basic Constants
 // ----------------------------------------------------------------------------
 
-static const int STEM_CH_PARALLEL = 64;      // PE parallelism (fixed)
+static const int STEM_CH_PARALLEL = 64;      // Packed bus width (64ch x 8bit)
 static const int STEM_MAX_WIDTH   = 640;     // Maximum input width
 static const int STEM_LINE_ROWS   = 8;       // Line buffer rows (power of 2)
 static const int STEM_LINE_MASK   = STEM_LINE_ROWS - 1;  // For & operation
 
-// Synthesis-stable default partial unroll factor.
-// Keep this low to reduce line-buffer port pressure and scheduling risk.
-#ifndef STEM_UNROLL_FACTOR
-#define STEM_UNROLL_FACTOR 1
-#endif
+// Channel parallelism (fixed)
+static const int STEM_IC_PAR   = 8;
+static const int STEM_OC_PAR   = 8;
+static const int STEM_MP_PAR   = 8;
+static const int STEM_IC_PAR0  = 3;  // Conv0 IC
 
-// Catapult does not reliably parse macro tokens inside pragma factor fields.
-// Use _Pragma with literal factors to keep pragma expansion deterministic.
-#if STEM_UNROLL_FACTOR == 1
-#define STEM_UNROLL_PRAGMA _Pragma("hls_unroll factor=1")
-#elif STEM_UNROLL_FACTOR == 2
-#define STEM_UNROLL_PRAGMA _Pragma("hls_unroll factor=2")
-#elif STEM_UNROLL_FACTOR == 4
-#define STEM_UNROLL_PRAGMA _Pragma("hls_unroll factor=4")
-#elif STEM_UNROLL_FACTOR == 8
-#define STEM_UNROLL_PRAGMA _Pragma("hls_unroll factor=8")
-#else
-#error "Unsupported STEM_UNROLL_FACTOR. Use one of: 1, 2, 4, 8."
-#endif
-
-// Max rows processed per stage in one main-loop iteration.
-// Lower value reduces cross-stage memory dependency pressure.
-#ifndef STEM_MAX_STAGE_ROWS
-#define STEM_MAX_STAGE_ROWS 1
-#endif
+// Channel groups per layer
+static const int CH_GRP32 = 32 / STEM_OC_PAR;  // 4
+static const int CH_GRP16 = 16 / STEM_OC_PAR;  // 2
+static const int CH_GRP64 = 64 / STEM_OC_PAR;  // 8
 
 // ----------------------------------------------------------------------------
-// Data Types (matching streaming module)
+// Data Types
 // ----------------------------------------------------------------------------
 
-typedef ac_fixed<8, 4, true>   stem_act_t;      // Activation: Q4.4
-typedef ac_int<1, false>       stem_bw_t;       // Binary weight
-typedef ac_fixed<24, 16, true> stem_acc_t;      // Accumulator: Q16.8
-typedef ac_fixed<8, 4, true>   stem_out_t;      // Output activation
-typedef ac_fixed<16, 8, true>  stem_bn_t;       // BN parameters
+typedef ac_int<8, true>   stem_act_t;   // int8 activation
+typedef ac_int<8, true>   stem_out_t;   // int8 output
+typedef ac_int<20, true>  stem_acc_t;   // accumulator (shift-safe)
+
+typedef ac_int<1, false>  stem_bw_t;    // binary weight (0:+1, 1:-1)
+
+typedef ac_int<8, true>   stem_shift_t; // shift (signed)
+typedef ac_int<16, true>  stem_bias_t;  // bias (signed)
 
 // Packed types for streaming
-typedef ac_int<512, false>     stem_packed_act_t;  // 64ch x 8bit
-typedef ac_int<64, false>      stem_packed_bw_t;   // 64 binary weights
-typedef ac_int<24, false>      stem_packed_rgb_t;  // 3ch x 8bit RGB input
+typedef ac_int<512, false> stem_packed_act_t;  // 64ch x 8bit
+typedef ac_int<64, false>  stem_packed_bw_t;   // 64-bit packed weight/param
+typedef ac_int<24, false>  stem_packed_rgb_t;  // 3ch x 8bit RGB input
+
+// Weight request metadata (DRAM scheduling)
+enum stem_weight_layer_t {
+    STEM_W_CONV0 = 0,
+    STEM_W_CONV1 = 1,
+    STEM_W_CONV2 = 2,
+    STEM_W_CONV3 = 3
+};
+
+struct stem_weight_req_t {
+    ac_int<2, false> layer;
+    ac_int<12, false> packs;
+};
+
+// Runtime status stream for scheduler/verification visibility.
+enum stem_status_code_t {
+    ST_W_READY    = 1,
+    ST_IN_READY   = 2,
+    ST_TILE_READY = 3,
+    ST_TILE_DONE  = 4,
+    ST_FRAME_DONE = 5
+};
+
+struct stem_status_t {
+    ac_int<4, false> code;
+    ac_int<2, false> layer;
+    ac_int<10, false> row_idx;
+    ac_int<10, false> tile_idx;
+};
+
+// Vector (8ch) for internal streaming
+struct stem_vec_t {
+    stem_act_t v[STEM_OC_PAR];
+};
 
 // ----------------------------------------------------------------------------
-// Operation Modes
+// Operation Modes (kept for compatibility)
 // ----------------------------------------------------------------------------
 
 typedef enum {
@@ -112,32 +133,23 @@ static const int CONV3_IN_H  = 160, CONV3_IN_W  = 160, CONV3_IN_CH  = 64;
 static const int CONV3_OUT_H = 160, CONV3_OUT_W = 160, CONV3_OUT_CH = 32;
 static const int CONV3_K = 1, CONV3_S = 1, CONV3_P = 0;
 
-// ----------------------------------------------------------------------------
-// Weight Sizes (binary weights, very compact)
-// ----------------------------------------------------------------------------
-
-// Conv0: 3x3, IC=3, OC=32 → 3*32*9 = 864 bits = 108 bytes
-// Conv1: 1x1, IC=32, OC=16 → 32*16 = 512 bits = 64 bytes
-// Conv2: 3x3, IC=16, OC=32 → 16*32*9 = 4608 bits = 576 bytes
-// Conv3: 1x1, IC=64, OC=32 → 64*32 = 2048 bits = 256 bytes
-// Total: ~1 KB (very small!)
-
-// ----------------------------------------------------------------------------
-// 3x3 Window for Convolution
-// ----------------------------------------------------------------------------
-
-struct StemWindow3x3 {
-    stem_act_t data[3][3][STEM_CH_PARALLEL];
-};
+// Layer packet counts for streamed binary weights + per-OC params.
+// Conv0: 32*3 weight packs + 32 param packs = 128
+// Conv1: 16*1 weight packs + 16 param packs = 32
+// Conv2: 32*16 weight packs + 32 param packs = 544
+// Conv3: 32*1 weight packs + 32 param packs = 64
+static const int STEM_PACKS_CONV0 = (CONV0_OUT_CH * CONV0_IN_CH) + CONV0_OUT_CH;
+static const int STEM_PACKS_CONV1 = CONV1_OUT_CH + CONV1_OUT_CH;
+static const int STEM_PACKS_CONV2 = (CONV2_OUT_CH * CONV2_IN_CH) + CONV2_OUT_CH;
+static const int STEM_PACKS_CONV3 = CONV3_OUT_CH + CONV3_OUT_CH;
 
 // ----------------------------------------------------------------------------
-// Runtime Configuration (for flexible testing)
+// Runtime Configuration
 // ----------------------------------------------------------------------------
 
 struct StemConfig {
     ac_int<10, false> input_height;
     ac_int<10, false> input_width;
-    bool use_bn;
     bool use_relu;
 };
 

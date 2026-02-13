@@ -1,4 +1,4 @@
-.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean stem stem-log stem-gui stem-gui-build stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean clean
+.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean stem stem-log stem-gui stem-gui-build stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean clean-artifacts clean
 .SILENT:
 
 # Update local repository to latest origin/dev (stash handles unstaged changes)
@@ -66,8 +66,23 @@ stem2-clean:
 	cd Binary_cnn && rm -rf stem_v2_processor* stem_v2_processor.ccs
 
 # Clean all Catapult-generated artifacts
-clean: stream-clean block-clean stem-clean stem2-clean
-	cd Binary_cnn && rm -rf bin_cnn bin_cnn.ccs Catapult Catapult.ccs logs catapult_pid* .Catapult*
+clean-artifacts:
+	rm -rf \
+		Binary_cnn/bin_cnn \
+		Binary_cnn/bin_cnn.ccs \
+		Binary_cnn/Catapult \
+		Binary_cnn/Catapult.ccs \
+		Binary_cnn/logs \
+		Binary_cnn/catapult.log \
+		Binary_cnn/catapult_pid* \
+		Binary_cnn/.Catapult* \
+		catapult.log \
+		catapult_pid* \
+		.Catapult*
+	find Binary_cnn -type d \( -name CDesignChecker -o -name scverify \) -prune -exec rm -rf {} +
+	find Binary_cnn -type f \( -name '*.ccs' -o -name '*.vcd' -o -name '*.wlf' -o -name 'transcript' \) -delete
+
+clean: stream-clean block-clean stem-clean stem2-clean clean-artifacts
 
 # Run block processor Catapult in batch mode with log (auto-cleans old project)
 block: block-clean
@@ -126,7 +141,7 @@ block-gui:
 
 # Run stem processor compile flow, then open GUI project file
 stem: stem-clean
-	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
+	cd Binary_cnn && catapult -shell -file scripts/run_stem_catapult.tcl
 	cd Binary_cnn && \
 	if [ -z "$$DISPLAY" ]; then \
 		echo "[stem] Compile finished. DISPLAY is empty, skipping GUI open."; \
@@ -142,44 +157,30 @@ stem: stem-clean
 		exit 1; \
 	fi
 
-# Run stem processor in batch mode with full log
+# Run stem processor in batch mode
 stem-log: stem-clean
-	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
+	cd Binary_cnn && catapult -shell -file scripts/run_stem_catapult.tcl
 
 # Run stem processor testbench in auto mode
-# - all 3 files exist: stem-tb-weight
-# - none exist: stem-tb-no-weight
-# - partial files: error
+# - packed weight file exists: stem-tb-weight
+# - missing packed weight file: stem-tb-no-weight
 stem-tb:
-	@HAS_W=0; HAS_S=0; HAS_B=0; \
+	@HAS_W=0; \
 	if [ -f "Binary_cnn/weights/stem_weights.txt" ]; then HAS_W=1; fi; \
-	if [ -f "Binary_cnn/weights/stem_bn_scale.txt" ]; then HAS_S=1; fi; \
-	if [ -f "Binary_cnn/weights/stem_bn_bias.txt" ]; then HAS_B=1; fi; \
-	COUNT=$$((HAS_W + HAS_S + HAS_B)); \
-	if [ "$$COUNT" -eq 3 ]; then \
-		echo "[stem-tb] Found all weight/BN files. Running stem-tb-weight."; \
+	if [ "$$HAS_W" -eq 1 ]; then \
+		echo "[stem-tb] Found packed weight file. Running stem-tb-weight."; \
 		$(MAKE) stem-tb-weight; \
-	elif [ "$$COUNT" -eq 0 ]; then \
-		echo "[stem-tb] No weight/BN files found. Running stem-tb-no-weight."; \
-		$(MAKE) stem-tb-no-weight; \
 	else \
-		echo "[stem-tb] Partial weight/BN files detected. Provide all 3 files or none."; \
-		if [ "$$HAS_W" -eq 0 ]; then echo "Missing: Binary_cnn/weights/stem_weights.txt"; fi; \
-		if [ "$$HAS_S" -eq 0 ]; then echo "Missing: Binary_cnn/weights/stem_bn_scale.txt"; fi; \
-		if [ "$$HAS_B" -eq 0 ]; then echo "Missing: Binary_cnn/weights/stem_bn_bias.txt"; fi; \
-		exit 1; \
+		echo "[stem-tb] Packed weight file not found. Running stem-tb-no-weight."; \
+		$(MAKE) stem-tb-no-weight; \
 	fi
 
-# Run stem processor testbench with real weight/BN files
-# Required files:
+# Run stem processor testbench with packed weight stream file
+# Required file:
 #   Binary_cnn/weights/stem_weights.txt
-#   Binary_cnn/weights/stem_bn_scale.txt
-#   Binary_cnn/weights/stem_bn_bias.txt
 stem-tb-weight: stem-clean weight-dir
 	@if [ ! -f "Binary_cnn/weights/stem_weights.txt" ]; then echo "Missing Binary_cnn/weights/stem_weights.txt"; exit 1; fi
-	@if [ ! -f "Binary_cnn/weights/stem_bn_scale.txt" ]; then echo "Missing Binary_cnn/weights/stem_bn_scale.txt"; exit 1; fi
-	@if [ ! -f "Binary_cnn/weights/stem_bn_bias.txt" ]; then echo "Missing Binary_cnn/weights/stem_bn_bias.txt"; exit 1; fi
-	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
+	cd Binary_cnn && catapult -shell -file scripts/run_stem_catapult.tcl
 	cd Binary_cnn && ROOT_DIR=$$(pwd); \
 	SOL_DIR=$$(ls -d stem_processor/StemProcessor.v* stem_processor/solution.v* 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$SOL_DIR" ]; then echo "No stem solution directory found (StemProcessor.v* or solution.v*)."; exit 1; fi; \
@@ -197,35 +198,37 @@ stem-tb-weight: stem-clean weight-dir
 	PROJ_DIR=$$(dirname "$$SOL_DIR"); \
 	PROJ_DIR_ABS="$$ROOT_DIR/$$PROJ_DIR"; \
 	SCV_MK_ABS="$$ROOT_DIR/$$SCV_MK"; \
-	SCV_LOG="$$ROOT_DIR/logs/scverify_stem_sim.log"; \
-	LAUNCH_TCL="$$ROOT_DIR/logs/stem_scverify_launch.tcl"; \
+	SCV_LOG=$$(mktemp /tmp/scverify_stem_sim.XXXXXX.log); \
+	LAUNCH_TCL=$$(mktemp /tmp/stem_scverify_launch.XXXXXX.tcl); \
 	printf "if {![file isdirectory {%s}]} { error {missing stem project directory} }\nproject load {%s} 2025.2\nflow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$PROJ_DIR_ABS" "$$PROJ_DIR_ABS" "$$SCV_MK_ABS" > "$$LAUNCH_TCL"; \
 	(cd "$$ROOT_DIR" && \
 		STEM_WEIGHT_FILE="$$ROOT_DIR/weights/stem_weights.txt" \
-		STEM_BN_SCALE_FILE="$$ROOT_DIR/weights/stem_bn_scale.txt" \
-		STEM_BN_BIAS_FILE="$$ROOT_DIR/weights/stem_bn_bias.txt" \
 		catapult -shell -file "$$LAUNCH_TCL" > "$$SCV_LOG" 2>&1); \
 	SIM_RC=$$?; \
 	rm -f "$$LAUNCH_TCL"; \
 	cat "$$SCV_LOG"; \
 	if [ "$$SIM_RC" -ne 0 ]; then \
+		rm -f "$$SCV_LOG"; \
 		echo "[stem-tb] FAIL: SCVerify returned $$SIM_RC"; \
 		exit "$$SIM_RC"; \
 	fi; \
 	if grep -q "\\*\\*\\* TEST PASSED \\*\\*\\*" "$$SCV_LOG"; then \
+		rm -f "$$SCV_LOG"; \
 		echo "[stem-tb] PASS"; \
 	elif grep -q "\\*\\*\\* TEST FAILED \\*\\*\\*" "$$SCV_LOG"; then \
+		rm -f "$$SCV_LOG"; \
 		echo "[stem-tb] FAIL: TB reported TEST FAILED"; \
 		exit 1; \
 	else \
+		rm -f "$$SCV_LOG"; \
 		echo "[stem-tb] FAIL: PASS marker not found in $$SCV_LOG"; \
 		exit 1; \
 	fi
 
-# Run stem processor testbench without external weight/BN files
-# (forces TB fallback: pseudo-random weights + identity BN)
+# Run stem processor testbench without external packed weight file
+# (forces TB fallback: pseudo-random packed weights/params)
 stem-tb-no-weight: stem-clean
-	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_stem_catapult.tcl 2>&1 | tee logs/catapult_stem.log
+	cd Binary_cnn && catapult -shell -file scripts/run_stem_catapult.tcl
 	cd Binary_cnn && ROOT_DIR=$$(pwd); \
 	SOL_DIR=$$(ls -d stem_processor/StemProcessor.v* stem_processor/solution.v* 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$SOL_DIR" ]; then echo "No stem solution directory found (StemProcessor.v* or solution.v*)."; exit 1; fi; \
@@ -243,25 +246,29 @@ stem-tb-no-weight: stem-clean
 	PROJ_DIR=$$(dirname "$$SOL_DIR"); \
 	PROJ_DIR_ABS="$$ROOT_DIR/$$PROJ_DIR"; \
 	SCV_MK_ABS="$$ROOT_DIR/$$SCV_MK"; \
-	SCV_LOG="$$ROOT_DIR/logs/scverify_stem_sim.log"; \
-	LAUNCH_TCL="$$ROOT_DIR/logs/stem_scverify_launch.tcl"; \
+	SCV_LOG=$$(mktemp /tmp/scverify_stem_sim.XXXXXX.log); \
+	LAUNCH_TCL=$$(mktemp /tmp/stem_scverify_launch.XXXXXX.tcl); \
 	printf "if {![file isdirectory {%s}]} { error {missing stem project directory} }\nproject load {%s} 2025.2\nflow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$PROJ_DIR_ABS" "$$PROJ_DIR_ABS" "$$SCV_MK_ABS" > "$$LAUNCH_TCL"; \
 	(cd "$$ROOT_DIR" && \
-		STEM_WEIGHT_FILE= STEM_BN_SCALE_FILE= STEM_BN_BIAS_FILE= \
+		STEM_WEIGHT_FILE= \
 		catapult -shell -file "$$LAUNCH_TCL" > "$$SCV_LOG" 2>&1); \
 	SIM_RC=$$?; \
 	rm -f "$$LAUNCH_TCL"; \
 	cat "$$SCV_LOG"; \
 	if [ "$$SIM_RC" -ne 0 ]; then \
+		rm -f "$$SCV_LOG"; \
 		echo "[stem-tb] FAIL: SCVerify returned $$SIM_RC"; \
 		exit "$$SIM_RC"; \
 	fi; \
 	if grep -q "\\*\\*\\* TEST PASSED \\*\\*\\*" "$$SCV_LOG"; then \
+		rm -f "$$SCV_LOG"; \
 		echo "[stem-tb] PASS"; \
 	elif grep -q "\\*\\*\\* TEST FAILED \\*\\*\\*" "$$SCV_LOG"; then \
+		rm -f "$$SCV_LOG"; \
 		echo "[stem-tb] FAIL: TB reported TEST FAILED"; \
 		exit 1; \
 	else \
+		rm -f "$$SCV_LOG"; \
 		echo "[stem-tb] FAIL: PASS marker not found in $$SCV_LOG"; \
 		exit 1; \
 	fi
