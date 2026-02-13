@@ -525,8 +525,24 @@ void StemProcessor::run(
                 conv2_row_idx[run_slot] == conv3_out_row &&
                 mp_row_idx[run_slot] == conv3_out_row) {
 
-                #pragma hls_pipeline_init_interval 2
                 for (int col = 0; col < conv2_out_w; col++) {
+                    // Preload BRAM -> local registers (sequential read, 1 port sufficient)
+                    stem_act_t conv2_local[CONV2_OUT_CH];
+                    stem_act_t mp_local[MP_OUT_CH];
+                    #pragma hls_array_partition variable=conv2_local complete
+                    #pragma hls_array_partition variable=mp_local complete
+
+                    PRELOAD_CONV2:
+                    #pragma hls_pipeline_init_interval 1
+                    for (int ch = 0; ch < CONV2_OUT_CH; ch++) {
+                        conv2_local[ch] = conv2_row_stage[run_slot][col][ch];
+                    }
+                    PRELOAD_MP:
+                    #pragma hls_pipeline_init_interval 1
+                    for (int ch = 0; ch < MP_OUT_CH; ch++) {
+                        mp_local[ch] = mp_row_stage[run_slot][col][ch];
+                    }
+
                     stem_act_t out_ch[CONV3_OUT_CH];
                     #pragma hls_array_partition variable=out_ch cyclic factor=8 dim=1
 
@@ -551,9 +567,9 @@ void StemProcessor::run(
                                 const int ic_idx = ic_base + ic;
                                 stem_act_t val;
                                 if (ic_idx < CONV2_OUT_CH) {
-                                    val = conv2_row_stage[run_slot][col][ic_idx];
+                                    val = conv2_local[ic_idx];
                                 } else {
-                                    val = mp_row_stage[run_slot][col][ic_idx - CONV2_OUT_CH];
+                                    val = mp_local[ic_idx - CONV2_OUT_CH];
                                 }
 
                                 if (w3[oc][ic_idx] == 0) {

@@ -89,6 +89,11 @@ if {[map_buffer_resource "conv1_buf.buffer" {conv1_buf.buffer conv1_buf/buffer r
 incr map_total
 if {[map_buffer_resource "mp_buf.buffer" {mp_buf.buffer mp_buf/buffer run/mp_buf.buffer run/mp_buf/buffer} $roots]} { incr map_ok }
 
+incr map_total
+if {[map_buffer_resource "conv2_row_stage" {conv2_row_stage run/conv2_row_stage} $roots]} { incr map_ok }
+incr map_total
+if {[map_buffer_resource "mp_row_stage" {mp_row_stage run/mp_row_stage} $roots]} { incr map_ok }
+
 puts "Memory directive mapping summary: ${map_ok}/${map_total} resources mapped."
 
 # Array partitioning for parallel channel access (dim=4 is inner channel index).
@@ -101,6 +106,28 @@ incr part_total
 if {[apply_array_partition "conv1_buf.buffer" {conv1_buf.buffer conv1_buf/buffer run/conv1_buf.buffer run/conv1_buf/buffer} $roots 4 8]} { incr part_ok }
 incr part_total
 if {[apply_array_partition "mp_buf.buffer" {mp_buf.buffer mp_buf/buffer run/mp_buf.buffer run/mp_buf/buffer} $roots 4 8]} { incr part_ok }
+
+# Complete partition on row staging arrays (channel dim) for parallel register preload access.
+proc apply_complete_partition {label keys roots dim} {
+    foreach root $roots {
+        foreach key $keys {
+            set path "${root}/${key}:rsc"
+            if {![catch {directive set $path -ARRAY_PARTITION complete -dim $dim} err]} {
+                puts "COMPLETE PARTITION OK: ${label} -> ${path}"
+                incr ::part_ok
+                incr ::part_total
+                return 1
+            }
+        }
+    }
+    puts "COMPLETE PARTITION SKIP: ${label} (path not found or unsupported)"
+    incr ::part_total
+    return 0
+}
+
+apply_complete_partition "conv2_row_stage dim3" {conv2_row_stage run/conv2_row_stage} $roots 3
+apply_complete_partition "mp_row_stage dim3" {mp_row_stage run/mp_row_stage} $roots 3
+
 puts "Array partition summary: ${part_ok}/${part_total} resources partitioned."
 
 # Keep clock overhead explicit to avoid SCHD-22 style schedule blockers.
