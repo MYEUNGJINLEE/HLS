@@ -225,8 +225,8 @@ void StemProcessor::run(
     stem_act_t conv2_row_stage[2][CONV3_OUT_W][CONV2_OUT_CH];
     stem_act_t mp_row_stage[2][CONV3_OUT_W][MP_OUT_CH];
 
-    #pragma hls_array_partition variable=conv2_row_stage cyclic factor=8 dim=3
-    #pragma hls_array_partition variable=mp_row_stage cyclic factor=8 dim=3
+    #pragma hls_array_partition variable=conv2_row_stage complete dim=3
+    #pragma hls_array_partition variable=mp_row_stage complete dim=3
 
     int conv0_in_row = 0;
     int conv0_out_row = 0;
