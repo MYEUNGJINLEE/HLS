@@ -140,12 +140,27 @@ if {[catch {directive set -CLOCK_OVERHEAD 0} clk_err]} {
 # ============================================================================
 # Register vs RAM Mapping
 # ============================================================================
-# Small arrays (accumulators, local buffers) -> registers
-# Large arrays (line buffers, row staging) -> BRAM
-# This prevents Catapult from inferring BRAM for small parallel-access arrays.
+# MEM_MAP_THRESHOLD: arrays with <= N elements are mapped to registers.
+# This is the PRIMARY mechanism to prevent small parallel-access arrays
+# from being inferred as BRAM (which causes SCHD-4/SCHD-9 port conflicts).
+#
+# Arrays <= 256 elements -> Register (auto):
+#   conv2_local[32], mp_local[32], mp_result[32], out_ch[32], conv0_pix[32],
+#   out_grp[8], rgb[3], mp_in[8], window[72], acc_partial[256],
+#   acc_spatial[64], acc_partial_conv0[96], acc_partial_conv1[64]
+#
+# Arrays > 256 elements -> BRAM (auto):
+#   conv2_row_stage[10240], mp_row_stage[10240], w0[864], w1[512],
+#   w2[13824], w3[2048], line buffers
 # ============================================================================
 
-puts "======== APPLYING REGISTER/RAM MAPPINGS ========"
+if {[catch {directive set -MEM_MAP_THRESHOLD 256} mem_err]} {
+    puts "MEM_MAP_THRESHOLD set failed: $mem_err"
+} else {
+    puts "MEM_MAP_THRESHOLD set to 256"
+}
+
+puts "======== APPLYING REGISTER/RAM MAPPINGS (fallback) ========"
 
 proc map_to_register {label keys roots} {
     foreach root $roots {
@@ -161,69 +176,73 @@ proc map_to_register {label keys roots} {
     return 0
 }
 
-# Partial accumulator arrays (small, need full parallel access -> registers)
+# Fallback: explicit register mapping with corrected Catapult hierarchy paths.
+# Path pattern from error messages: MAIN_LOOP:if#N:for:varname (no extra :if)
+
+# Conv0 accumulator (Stage 2+3, if#1)
 map_to_register "Conv0 partial acc" {
     run/MAIN_LOOP:if#1:for:acc_partial_conv0
     MAIN_LOOP:if#1:for:acc_partial_conv0
-    run/MAIN_LOOP:if#1:for:CONV0_IC:for:acc_partial_conv0
-    MAIN_LOOP:if#1:for:CONV0_IC:for:acc_partial_conv0
 } $roots
 
+# Conv1 accumulator (Stage 2+3, if#1)
 map_to_register "Conv1 partial acc" {
     run/MAIN_LOOP:if#1:for:acc_partial_conv1
     MAIN_LOOP:if#1:for:acc_partial_conv1
-    run/MAIN_LOOP:if#1:for:CONV1_IC_GRP:for:acc_partial_conv1
-    MAIN_LOOP:if#1:for:CONV1_IC_GRP:for:acc_partial_conv1
 } $roots
 
+# Conv2 accumulator (Stage 4, if#3)
 map_to_register "Conv2 spatial acc" {
+    run/MAIN_LOOP:if#3:for:acc_spatial
+    MAIN_LOOP:if#3:for:acc_spatial
     run/MAIN_LOOP:if#3:if:for:acc_spatial
     MAIN_LOOP:if#3:if:for:acc_spatial
-    run/MAIN_LOOP:if#3:if:for:CONV2_IC_GRP:for:acc_spatial
-    MAIN_LOOP:if#3:if:for:CONV2_IC_GRP:for:acc_spatial
 } $roots
 
+# Conv3 accumulator (Stage 6, if#5)
 map_to_register "Conv3 partial acc" {
+    run/MAIN_LOOP:if#5:for:acc_partial
+    MAIN_LOOP:if#5:for:acc_partial
     run/MAIN_LOOP:if#5:if:for:acc_partial
     MAIN_LOOP:if#5:if:for:acc_partial
-    run/MAIN_LOOP:if#5:if:for:CONV3_IC_GRP:for:acc_partial
-    MAIN_LOOP:if#5:if:for:CONV3_IC_GRP:for:acc_partial
 } $roots
 
-# Conv3 preload local arrays (fully partitioned registers)
+# Conv3 preload arrays (Stage 6)
 map_to_register "conv2_local" {
+    run/MAIN_LOOP:if#5:for:conv2_local
+    MAIN_LOOP:if#5:for:conv2_local
     run/MAIN_LOOP:if#5:if:for:conv2_local
     MAIN_LOOP:if#5:if:for:conv2_local
-    run/conv2_local
 } $roots
 
 map_to_register "mp_local" {
+    run/MAIN_LOOP:if#5:for:mp_local
+    MAIN_LOOP:if#5:for:mp_local
     run/MAIN_LOOP:if#5:if:for:mp_local
     MAIN_LOOP:if#5:if:for:mp_local
-    run/mp_local
 } $roots
 
-# MaxPool poststore result array
+# MaxPool poststore (Stage 5, if#4)
 map_to_register "mp_result" {
+    run/MAIN_LOOP:if#4:for:mp_result
+    MAIN_LOOP:if#4:for:mp_result
     run/MAIN_LOOP:if#4:if:for:mp_result
     MAIN_LOOP:if#4:if:for:mp_result
-    run/mp_result
 } $roots
 
-# Output channel array
+# Output arrays
 map_to_register "out_ch" {
+    run/MAIN_LOOP:if#5:for:out_ch
+    MAIN_LOOP:if#5:for:out_ch
     run/MAIN_LOOP:if#5:if:for:out_ch
     MAIN_LOOP:if#5:if:for:out_ch
-    run/out_ch
 } $roots
 
-# Conv0 output pixels
 map_to_register "conv0_pix" {
     run/MAIN_LOOP:if#1:for:conv0_pix
     MAIN_LOOP:if#1:for:conv0_pix
 } $roots
 
-# Conv1 output group
 map_to_register "out_grp" {
     run/MAIN_LOOP:if#1:for:out_grp
     MAIN_LOOP:if#1:for:out_grp
