@@ -144,20 +144,19 @@ if {[catch {directive set -CLOCK_OVERHEAD 0} clk_err]} {
 # This is the PRIMARY mechanism to prevent small parallel-access arrays
 # from being inferred as BRAM (which causes SCHD-4/SCHD-9 port conflicts).
 #
-# Arrays <= 256 elements -> Register (auto):
-#   conv2_local[32], mp_local[32], mp_result[32], out_ch[32], conv0_pix[32],
-#   out_grp[8], rgb[3], mp_in[8], window[72], acc_partial[256],
-#   acc_spatial[64], acc_partial_conv0[96], acc_partial_conv1[64]
+# Arrays <= 8192 elements -> Register (auto):
+#   All small locals (conv2_local, mp_local, mp_result, acc_*, out_ch, etc.)
+#   Weight arrays: w0[864], w1[512], w3[2048], w2_tile[4608]
+#   Shift/bias: shift0-3, bias0-3
 #
-# Arrays > 256 elements -> BRAM (auto):
-#   conv2_row_stage[10240], mp_row_stage[10240], w0[864], w1[512],
-#   w2[13824], w3[2048], line buffers
+# Arrays > 8192 elements -> BRAM (auto):
+#   conv2_row_stage[10240], mp_row_stage[10240], w2[13824], line buffers
 # ============================================================================
 
-if {[catch {directive set -MEM_MAP_THRESHOLD 256} mem_err]} {
+if {[catch {directive set -MEM_MAP_THRESHOLD 8192} mem_err]} {
     puts "MEM_MAP_THRESHOLD set failed: $mem_err"
 } else {
-    puts "MEM_MAP_THRESHOLD set to 256"
+    puts "MEM_MAP_THRESHOLD set to 8192"
 }
 
 puts "======== APPLYING REGISTER/RAM MAPPINGS (fallback) ========"
