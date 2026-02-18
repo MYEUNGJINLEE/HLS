@@ -283,18 +283,19 @@ void StemProcessor::run(
                 // Phase 1: Compute partial sums per IC channel (includes 3x3 spatial)
                 CONV0_IC:
                 for (int ic = 0; ic < STEM_IC_PAR0; ic++) {
-                    // Preload weight tile: BRAM → register (sequential, 1 port)
-                    stem_bw_t w0_tile[CONV0_OUT_CH][3][3];
-                    #pragma hls_array_partition variable=w0_tile complete dim=2
-                    #pragma hls_array_partition variable=w0_tile complete dim=3
+                    // Preload weight tile: BRAM → packed register (1 MUX only)
+                    // Pack kr(3)*kc(3)=9 bits per oc into ac_int<9>
+                    ac_int<9,false> w0_pack[CONV0_OUT_CH];
                     PRELOAD_W0:
                     #pragma hls_pipeline_init_interval 1
                     for (int oc_p = 0; oc_p < CONV0_OUT_CH; oc_p++) {
+                        ac_int<9,false> packed = 0;
                         for (int kr_p = 0; kr_p < 3; kr_p++) {
                             for (int kc_p = 0; kc_p < 3; kc_p++) {
-                                w0_tile[oc_p][kr_p][kc_p] = w0[oc_p][ic][kr_p][kc_p];
+                                packed[kr_p * 3 + kc_p] = w0[oc_p][ic][kr_p][kc_p];
                             }
                         }
+                        w0_pack[oc_p] = packed;
                     }
 
                     CONV0_OC:
@@ -309,7 +310,7 @@ void StemProcessor::run(
                             #pragma hls_unroll yes
                             for (int kc = 0; kc < 3; kc++) {
                                 stem_act_t val = window[kr][kc][ic];
-                                if (w0_tile[oc][kr][kc] == 0) {
+                                if (w0_pack[oc][kr * 3 + kc] == 0) {
                                     partial += val;
                                 } else {
                                     partial -= val;
@@ -359,15 +360,16 @@ void StemProcessor::run(
                 for (int ic_grp = 0; ic_grp < CH_GRP32; ic_grp++) {
                     const int ic_base = ic_grp * STEM_IC_PAR;
 
-                    // Preload weight tile: BRAM → register (sequential, 1 port)
-                    stem_bw_t w1_tile[CONV1_OUT_CH][STEM_IC_PAR];
-                    #pragma hls_array_partition variable=w1_tile complete dim=2
+                    // Preload weight tile: BRAM → packed register (1 MUX only)
+                    ac_int<STEM_IC_PAR,false> w1_pack[CONV1_OUT_CH];
                     PRELOAD_W1:
                     #pragma hls_pipeline_init_interval 1
                     for (int oc_p = 0; oc_p < CONV1_OUT_CH; oc_p++) {
+                        ac_int<STEM_IC_PAR,false> packed = 0;
                         for (int ic_p = 0; ic_p < STEM_IC_PAR; ic_p++) {
-                            w1_tile[oc_p][ic_p] = w1[oc_p][ic_base + ic_p];
+                            packed[ic_p] = w1[oc_p][ic_base + ic_p];
                         }
+                        w1_pack[oc_p] = packed;
                     }
 
                     CONV1_OC:
@@ -379,7 +381,7 @@ void StemProcessor::run(
                         #pragma hls_unroll yes
                         for (int ic = 0; ic < STEM_IC_PAR; ic++) {
                             stem_act_t val = conv0_pix[ic_base + ic];
-                            if (w1_tile[oc][ic] == 0) {
+                            if (w1_pack[oc][ic] == 0) {
                                 partial += val;
                             } else {
                                 partial -= val;
@@ -444,21 +446,21 @@ void StemProcessor::run(
 
                         const int ic_base = ic_grp * STEM_IC_PAR;
 
-                        // Preload weight tile: BRAM → register (sequential, 1 port)
-                        stem_bw_t w2_tile[CONV2_OUT_CH][STEM_IC_PAR][3][3];
-                        #pragma hls_array_partition variable=w2_tile complete dim=2
-                        #pragma hls_array_partition variable=w2_tile complete dim=3
-                        #pragma hls_array_partition variable=w2_tile complete dim=4
+                        // Preload weight tile: BRAM → packed register (1 MUX only)
+                        // Pack ic(8)*kr(3)*kc(3)=72 bits per oc into ac_int<72>
+                        ac_int<STEM_IC_PAR*9,false> w2_pack[CONV2_OUT_CH];
                         PRELOAD_W2:
                         #pragma hls_pipeline_init_interval 1
                         for (int oc_p = 0; oc_p < CONV2_OUT_CH; oc_p++) {
+                            ac_int<STEM_IC_PAR*9,false> packed = 0;
                             for (int ic_p = 0; ic_p < STEM_IC_PAR; ic_p++) {
                                 for (int kr_p = 0; kr_p < 3; kr_p++) {
                                     for (int kc_p = 0; kc_p < 3; kc_p++) {
-                                        w2_tile[oc_p][ic_p][kr_p][kc_p] = w2[oc_p][ic_base + ic_p][kr_p][kc_p];
+                                        packed[ic_p * 9 + kr_p * 3 + kc_p] = w2[oc_p][ic_base + ic_p][kr_p][kc_p];
                                     }
                                 }
                             }
+                            w2_pack[oc_p] = packed;
                         }
 
                         CONV2_OC:
@@ -476,7 +478,7 @@ void StemProcessor::run(
                                     #pragma hls_unroll yes
                                     for (int kc = 0; kc < 3; kc++) {
                                         stem_act_t val = window[kr][kc][ic];
-                                        if (w2_tile[oc][ic][kr][kc] == 0) {
+                                        if (w2_pack[oc][ic * 9 + kr * 3 + kc] == 0) {
                                             partial += val;
                                         } else {
                                             partial -= val;
@@ -602,15 +604,17 @@ void StemProcessor::run(
                     for (int ic_grp = 0; ic_grp < CH_GRP64; ic_grp++) {
                         const int ic_base = ic_grp * STEM_IC_PAR;
 
-                        // Preload weight tile: BRAM → register (sequential, 1 port)
-                        stem_bw_t w3_tile[CONV3_OUT_CH][STEM_IC_PAR];
-                        #pragma hls_array_partition variable=w3_tile complete dim=2
+                        // Preload weight tile: BRAM → packed register (1 MUX only)
+                        // Pack ic(8) bits per oc into ac_int<8>
+                        ac_int<STEM_IC_PAR,false> w3_pack[CONV3_OUT_CH];
                         PRELOAD_W3:
                         #pragma hls_pipeline_init_interval 1
                         for (int oc_p = 0; oc_p < CONV3_OUT_CH; oc_p++) {
+                            ac_int<STEM_IC_PAR,false> packed = 0;
                             for (int ic_p = 0; ic_p < STEM_IC_PAR; ic_p++) {
-                                w3_tile[oc_p][ic_p] = w3[oc_p][ic_base + ic_p];
+                                packed[ic_p] = w3[oc_p][ic_base + ic_p];
                             }
+                            w3_pack[oc_p] = packed;
                         }
 
                         CONV3_OC:
@@ -629,7 +633,7 @@ void StemProcessor::run(
                                     val = mp_local[ic_idx - CONV2_OUT_CH];
                                 }
 
-                                if (w3_tile[oc][ic] == 0) {
+                                if (w3_pack[oc][ic] == 0) {
                                     partial += val;
                                 } else {
                                     partial -= val;
