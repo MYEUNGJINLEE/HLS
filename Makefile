@@ -1,4 +1,4 @@
-.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean gpt gpt-log gpt-clean stem stem-log stem-gui stem-gui-build stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean clean-artifacts clean
+.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean gpt gpt-log gpt-gui gpt-clean stem stem-log stem-gui stem-gui-build stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean clean-artifacts clean
 .SILENT:
 
 # Update local repository to latest origin/dev (stash handles unstaged changes)
@@ -101,6 +101,20 @@ gpt: gpt-clean
 
 # Alias for gpt
 gpt-log: gpt
+
+# Run GPT backbone phase3 with GUI and keep window open
+gpt-gui:
+	cd Binary_cnn && PRJ=$$(ls -t gpt_backbone_phase3*.ccs 2>/dev/null | head -n 1); \
+	if [ -z "$$PRJ" ]; then \
+		echo "No gpt_backbone_phase3*.ccs found. Running batch flow once to create project..."; \
+		catapult -shell -file scripts/run_gpt_backbone_phase3_catapult.tcl; \
+		PRJ=$$(ls -t gpt_backbone_phase3*.ccs 2>/dev/null | head -n 1); \
+	fi; \
+	if [ -n "$$PRJ" ]; then \
+		catapult "$$PRJ" & \
+	else \
+		echo "Could not find gpt_backbone_phase3*.ccs project file."; exit 1; \
+	fi
 
 # Run block processor batch flow and execute SCVerify testbench simulation
 block-tb: block-clean
