@@ -1,4 +1,4 @@
-.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean stem stem-log stem-gui stem-gui-build stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean clean-artifacts clean
+.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean gpt gpt-log gpt-clean stem stem-log stem-gui stem-gui-build stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean clean-artifacts clean
 .SILENT:
 
 # Update local repository to latest origin/dev (stash handles unstaged changes)
@@ -57,6 +57,10 @@ stream-clean:
 block-clean:
 	cd Binary_cnn && rm -rf block_processor* block_processor.ccs
 
+# Clean GPT backbone phase3 projects (including numbered variants _1, _2, ...)
+gpt-clean:
+	cd Binary_cnn && rm -rf gpt_backbone_phase3* gpt_backbone_phase3.ccs
+
 # Clean stem processor projects
 stem-clean:
 	cd Binary_cnn && rm -rf stem_processor* stem_processor.ccs
@@ -82,7 +86,7 @@ clean-artifacts:
 	find Binary_cnn -type d \( -name CDesignChecker -o -name scverify \) -prune -exec rm -rf {} +
 	find Binary_cnn -type f \( -name '*.ccs' -o -name '*.vcd' -o -name '*.wlf' -o -name 'transcript' \) -delete
 
-clean: stream-clean block-clean stem-clean stem2-clean clean-artifacts
+clean: stream-clean block-clean gpt-clean stem-clean stem2-clean clean-artifacts
 
 # Run block processor Catapult in batch mode with log (auto-cleans old project)
 block: block-clean
@@ -90,6 +94,13 @@ block: block-clean
 
 # Alias for block
 block-log: block
+
+# Run GPT backbone phase3 Catapult in batch mode with log (auto-cleans old project)
+gpt: gpt-clean
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_gpt_backbone_phase3_catapult.tcl 2>&1 | tee logs/catapult_gpt_backbone_phase3.log
+
+# Alias for gpt
+gpt-log: gpt
 
 # Run block processor batch flow and execute SCVerify testbench simulation
 block-tb: block-clean
