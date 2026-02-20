@@ -330,6 +330,15 @@ puts "======== LOOP DIRECTIVES COMPLETE ========"
 
 go compile
 
+# ============================================================================
+# Technology Library (Xilinx Zynq UltraScale+, same as three_pe_block)
+# ============================================================================
+solution library remove *
+solution library add mgc_Xilinx-ZYNQ-uplus-1_beh -- -rtlsyntool Vivado -manufacturer Xilinx -family ZYNQ-uplus -speed -1 -part xczu11eg-ffvb1517-1-e
+solution library add Xilinx_RAMS
+solution library add ccs_fpga_hic
+solution library add Xilinx_FIFO
+
 go architect
 
 go schedule
