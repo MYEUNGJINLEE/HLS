@@ -12,11 +12,11 @@ stem_act_t ThreePEBlock::apply_bn_relu(
     if (s >= 0) {
         val = acc << s;
     } else {
-        int rs = -s;
-        stem_acc_t rnd = (acc >= 0)
-            ? (stem_acc_t(1) << (rs - 1))
-            : -(stem_acc_t(1) << (rs - 1));
-        val = (acc + rnd) >> rs;
+        // CRD-979 fix: use plain int to avoid ac_int unary-minus width expansion
+        int rs   = -s;
+        int vi   = (int)acc;
+        int rnd  = (vi >= 0) ? (1 << (rs - 1)) : -(1 << (rs - 1));
+        val = (stem_acc_t)((vi + rnd) >> rs);
     }
     val += (stem_acc_t)bias;
     if (use_relu && val < 0) val = 0;
