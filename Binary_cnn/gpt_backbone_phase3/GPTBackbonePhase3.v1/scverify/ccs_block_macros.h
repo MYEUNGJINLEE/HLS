@@ -1,0 +1,79 @@
+// ccs_block_macros.h
+#include "ccs_testbench.h"
+
+#ifndef EXCLUDE_CCS_BLOCK_INTERCEPT
+#ifndef INCLUDE_CCS_BLOCK_INTERCEPT
+#define INCLUDE_CCS_BLOCK_INTERCEPT
+#ifdef  CCS_DESIGN_FUNC_GPTBackbonePhase3_run
+#define ccs_intercept_GPTBackbonePhase3_run_347 \
+  run(ac_channel<ac_int<512, false> > &input_stream, ac_channel<ac_int<64, false> > &weight_stream, ac_channel<ac_int<512, false> > &p3_stream, ac_channel<ac_int<512, false> > &p4_stream, ac_channel<ac_int<512, false> > &p5_stream);\
+  void ccs_real_run
+#else
+#define ccs_intercept_GPTBackbonePhase3_run_347 run
+#endif //CCS_DESIGN_FUNC_GPTBackbonePhase3_run
+#endif //INCLUDE_CCS_BLOCK_INTERCEPT
+#endif //EXCLUDE_CCS_BLOCK_INTERCEPT
+
+// GPTBackbonePhase3::run 347 TOP
+#define ccs_intercept_run_347 ccs_intercept_GPTBackbonePhase3_run_347
+#define ccs_intercept_GPTBackbonePhase3_run ccs_intercept_GPTBackbonePhase3_run_347
+// gpt_packs_per_oc_1x1 15 INLINE
+#define ccs_intercept_gpt_packs_per_oc_1x1_15 gpt_packs_per_oc_1x1
+#define ccs_intercept__gpt_packs_per_oc_1x1_15 gpt_packs_per_oc_1x1
+#define ccs_intercept__gpt_packs_per_oc_1x1 gpt_packs_per_oc_1x1
+// gpt_shift_round 6 INLINE
+#define ccs_intercept_gpt_shift_round_6 gpt_shift_round
+#define ccs_intercept__gpt_shift_round_6 gpt_shift_round
+#define ccs_intercept__gpt_shift_round gpt_shift_round
+// gpt_apply_bn_relu 24 INLINE
+#define ccs_intercept_gpt_apply_bn_relu_24 gpt_apply_bn_relu
+#define ccs_intercept__gpt_apply_bn_relu_24 gpt_apply_bn_relu
+#define ccs_intercept__gpt_apply_bn_relu gpt_apply_bn_relu
+// gpt_unpack_act64 37 INLINE
+#define ccs_intercept_gpt_unpack_act64_37 gpt_unpack_act64
+#define ccs_intercept__gpt_unpack_act64_37 gpt_unpack_act64
+#define ccs_intercept__gpt_unpack_act64 gpt_unpack_act64
+// gpt_pack_act64 47 INLINE
+#define ccs_intercept_gpt_pack_act64_47 gpt_pack_act64
+#define ccs_intercept__gpt_pack_act64_47 gpt_pack_act64
+#define ccs_intercept__gpt_pack_act64 gpt_pack_act64
+// gpt_unpack_weight64 59 INLINE
+#define ccs_intercept_gpt_unpack_weight64_59 gpt_unpack_weight64
+#define ccs_intercept__gpt_unpack_weight64_59 gpt_unpack_weight64
+#define ccs_intercept__gpt_unpack_weight64 gpt_unpack_weight64
+// gpt_unpack_bn_params 69 INLINE
+#define ccs_intercept_gpt_unpack_bn_params_69 gpt_unpack_bn_params
+#define ccs_intercept__gpt_unpack_bn_params_69 gpt_unpack_bn_params
+#define ccs_intercept__gpt_unpack_bn_params gpt_unpack_bn_params
+// load_block2_weights 43 INLINE
+#define ccs_intercept_load_block2_weights_43 load_block2_weights
+#define ccs_intercept__load_block2_weights_43 load_block2_weights
+#define ccs_intercept__load_block2_weights load_block2_weights
+// drain_weight_packs 132 INLINE
+#define ccs_intercept_drain_weight_packs_132 drain_weight_packs
+#define ccs_intercept__drain_weight_packs_132 drain_weight_packs
+#define ccs_intercept__drain_weight_packs drain_weight_packs
+// read_block2_input 141 INLINE
+#define ccs_intercept_read_block2_input_141 read_block2_input
+#define ccs_intercept__read_block2_input_141 read_block2_input
+#define ccs_intercept__read_block2_input read_block2_input
+// run_block2_ds 154 INLINE
+#define ccs_intercept_run_block2_ds_154 run_block2_ds
+#define ccs_intercept__run_block2_ds_154 run_block2_ds
+#define ccs_intercept__run_block2_ds run_block2_ds
+// run_block2_c3_repeat 196 INLINE
+#define ccs_intercept_run_block2_c3_repeat_196 run_block2_c3_repeat
+#define ccs_intercept__run_block2_c3_repeat_196 run_block2_c3_repeat
+#define ccs_intercept__run_block2_c3_repeat run_block2_c3_repeat
+// write_p3 305 INLINE
+#define ccs_intercept_write_p3_305 write_p3
+#define ccs_intercept__write_p3_305 write_p3
+#define ccs_intercept__write_p3 write_p3
+// emit_p4_skeleton 314 INLINE
+#define ccs_intercept_emit_p4_skeleton_314 emit_p4_skeleton
+#define ccs_intercept__emit_p4_skeleton_314 emit_p4_skeleton
+#define ccs_intercept__emit_p4_skeleton emit_p4_skeleton
+// emit_p5_skeleton 336 INLINE
+#define ccs_intercept_emit_p5_skeleton_336 emit_p5_skeleton
+#define ccs_intercept__emit_p5_skeleton_336 emit_p5_skeleton
+#define ccs_intercept__emit_p5_skeleton emit_p5_skeleton

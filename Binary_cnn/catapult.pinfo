@@ -1,273 +1,339 @@
 ==============================================================================
-[94] Catapult 2025.2_1/1197638 - Thu Feb 12 15:57:09 2026
+[608] Catapult 2025.2_1/1197638 - Fri Feb 20 17:24:34 2026
 ------------------------------------------------------------------------------
-[New LWP 197628]
-[New LWP 197629]
-[New LWP 197630]
-[New LWP 197646]
-[New LWP 197648]
-[New LWP 197671]
-[New LWP 197672]
-[New LWP 197790]
-[New LWP 197791]
-[New LWP 197822]
-[New LWP 197829]
-[New LWP 197931]
-[New LWP 199017]
-[New LWP 199018]
+[New LWP 55451]
+[New LWP 55452]
+[New LWP 55453]
+[New LWP 55460]
+[New LWP 55462]
+[New LWP 55469]
+[New LWP 55470]
+[New LWP 55584]
+[New LWP 55585]
+[New LWP 55591]
+[New LWP 55592]
+[New LWP 55601]
+[New LWP 55651]
+[New LWP 55656]
 [Thread debugging using libthread_db enabled]
 Using host libthread_db library "/lib64/libthread_db.so.1".
-0x00002b1b3d92fa35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+0x00007f7005849a35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
 
-Thread 15 (Thread 0x2b1b7861b700 (LWP 199018) "catapult"):
-#0  0x00002b1b3d92fde2 in pthread_cond_timedwait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+Thread 15 (Thread 0x7f6fca5e2700 (LWP 55656) "catapult"):
+#0  0x00007f7005849de2 in pthread_cond_timedwait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
 #1  0x00000000011a9ce8 in CPU_Time::memusage_monitor::monitor (d=0x4e27a40 <CPU_Time::memory_info(unsigned long*, unsigned long*) const::m>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/basic/sif_b_error.cxx:727
-#2  0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#3  0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+#2  0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#3  0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 14 (Thread 0x2b1b7841a700 (LWP 199017) "catapult"):
-#0  0x00002b1b3d92fde2 in pthread_cond_timedwait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
-#1  0x00002b1b3cf42a94 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#2  0x00002b1b3cf0c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x2b1b480367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
-#4  0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#5  0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+Thread 14 (Thread 0x7f6fcade3700 (LWP 55651) "catapult"):
+#0  0x00007f7005849de2 in pthread_cond_timedwait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+#1  0x00007f70062c2a94 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#2  0x00007f700628c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x7f6ff80367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
+#4  0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#5  0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 13 (Thread 0x2b1b57ff5700 (LWP 197931) "catapult"):
-#0  0x00002b1b3d92fa35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
-#1  0x00002b1b3cf42d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#2  0x00002b1b3cf0c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#3  0x0000000001a77652 in TTclThread::Event::SendEvent (this=0x2b1b800115f0, handler=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1056
-#4  0x00002b1b3cf2a5ad in TimerHandlerEventProc () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#5  0x00002b1b3cf0c4cf in Tcl_ServiceEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#6  0x00002b1b3cf0c7d9 in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#7  0x0000000001a77652 in TTclThread::Event::SendEvent (this=0x2b1b80011520, handler=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1056
-#8  0x00002b1b3cf2a5ad in TimerHandlerEventProc () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#9  0x00002b1b3cf0c4cf in Tcl_ServiceEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#10 0x00002b1b3cf0c7d9 in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#11 0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x2b1b480367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
-#12 0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#13 0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+Thread 13 (Thread 0x7f6fcb5e4700 (LWP 55601) "catapult"):
+#0  0x00007f7005849a35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+#1  0x00007f70062c2d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#2  0x00007f700628c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#3  0x0000000001a77652 in TTclThread::Event::SendEvent (this=0x7f6fb80010c0, handler=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1056
+#4  0x00007f70062aa5ad in TimerHandlerEventProc () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#5  0x00007f700628c4cf in Tcl_ServiceEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#6  0x00007f700628c7d9 in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#7  0x0000000001a77652 in TTclThread::Event::SendEvent (this=0x7f6fb8001050, handler=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1056
+#8  0x00007f70062aa5ad in TimerHandlerEventProc () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#9  0x00007f700628c4cf in Tcl_ServiceEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#10 0x00007f700628c7d9 in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#11 0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x7f6ff80367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
+#12 0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#13 0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 12 (Thread 0x2b1b57bed700 (LWP 197829) "catapult"):
-#0  0x00002b1b3d92fde2 in pthread_cond_timedwait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
-#1  0x00002b1b3cf42a94 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#2  0x00002b1b3cf0c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x2b1b480367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
-#4  0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#5  0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+Thread 12 (Thread 0x7f6fcbfff700 (LWP 55592) "catapult"):
+#0  0x00007f7005849de2 in pthread_cond_timedwait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+#1  0x00007f70062c2a94 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#2  0x00007f700628c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x7f6ff80367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
+#4  0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#5  0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 11 (Thread 0x2b1b47ba7700 (LWP 197822) "catapult"):
-#0  0x00002b1b3d92fa35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
-#1  0x00002b1b3cf42d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#2  0x00002b1b3cf0c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x2b1b480367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
-#4  0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#5  0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+Thread 11 (Thread 0x7f6ffcdd7700 (LWP 55591) "catapult"):
+#0  0x00007f7005849a35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+#1  0x00007f70062c2d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#2  0x00007f700628c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x7f6ff80367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
+#4  0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#5  0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 10 (Thread 0x2b1b56a8d700 (LWP 197791) "catapult"):
-#0  0x00002b1b3d92fa35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
-#1  0x00002b1b3cf42d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#2  0x00002b1b3cf0c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#3  0x0000000001a77652 in TTclThread::Event::SendEvent (this=0x2b1b56a8a860, handler=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1056
-#4  0x0000000001a7e70f in TTclThread::Event::SendEvent (this=0x2b1b56a8a860) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1000
-#5  TTclThread::Handler::EventEval::EventEval (resultInfo=<optimized out>, record=true, str=0x2b1bbf7d9440, interp=<optimized out>, handler=<optimized out>, this=0x2b1b56a8a860) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1674
-#6  TTclThread::Handler::Eval (interp=<optimized out>, script=0x2b1bbf7d9440, record=<optimized out>, resultInfo=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:2198
-#7  0x0000000001a7ec08 in TTclThread::Eval (resultInfo=0x2b1b56a8a920, record=true, command=0x2b1bbf7d9440, interp=0x2b1b680133e0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:3102
-#8  TTclThread::Command::Eval (clientData=clientData@entry=0x0, interp=interp@entry=0x2b1b6c01b5c0, objc=objc@entry=6, objv=objv@entry=0x2b1b6cbec838) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:3486
-#9  0x0000000001a7ee11 in TTclThread::InterpObjCmd (clientData=0x0, interp=0x2b1b6c01b5c0, objc=6, objv=0x2b1b6cbec838) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:3546
-#10 0x00002b1b3ce96969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#11 0x00002b1b3ceda5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#12 0x00002b1b3cf1c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#13 0x00002b1b3ce96969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#14 0x00002b1b3ceda5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#15 0x00002b1b3cf1c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#16 0x00002b1b3ce96969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#17 0x00002b1b3ceda5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#18 0x00002b1b3cf1c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#19 0x00002b1b3ce96969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#20 0x00002b1b3ceda5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#21 0x00002b1b3cf1c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#22 0x00002b1b3ce96969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#23 0x00002b1b3ceda5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#24 0x00002b1b3cf1c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#25 0x00002b1b3ce96969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#26 0x00002b1b3ceda5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#27 0x00002b1b3cee2e07 in TclCompEvalObj () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#28 0x00002b1b3ce98906 in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#29 0x00002b1b54063a2f in ButtonWidgetObjCmd () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtk8.5t.so
-#30 0x00002b1b3ce96969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#31 0x00002b1b3ce96e22 in Tcl_EvalObjv () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#32 0x00002b1b3ce98bb2 in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#33 0x00002b1b3cf1bf4f in Tcl_UplevelObjCmd () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#34 0x00002b1b3ce96969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#35 0x00002b1b3ceda5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#36 0x00002b1b3cf1c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#37 0x00002b1b3ce96969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#38 0x00002b1b3ce9824c in TclEvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#39 0x00002b1b3ce98853 in Tcl_EvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#40 0x00002b1b5403b908 in Tk_BindEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtk8.5t.so
-#41 0x00002b1b5403ddf6 in TkBindEventProc () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtk8.5t.so
-#42 0x00002b1b54045813 in Tk_HandleEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtk8.5t.so
-#43 0x00002b1b54045a04 in WindowEventProc () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtk8.5t.so
-#44 0x00002b1b3cf0c4cf in Tcl_ServiceEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#45 0x00002b1b3cf0c715 in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#46 0x00002b1b3ced87b2 in Tcl_VwaitObjCmd () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#47 0x00002b1b3ce96969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#48 0x00002b1b3ceda5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#49 0x00002b1b3cf1c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#50 0x00002b1b3ce96969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#51 0x00002b1b3ceda5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#52 0x00002b1b3cee2e07 in TclCompEvalObj () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#53 0x00002b1b3ce98906 in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#54 0x00000000019ae9cb in TUC_Startup::RunInteractiveCommand::EventGuiNotifyInteractive::Process (this=0xb101760) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/cmd_startup.cxx:7991
-#55 0x0000000001a76af8 in TTclThread::Event::EventProc (evPtr=<optimized out>, flags=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1079
-#56 0x00002b1b3cf0c4cf in Tcl_ServiceEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#57 0x00002b1b3cf0c715 in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#58 0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x2b1b480367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
-#59 0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#60 0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+Thread 10 (Thread 0x7f6fed7fa700 (LWP 55585) "catapult"):
+#0  0x00007f7005849a35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+#1  0x00007f70062c2d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#2  0x00007f700628c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#3  0x0000000001a77652 in TTclThread::Event::SendEvent (this=0x7f6fed7f4180, handler=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1056
+#4  0x0000000001a83e4c in TTclThread::Event::SendEvent (this=0x7f6fed7f4180) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1000
+#5  TTclThread::Handler::EventEval::EventEval (resultInfo=0x7f6fed7f4150, record=false, str=0x7f6fe859b540, interp=0x7f6ff0033c10, handler=<optimized out>, this=0x7f6fed7f4180) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1674
+#6  TTclThread::Handler::MapCommandObjCmd::tclCommand (clientData=0x7f6fed7f4150, interp=0x7f6fcc01e4a0, objc=<optimized out>, objv=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:2793
+#7  0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#8  0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#9  0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#10 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#11 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#12 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#13 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#14 0x00007f700621824c in TclEvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#15 0x00007f7006218853 in Tcl_EvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#16 0x00007f7006218c5f in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#17 0x00007f700628aac9 in Tcl_NamespaceObjCmd () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#18 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#19 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#20 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#21 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#22 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#23 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#24 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#25 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#26 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#27 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#28 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#29 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#30 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#31 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#32 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#33 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#34 0x00007f700621824c in TclEvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#35 0x00007f7006218853 in Tcl_EvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#36 0x00007f7006218c5f in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#37 0x00007f700628aac9 in Tcl_NamespaceObjCmd () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#38 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#39 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#40 0x00007f7006262e07 in TclCompEvalObj () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#41 0x00007f7006218906 in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#42 0x00007f700629bf4f in Tcl_UplevelObjCmd () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#43 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#44 0x00007f700621824c in TclEvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#45 0x00007f7006218853 in Tcl_EvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#46 0x00007f7006218c5f in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#47 0x00007f700621ef6b in Tcl_EvalObjCmd () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#48 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#49 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#50 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#51 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#52 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#53 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#54 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#55 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#56 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#57 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#58 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#59 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#60 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#61 0x00007f700621824c in TclEvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#62 0x00007f7006218853 in Tcl_EvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#63 0x00007f7006218c5f in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#64 0x00007f700621ef6b in Tcl_EvalObjCmd () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#65 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#66 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#67 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#68 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#69 0x00007f700621824c in TclEvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#70 0x00007f7006218853 in Tcl_EvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#71 0x00007f7006218875 in Tcl_Eval () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#72 0x0000000001a838e7 in TTclThread::Handler::EventSend::Process (this=0x7f6fbdad1a00) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1456
+#73 0x0000000001a76af8 in TTclThread::Event::EventProc (evPtr=<optimized out>, flags=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1079
+#74 0x00007f700628c4cf in Tcl_ServiceEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#75 0x00007f700628c715 in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#76 0x0000000001a77652 in TTclThread::Event::SendEvent (this=0x7f6fed7f7860, handler=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1056
+#77 0x0000000001a7e70f in TTclThread::Event::SendEvent (this=0x7f6fed7f7860) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1000
+#78 TTclThread::Handler::EventEval::EventEval (resultInfo=<optimized out>, record=true, str=0x7f6fe85f83e0, interp=<optimized out>, handler=<optimized out>, this=0x7f6fed7f7860) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1674
+#79 TTclThread::Handler::Eval (interp=<optimized out>, script=0x7f6fe85f83e0, record=<optimized out>, resultInfo=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:2198
+#80 0x0000000001a7ec08 in TTclThread::Eval (resultInfo=0x7f6fed7f7920, record=true, command=0x7f6fe85f83e0, interp=0x7f6fd80133e0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:3102
+#81 TTclThread::Command::Eval (clientData=clientData@entry=0x0, interp=interp@entry=0x7f6fcc01e4a0, objc=objc@entry=6, objv=objv@entry=0x7f6fccbfb428) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:3486
+#82 0x0000000001a7ee11 in TTclThread::InterpObjCmd (clientData=0x0, interp=0x7f6fcc01e4a0, objc=6, objv=0x7f6fccbfb428) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:3546
+#83 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#84 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#85 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#86 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#87 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#88 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#89 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#90 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#91 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#92 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#93 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#94 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#95 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#96 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#97 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#98 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#99 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#100 0x00007f7006262e07 in TclCompEvalObj () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#101 0x00007f7006218906 in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#102 0x00007f6ffc0d2a2f in ButtonWidgetObjCmd () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtk8.5t.so
+#103 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#104 0x00007f7006216e22 in Tcl_EvalObjv () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#105 0x00007f7006218bb2 in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#106 0x00007f700629bf4f in Tcl_UplevelObjCmd () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#107 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#108 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#109 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#110 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#111 0x00007f700621824c in TclEvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#112 0x00007f7006218853 in Tcl_EvalEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#113 0x00007f6ffc0aa908 in Tk_BindEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtk8.5t.so
+#114 0x00007f6ffc0acdf6 in TkBindEventProc () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtk8.5t.so
+#115 0x00007f6ffc0b4813 in Tk_HandleEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtk8.5t.so
+#116 0x00007f6ffc0b4a04 in WindowEventProc () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtk8.5t.so
+#117 0x00007f700628c4cf in Tcl_ServiceEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#118 0x00007f700628c715 in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#119 0x00007f70062587b2 in Tcl_VwaitObjCmd () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#120 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#121 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#122 0x00007f700629c809 in TclObjInterpProcCore () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#123 0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#124 0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#125 0x00007f7006262e07 in TclCompEvalObj () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#126 0x00007f7006218906 in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#127 0x00000000019ae9cb in TUC_Startup::RunInteractiveCommand::EventGuiNotifyInteractive::Process (this=0xbb34750) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/cmd_startup.cxx:7991
+#128 0x0000000001a76af8 in TTclThread::Event::EventProc (evPtr=<optimized out>, flags=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1079
+#129 0x00007f700628c4cf in Tcl_ServiceEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#130 0x00007f700628c715 in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#131 0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x7f6ff80367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
+#132 0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#133 0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 9 (Thread 0x2b1b5688c700 (LWP 197790) "catapult"):
-#0  0x00002b1b3d92fde2 in pthread_cond_timedwait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
-#1  0x00002b1b3cf42a94 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#2  0x00002b1b3cf0c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#3  0x0000000001a77652 in TTclThread::Event::SendEvent (this=0x2b1b5688b940, handler=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1056
-#4  0x0000000001883a73 in (anonymous namespace)::SIF_GO_Transforms::EventGoTransform::EventGoTransform (resultInfo_=..., ret_state_=@0x2b1b5688b82c: SDS::Sinvalid, ret_invalid_proj_=@0x2b1b5688b813: false, state_=@0x2b1b5688b828: SDS::Sarchitect, sid_=..., cmd_=..., this=0x2b1b5688b940) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_xform_cmds.cxx:3241
-#5  TUC_Go::TclCommand::Command (this=<optimized out>, objcIdx=<optimized out>, clientData=<optimized out>, interp=0x2b1b680133e0, objc=<optimized out>, objv=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_xform_cmds.cxx:4057
-#6  0x000000000182366d in SIF_TclCommand::Process (objv=0x2b1b680164f8, objc=2, interp=0x2b1b680133e0, clientData=0x0, objcIdx=1, this=0x2b1b680d91f0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_tcl_command.cxx:271
-#7  SIF_TclTopCommand::tclCommand (clientData=<optimized out>, interp=0x2b1b680133e0, objc=2, objv=0x2b1b680164f8) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_tcl_command.h:255
-#8  0x00002b1b3ce96969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#9  0x00002b1b3ceda5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#10 0x00002b1b3cee2e07 in TclCompEvalObj () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#11 0x00002b1b3ce98906 in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#12 0x00002b1b3cee8903 in Tcl_RecordAndEvalObj () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#13 0x00002b1b3cee8957 in Tcl_RecordAndEval () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#14 0x0000000001a84c58 in TTclThread::Handler::EventEval::Process (this=0x2b1b56a8a860) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1646
+Thread 9 (Thread 0x7f6fedffb700 (LWP 55584) "catapult"):
+#0  0x00007f7005849a35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+#1  0x00007f70062c2d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#2  0x00007f700628c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#3  0x0000000001a77652 in TTclThread::Event::SendEvent (this=0x7f6fedffa940, handler=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1056
+#4  0x0000000001883a73 in (anonymous namespace)::SIF_GO_Transforms::EventGoTransform::EventGoTransform (resultInfo_=..., ret_state_=@0x7f6fedffa82c: SDS::Sinvalid, ret_invalid_proj_=@0x7f6fedffa813: false, state_=@0x7f6fedffa828: SDS::Sarchitect, sid_=..., cmd_=..., this=0x7f6fedffa940) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_xform_cmds.cxx:3241
+#5  TUC_Go::TclCommand::Command (this=<optimized out>, objcIdx=<optimized out>, clientData=<optimized out>, interp=0x7f6fd80133e0, objc=<optimized out>, objv=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_xform_cmds.cxx:4057
+#6  0x000000000182366d in SIF_TclCommand::Process (objv=0x7f6fd80164f8, objc=2, interp=0x7f6fd80133e0, clientData=0x0, objcIdx=1, this=0x7f6fd80d51e0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_tcl_command.cxx:271
+#7  SIF_TclTopCommand::tclCommand (clientData=<optimized out>, interp=0x7f6fd80133e0, objc=2, objv=0x7f6fd80164f8) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_tcl_command.h:255
+#8  0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#9  0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#10 0x00007f7006262e07 in TclCompEvalObj () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#11 0x00007f7006218906 in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#12 0x00007f7006268903 in Tcl_RecordAndEvalObj () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#13 0x00007f7006268957 in Tcl_RecordAndEval () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#14 0x0000000001a84c58 in TTclThread::Handler::EventEval::Process (this=0x7f6fed7f7860) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1646
 #15 0x0000000001a76af8 in TTclThread::Event::EventProc (evPtr=<optimized out>, flags=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1079
-#16 0x00002b1b3cf0c4cf in Tcl_ServiceEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#17 0x00002b1b3cf0c7d9 in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#18 0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x2b1b480367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
-#19 0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#20 0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+#16 0x00007f700628c4cf in Tcl_ServiceEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#17 0x00007f700628c7d9 in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#18 0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x7f6ff80367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
+#19 0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#20 0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 8 (Thread 0x2b1b5668b700 (LWP 197672) "catapult"):
-#0  0x00002b1b3d92fa35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
-#1  0x00002b1b3cf42d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#2  0x00002b1b3cf0c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x2b1b480367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
-#4  0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#5  0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+Thread 8 (Thread 0x7f6fee7fc700 (LWP 55470) "catapult"):
+#0  0x00007f7005849a35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+#1  0x00007f70062c2d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#2  0x00007f700628c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x7f6ff80367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
+#4  0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#5  0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 7 (Thread 0x2b1b5648a700 (LWP 197671) "catapult"):
-#0  0x00002b1b3d92fa35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
-#1  0x00002b1b3cf42d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#2  0x00002b1b3cf0c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x2b1b480367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
-#4  0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#5  0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+Thread 7 (Thread 0x7f6feeffd700 (LWP 55469) "catapult"):
+#0  0x00007f7005849a35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+#1  0x00007f70062c2d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#2  0x00007f700628c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x7f6ff80367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
+#4  0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#5  0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 6 (Thread 0x2b1b5607d700 (LWP 197648) "catapult"):
-#0  0x00002b1b3d92fde2 in pthread_cond_timedwait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
-#1  0x00000000018f49f0 in _ZNEgYLAUeY::_ZNGrT1oVBE::_ZNGAFf7Q25::_ZNX3ZgpvZm (timeout_ms=0, timeout_secs=<optimized out>, this=0x8a8a1a8) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/aol/Mgc_home/shared/include/cds_clip/CLIM.cpp:1248
-#2  _ZNlMszCCKD::_ZNJwlVpxPI::_ZN4rpxl4Sg::_ZN88wyNsIq (this=0x8a8a130, ready=..., finished=@0x8a8a2c9: false) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/aol/Mgc_home/shared/include/cds_clip/CLIM.cpp:1483
-#3  0x00000000018f5122 in _ZNlMszCCKD::_ZNJwlVpxPI::Init (this=this@entry=0x8a8a110) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/aol/Mgc_home/shared/include/cds_clip/CLIM.cpp:1722
-#4  _ZNlMszCCKD::_ZNJwlVpxPI::InitW (p=p@entry=0x8a8a110) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/aol/Mgc_home/shared/include/cds_clip/CLIM.cpp:1718
-#5  0x00000000018e36c9 in _ZNEgYLAUeY::_ZNGrT1oVBE::_ZNCzulNp4G::rinit (arg=0x2b1b4c08f1b0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/aol/Mgc_home/shared/include/cds_clip/CLIM.cpp:1306
-#6  0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#7  0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+Thread 6 (Thread 0x7f6fef7fe700 (LWP 55462) "catapult"):
+#0  0x00007f7005849de2 in pthread_cond_timedwait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+#1  0x00000000018f49f0 in _ZNEgYLAUeY::_ZNGrT1oVBE::_ZNGAFf7Q25::_ZNX3ZgpvZm (timeout_ms=0, timeout_secs=<optimized out>, this=0x94c11a8) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/aol/Mgc_home/shared/include/cds_clip/CLIM.cpp:1248
+#2  _ZNlMszCCKD::_ZNJwlVpxPI::_ZN4rpxl4Sg::_ZN88wyNsIq (this=0x94c1130, ready=..., finished=@0x94c12c9: false) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/aol/Mgc_home/shared/include/cds_clip/CLIM.cpp:1483
+#3  0x00000000018f5122 in _ZNlMszCCKD::_ZNJwlVpxPI::Init (this=this@entry=0x94c1110) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/aol/Mgc_home/shared/include/cds_clip/CLIM.cpp:1722
+#4  _ZNlMszCCKD::_ZNJwlVpxPI::InitW (p=p@entry=0x94c1110) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/aol/Mgc_home/shared/include/cds_clip/CLIM.cpp:1718
+#5  0x00000000018e36c9 in _ZNEgYLAUeY::_ZNGrT1oVBE::_ZNCzulNp4G::rinit (arg=0x7f6ff008f1b0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/aol/Mgc_home/shared/include/cds_clip/CLIM.cpp:1306
+#6  0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#7  0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 5 (Thread 0x2b1b55e7c700 (LWP 197646) "catapult"):
-#0  0x00002b1b3d92fa35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
-#1  0x00002b1b3cf42d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#2  0x00002b1b3cf0c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x2b1b480367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
-#4  0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#5  0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+Thread 5 (Thread 0x7f6feffff700 (LWP 55460) "catapult"):
+#0  0x00007f7005849a35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+#1  0x00007f70062c2d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#2  0x00007f700628c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x7f6ff80367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
+#4  0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#5  0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 4 (Thread 0x2b1b479a6700 (LWP 197630) "catapult"):
-#0  0x0000000001325391 in SIF_LogicValues::operator[] (this=this@entry=0x2b1ba7049d08, pos=pos@entry=0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/classes/sif_types.cxx:722
-#1  0x0000000002914105 in SIF_ValuesOpera2::apply (this=this@entry=0x2b1b479a4300, trg=trg@entry=0x2b1ba7049cf8, idx=idx@entry=0, arg2=..., vec=vec@entry=false) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/classes/sif_values.cxx:211
-#2  0x000000000291568f in SIF_Values::evaluate (this=this@entry=0x2b1ba7049cf8, op2=..., idx=idx@entry=0, vslc=...) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/classes/sif_values.cxx:448
-#3  0x0000000001656575 in CD_SeqVal::asg_expand (lpexit=<optimized out>, val=..., this=0x2b1ba7049cf8) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:866
-#4  CD_SeqVal::asg_expand (lpexit=<optimized out>, val=..., this=0x2b1ba7049cf8) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:857
-#5  CD_SeqStat::asg_expand (this=0x2b1bab91b4a0, src=0x2b1ba6be30a0, lpexit=lpexit@entry=0x0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:1281
-#6  0x0000000001656728 in CD_SeqProp::fork_close (this=0x2b1b479a5350, fd=0x2b1ba7942ab0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3247
-#7  0x00000000016391ba in CD_Seq::op_opers (this=0x2b1b479a5350, parent=<optimized out>, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:141
-#8  0x00000000016589e6 in CD_SeqProp::op_sel (this=0x2b1b479a5350, sel=0x2b1ba55f7720) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3135
-#9  0x0000000001638ebf in CD_Seq::op_opers (this=0x2b1b479a5350, parent=0x2b1ba801d140, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
-#10 0x000000000165c385 in CD_SeqProp::op_cxtrf (this=0x2b1b479a5350, cxtrf=0x2b1ba7ae6b40) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3195
-#11 0x0000000001638d5d in CD_Seq::op_opers (this=0x2b1b479a5350, parent=<optimized out>, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:138
-#12 0x00000000016589e6 in CD_SeqProp::op_sel (this=0x2b1b479a5350, sel=0x2b1c03fff960) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3135
-#13 0x0000000001638ebf in CD_Seq::op_opers (this=0x2b1b479a5350, parent=0x2b1c03c1bc60, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
-#14 0x0000000001656aeb in CD_SeqProp::sp_loop (this=this@entry=0x2b1b479a5350, body=body@entry=0x2b1c03c1bc60) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:2727
-#15 0x0000000001657461 in CD_SeqProp::op_loop (this=0x2b1b479a5350, loop=0x2b1ba6aef8c0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3362
-#16 0x0000000001638ebf in CD_Seq::op_opers (this=0x2b1b479a5350, parent=0x2b1c03c1c9a0, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
-#17 0x0000000001656aeb in CD_SeqProp::sp_loop (this=this@entry=0x2b1b479a5350, body=body@entry=0x2b1c03c1c9a0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:2727
-#18 0x0000000001657461 in CD_SeqProp::op_loop (this=0x2b1b479a5350, loop=0x2b1ba6b2cb00) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3362
-#19 0x0000000001638ebf in CD_Seq::op_opers (this=0x2b1b479a5350, parent=0x2b1c03c1cec0, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
-#20 0x000000000165c385 in CD_SeqProp::op_cxtrf (this=0x2b1b479a5350, cxtrf=0x2b1c03c1d030) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3195
-#21 0x0000000001638cf0 in CD_Seq::op_opers (this=0x2b1b479a5350, parent=0x2b1c03c1dc50, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:133
-#22 0x00000000016589e6 in CD_SeqProp::op_sel (this=0x2b1b479a5350, sel=0x2b1c03c1dc50) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3135
-#23 0x0000000001638ebf in CD_Seq::op_opers (this=0x2b1b479a5350, parent=0x2b1ba6977970, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
-#24 0x0000000001656b7c in CD_SeqProp::sp_loop (this=this@entry=0x2b1b479a5350, body=body@entry=0x2b1ba6977970) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:2727
-#25 0x0000000001657461 in CD_SeqProp::op_loop (this=0x2b1b479a5350, loop=0x2b1c03e15bd0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3362
-#26 0x0000000001638ebf in CD_Seq::op_opers (this=0x2b1b479a5350, parent=0x2b1ba6978b00, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
-#27 0x000000000165c385 in CD_SeqProp::op_cxtrf (this=0x2b1b479a5350, cxtrf=0x2b1ba6979190) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3195
-#28 0x0000000001638d5d in CD_Seq::op_opers (this=0x2b1b479a5350, parent=<optimized out>, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:138
-#29 0x00000000016589e6 in CD_SeqProp::op_sel (this=0x2b1b479a5350, sel=0x2b1ba69792e0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3135
-#30 0x0000000001638ebf in CD_Seq::op_opers (this=0x2b1b479a5350, parent=0x2b1bab905740, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
-#31 0x000000000165c385 in CD_SeqProp::op_cxtrf (this=0x2b1b479a5350, cxtrf=0x2b1bab905930) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3195
-#32 0x0000000001638d5d in CD_Seq::op_opers (this=0x2b1b479a5350, parent=<optimized out>, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:138
-#33 0x00000000016589e6 in CD_SeqProp::op_sel (this=0x2b1b479a5350, sel=0x2b1bab905b00) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3135
-#34 0x0000000001638ebf in CD_Seq::op_opers (this=0x2b1b479a5350, parent=0x2b1ba6935310, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
-#35 0x0000000001656aeb in CD_SeqProp::sp_loop (this=this@entry=0x2b1b479a5350, body=body@entry=0x2b1ba6935310) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:2727
-#36 0x0000000001657461 in CD_SeqProp::op_loop (this=0x2b1b479a5350, loop=0x2b1ba7975ee0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3362
-#37 0x0000000001638ebf in CD_Seq::op_opers (this=0x2b1b479a5350, parent=0x2b1ba6935200, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
-#38 0x0000000001656aeb in CD_SeqProp::sp_loop (this=this@entry=0x2b1b479a5350, body=0x2b1ba6935200) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:2727
-#39 0x000000000165712d in SIF_Sequential::cd_seqprop (this=this@entry=0x2b1ba6a6a730) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:4069
-#40 0x0000000001609947 in SIF_Sequential::cd_opt_part (this=0x2b1ba6a6a730, opt=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_optimize.cxx:326
-#41 0x000000000160a75a in SIF_Partition::cd_optimize (fcnt=0, flags=<synthetic pointer>, this=0x2b1ba6a6a730) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_optimize.cxx:436
-#42 SIF_Partition::cd_optimize (this=this@entry=0x2b1ba6a6a730, flags=flags@entry=0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_optimize.cxx:504
-#43 0x00000000016f0d8d in sif_cd_transform_mergeloop (hpart=hpart@entry=0x2b1c03c614a0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_codemotion.cxx:1453
-#44 0x000000000189589d in unroll_loops_cmd (interp=<optimized out>, solution=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_xform_cmds.cxx:1124
-#45 0x0000000001892610 in (anonymous namespace)::ise_go_transform (lres=..., cmd=..., solution=@0x2b1b479a5ca8: 0x2b1ba66da7e0, stateSetCWD=...) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_xform_cmds.cxx:3557
-#46 0x00000000018944a3 in TUC_Go::ise_go (interp=interp@entry=0x2b1b4c033c10, cmd=..., c_solution=c_solution@entry=0x2b1ba66da7e0, state=state@entry=SDS::Sarchitect) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_xform_cmds.cxx:3767
-#47 0x00000000018952ba in (anonymous namespace)::SIF_GO_Transforms::EventGoTransform::Process (this=0x2b1b5688b940) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_xform_cmds.cxx:3217
-#48 0x0000000001a76af8 in TTclThread::Event::EventProc (evPtr=<optimized out>, flags=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1079
-#49 0x00002b1b3cf0c4cf in Tcl_ServiceEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#50 0x00002b1b3cf0c7d9 in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#51 0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x2b1b480367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
-#52 0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#53 0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+Thread 4 (Thread 0x7f6ff7fff700 (LWP 55453) "catapult"):
+#0  0x000000000164b08b in CD_SeqVal::asg (newscope=true, val=..., this=0x7f6f7ccf95e8) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:851
+#1  CD_SeqStat::asg (this=0x7f6f84856ca0, src=..., newscope=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:1243
+#2  0x0000000001639038 in CD_Seq::op_opers (this=0x7f6ff7ffda90, parent=<optimized out>, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:136
+#3  0x00000000016589e6 in CD_SeqProp::op_sel (this=0x7f6ff7ffda90, sel=0x7f6ff3aaee80) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3135
+#4  0x0000000001638ebf in CD_Seq::op_opers (this=0x7f6ff7ffda90, parent=0x7f6ff165c390, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
+#5  0x000000000165c385 in CD_SeqProp::op_cxtrf (this=0x7f6ff7ffda90, cxtrf=0x7f6ff165c150) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3195
+#6  0x0000000001638cf0 in CD_Seq::op_opers (this=0x7f6ff7ffda90, parent=0x7f6ff165b600, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:133
+#7  0x00000000016589e6 in CD_SeqProp::op_sel (this=0x7f6ff7ffda90, sel=0x7f6ff165b600) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3135
+#8  0x0000000001638ebf in CD_Seq::op_opers (this=0x7f6ff7ffda90, parent=0x7f6ff0721ab0, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
+#9  0x0000000001656aeb in CD_SeqProp::sp_loop (this=this@entry=0x7f6ff7ffda90, body=body@entry=0x7f6ff0721ab0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:2727
+#10 0x0000000001657461 in CD_SeqProp::op_loop (this=0x7f6ff7ffda90, loop=0x7f6fbe6fbfb0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3362
+#11 0x0000000001638ebf in CD_Seq::op_opers (this=0x7f6ff7ffda90, parent=0x7f6ff07223a0, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
+#12 0x000000000165c385 in CD_SeqProp::op_cxtrf (this=0x7f6ff7ffda90, cxtrf=0x7f6ff07226f0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3195
+#13 0x0000000001638cf0 in CD_Seq::op_opers (this=0x7f6ff7ffda90, parent=0x7f6ff06dee20, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:133
+#14 0x00000000016589e6 in CD_SeqProp::op_sel (this=0x7f6ff7ffda90, sel=0x7f6ff06dee20) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3135
+#15 0x0000000001638ebf in CD_Seq::op_opers (this=0x7f6ff7ffda90, parent=0x7f6ff06df4e0, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
+#16 0x0000000001656aeb in CD_SeqProp::sp_loop (this=this@entry=0x7f6ff7ffda90, body=body@entry=0x7f6ff06df4e0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:2727
+#17 0x0000000001657461 in CD_SeqProp::op_loop (this=0x7f6ff7ffda90, loop=0x7f6ff09b1e60) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3362
+#18 0x0000000001638ebf in CD_Seq::op_opers (this=0x7f6ff7ffda90, parent=0x7f6ff06dfaa0, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
+#19 0x000000000165c385 in CD_SeqProp::op_cxtrf (this=0x7f6ff7ffda90, cxtrf=0x7f6fbe6fb4a0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3195
+#20 0x0000000001638d5d in CD_Seq::op_opers (this=0x7f6ff7ffda90, parent=<optimized out>, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:138
+#21 0x00000000016589e6 in CD_SeqProp::op_sel (this=0x7f6ff7ffda90, sel=0x7f6ff0c43da0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3135
+#22 0x000000000165c385 in CD_SeqProp::op_cxtrf (this=0x7f6ff7ffda90, cxtrf=0x7f6ff0c441a0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3195
+#23 0x0000000001638cf0 in CD_Seq::op_opers (this=0x7f6ff7ffda90, parent=0x7f6ff0a6bd70, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:133
+#24 0x00000000016589e6 in CD_SeqProp::op_sel (this=0x7f6ff7ffda90, sel=0x7f6ff0a6bd70) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3135
+#25 0x0000000001638ebf in CD_Seq::op_opers (this=0x7f6ff7ffda90, parent=0x7f6ff0a6c170, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
+#26 0x0000000001656aeb in CD_SeqProp::sp_loop (this=this@entry=0x7f6ff7ffda90, body=body@entry=0x7f6ff0a6c170) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:2727
+#27 0x0000000001657461 in CD_SeqProp::op_loop (this=0x7f6ff7ffda90, loop=0x7f6fb4616800) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:3362
+#28 0x0000000001638ebf in CD_Seq::op_opers (this=0x7f6ff7ffda90, parent=0x7f6ff0a6c880, ops=<optimized out>, trav=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seq.cxx:127
+#29 0x0000000001656aeb in CD_SeqProp::sp_loop (this=this@entry=0x7f6ff7ffda90, body=0x7f6ff0a6c880) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:2727
+#30 0x000000000165712d in SIF_Sequential::cd_seqprop (this=this@entry=0x7f6fbe782b70) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_seqprop.cxx:4069
+#31 0x0000000001609947 in SIF_Sequential::cd_opt_part (this=0x7f6fbe782b70, opt=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_optimize.cxx:326
+#32 0x000000000160a619 in SIF_Partition::cd_optimize (this=this@entry=0x7f6fbe782b70, fcnt=<optimized out>, fcnt@entry=2, flags=0x3c27aa4 <next_loop(SIF_Sequential*, bool*, int*)::ctab+4>, flags@entry=0x3c27aa0 <next_loop(SIF_Sequential*, bool*, int*)::ctab>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_optimize.cxx:431
+#33 0x00000000016eea60 in next_loop (unroll=0x7f6ff7ffe20c, do_opt=<synthetic pointer>, seq=0x7f6fbe782b70) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_codemotion.cxx:2652
+#34 next_loop (unroll=0x7f6ff7ffe20c, do_opt=<synthetic pointer>, seq=0x7f6fbe782b70) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_codemotion.cxx:2638
+#35 sif_cd_transform_unroll (seq=seq@entry=0x7f6fbe782b70, def=def@entry=false) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_codemotion.cxx:2677
+#36 0x00000000016eeda7 in sif_cd_transform_unroll (hpart=hpart@entry=0x7f6fbc522050, def=def@entry=false) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/cdfg/sif_cd_codemotion.cxx:2761
+#37 0x000000000189587d in unroll_loops_cmd (interp=<optimized out>, solution=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_xform_cmds.cxx:1120
+#38 0x0000000001892610 in (anonymous namespace)::ise_go_transform (lres=..., cmd=..., solution=@0x7f6ff7ffeca8: 0x7f6fb4038090, stateSetCWD=...) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_xform_cmds.cxx:3557
+#39 0x00000000018944a3 in TUC_Go::ise_go (interp=interp@entry=0x7f6ff0033c10, cmd=..., c_solution=c_solution@entry=0x7f6fb4038090, state=state@entry=SDS::Sarchitect) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_xform_cmds.cxx:3767
+#40 0x00000000018952ba in (anonymous namespace)::SIF_GO_Transforms::EventGoTransform::Process (this=0x7f6fedffa940) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_xform_cmds.cxx:3217
+#41 0x0000000001a76af8 in TTclThread::Event::EventProc (evPtr=<optimized out>, flags=<optimized out>) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:1079
+#42 0x00007f700628c4cf in Tcl_ServiceEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#43 0x00007f700628c7d9 in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#44 0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0x7f6ff80367d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
+#45 0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#46 0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 3 (Thread 0x2b1b459a5700 (LWP 197629) "catapult"):
-#0  0x00002b1b3e74ab43 in select () from /lib64/libc.so.6
-#1  0x00002b1b3cf41ef6 in NotifierThreadProc () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#2  0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#3  0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+Thread 3 (Thread 0x7f6ffd5d8700 (LWP 55452) "catapult"):
+#0  0x00007f7004a50b43 in select () from /lib64/libc.so.6
+#1  0x00007f70062c1ef6 in NotifierThreadProc () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#2  0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#3  0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 2 (Thread 0x2b1b457a4700 (LWP 197628) "catapult"):
-#0  0x00002b1b3d92fa35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
-#1  0x00002b1b3cf42d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#2  0x00002b1b3cf0c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0xb1439f0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
-#4  0x00002b1b3d92bea5 in start_thread () from /lib64/libpthread.so.0
-#5  0x00002b1b3e753b0d in clone () from /lib64/libc.so.6
+Thread 2 (Thread 0x7f6ffddd9700 (LWP 55451) "catapult"):
+#0  0x00007f7005849a35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+#1  0x00007f70062c2d46 in Tcl_WaitForEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#2  0x00007f700628c79c in Tcl_DoOneEvent () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#3  0x0000000001a8190a in TTclThread::Handler::ThreadMain (clientData=0xbb729d0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:749
+#4  0x00007f7005845ea5 in start_thread () from /lib64/libpthread.so.0
+#5  0x00007f7004a59b0d in clone () from /lib64/libc.so.6
 
-Thread 1 (Thread 0x2b1b3af743c0 (LWP 197617) "catapult"):
-#0  0x00002b1b3d92fa35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
-#1  0x00002b1b3cf4150b in Tcl_ConditionWait () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#2  0x0000000001a7706d in TTclThread::TclCondition::Wait (this=0xb102f40) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:60
-#3  0x00000000019b1df7 in TUC_Startup::RunInteractiveCommand::TclCommand::Command (this=0xb100470, objcIdx=1, clientData=<optimized out>, interp=<optimized out>, objc=<optimized out>, objv=0xb0c90f8) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/cmd_startup.cxx:8071
-#4  0x000000000182366d in SIF_TclCommand::Process (objv=0xb0c90f8, objc=1, interp=0xb0bb9d0, clientData=0x0, objcIdx=1, this=0xb100470) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_tcl_command.cxx:271
-#5  SIF_TclTopCommand::tclCommand (clientData=<optimized out>, interp=0xb0bb9d0, objc=1, objv=0xb0c90f8) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_tcl_command.h:255
-#6  0x00002b1b3ce96969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#7  0x00002b1b3ceda5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#8  0x00002b1b3cee2e07 in TclCompEvalObj () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#9  0x00002b1b3ce98906 in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
-#10 0x0000000001156eba in TTclObjI::Eval (this=0x7ffd64069220) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclobj.h:622
-#11 StartTcl (envp=0x0, argv=0x7ffd64069358, argc=2) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/newui_main.cxx:1048
-#12 app_main (argv=0x7ffd64069358, argc=2, envp=0x0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/newui_main.cxx:1116
-#13 main (argc=2, argv=0x7ffd64069358) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/newui_main.cxx:1141
-[Inferior 1 (process 197617) detached]
+Thread 1 (Thread 0x7f7008426740 (LWP 55446) "catapult"):
+#0  0x00007f7005849a35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+#1  0x00007f70062c150b in Tcl_ConditionWait () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#2  0x0000000001a7706d in TTclThread::TclCondition::Wait (this=0xbb35f30) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclthread.cxx:60
+#3  0x00000000019b1df7 in TUC_Startup::RunInteractiveCommand::TclCommand::Command (this=0xbb33460, objcIdx=1, clientData=<optimized out>, interp=<optimized out>, objc=<optimized out>, objv=0xbb000f8) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/cmd_startup.cxx:8071
+#4  0x000000000182366d in SIF_TclCommand::Process (objv=0xbb000f8, objc=1, interp=0xbaf29d0, clientData=0x0, objcIdx=1, this=0xbb33460) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_tcl_command.cxx:271
+#5  SIF_TclTopCommand::tclCommand (clientData=<optimized out>, interp=0xbaf29d0, objc=1, objv=0xbb000f8) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/sif_tcl_command.h:255
+#6  0x00007f7006216969 in TclEvalObjvInternal () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#7  0x00007f700625a5f6 in TclExecuteByteCode () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#8  0x00007f7006262e07 in TclCompEvalObj () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#9  0x00007f7006218906 in TclEvalObjEx () from /usr/local/bin/Siemens_EDA/Catapult_Synthesis_2025.2_1-1197638/Mgc_home/lib/libtcl8.5t.so
+#10 0x0000000001156eba in TTclObjI::Eval (this=0x7ffe52cee8e0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/tclobj.h:622
+#11 StartTcl (envp=0x0, argv=0x7ffe52ceea18, argc=3) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/newui_main.cxx:1048
+#12 app_main (argv=0x7ffe52ceea18, argc=3, envp=0x0) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/newui_main.cxx:1116
+#13 main (argc=3, argv=0x7ffe52ceea18) at /wv/hlsb/CATAPULT/2025.2_1/2025-06-12/src/ise/newui_main.cxx:1141
+[Inferior 1 (process 55446) detached]

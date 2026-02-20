@@ -1,0 +1,564 @@
+
+# Messages from "go new"
+
+# Info: Branching solution 'solution.v2' at state 'initial' (PRJ-2)
+
+# Messages from "go analyze"
+
+solution.v2
+solution options defaults
+solution options set /Output/GenerateCycleNetlist false
+false
+solution file add ./src/stem/stem_config.h    -type C++
+/INPUTFILES/1
+solution file add ./src/pe/pe_config.h        -type C++
+/INPUTFILES/2
+solution file add ./src/pe/generic_pe.h       -type C++
+/INPUTFILES/3
+solution file add ./src/pe/generic_pe.cpp     -type C++
+/INPUTFILES/4
+solution file add ./src/pe/three_pe_block.h   -type C++
+/INPUTFILES/5
+solution file add ./src/pe/three_pe_block.cpp -type C++
+/INPUTFILES/6
+solution file add ./src/pe/three_pe_block_tb.cpp -type C++ -exclude true
+/INPUTFILES/7
+go analyze
+# Info: Starting transformation 'analyze' on solution 'solution.v2' (SOL-8)
+Creating project directory '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/three_pe_block/'. (PRJ-1)
+Moving session transcript to file "/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/catapult.log"
+Front End called with arguments: -- /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/pe/three_pe_block.cpp /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/pe/three_pe_block.h /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/pe/generic_pe.cpp /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/pe/generic_pe.h /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/pe/pe_config.h /mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/src/stem/stem_config.h (CIN-69)
+Edison Design Group C++/C Front End - Version 6.6 (CIN-1)
+Pragma 'hls_design<top>' detected on class 'ThreePEBlock' (CIN-6)
+Pragma 'hls_design<top>' detected on class 'ThreePEBlock' (CIN-6)
+Pragma 'hls_design<top>' detected on class 'ThreePEBlock' (CIN-6)
+Pragma 'hls_design<top>' detected on class 'ThreePEBlock' (CIN-6)
+Source file analysis completed (CIN-68)
+# Info: Completed transformation 'analyze' on solution 'solution.v2': elapsed time 10.52 seconds, memory usage 1690808kB, peak memory usage 1690808kB (SOL-9)
+
+# Messages from "go compile"
+
+puts "======== DESIGN HIERARCHY DEBUG ========"
+======== DESIGN HIERARCHY DEBUG ========
+catch {puts "solution design get: [solution design get]"}
+solution design get: ThreePEBlock GenericConvPE ThreePEBlock GenericConvPE ThreePEBlock::ThreePEBlock
+0
+catch {puts "directive get -rec: [directive get -rec]"}
+1
+puts "========================================"
+========================================
+proc map_bram {label keys roots} {
+    foreach root $roots {
+        foreach key $keys {
+            set path "${root}/${key}:rsc"
+            if {![catch {directive set $path -MAP_TO_MODULE {BLOCK_1R1W_RBW}} err]} {
+                puts "BRAM OK  : ${label} -> ${path}"
+                return 1
+            }
+        }
+    }
+    puts "BRAM SKIP: ${label}"
+    return 0
+}
+proc map_register {label keys roots} {
+    foreach root $roots {
+        foreach key $keys {
+            set path "${root}/${key}:rsc"
+            if {![catch {directive set $path -MAP_TO_MODULE {[Register]}} err]} {
+                puts "REG OK   : ${label} -> ${path}"
+                return 1
+            }
+        }
+    }
+    puts "REG SKIP : ${label}"
+    return 0
+}
+proc set_dependence {label keys roots} {
+    foreach root $roots {
+        foreach key $keys {
+            set path "${root}/${key}"
+            if {![catch {directive set $path -DEPENDENCE_TYPE inter -DEPENDENCE false} err]} {
+                puts "DEP OK   : ${label} -> ${path}"
+                return 1
+            }
+        }
+    }
+    puts "DEP SKIP : ${label}"
+    return 0
+}
+set roots {
+    /ThreePEBlock
+    /ThreePEBlock/run
+    /ThreePEBlock/run_straight
+    /ThreePEBlock/run_branch_cat
+    /ThreePEBlock/run_shortcut
+    /three_pe_block/ThreePEBlock
+    /three_pe_block/ThreePEBlock/run
+    /three_pe_block/ThreePEBlock/run_straight
+    /three_pe_block/ThreePEBlock/run_branch_cat
+    /three_pe_block/ThreePEBlock/run_shortcut
+}
+
+    /ThreePEBlock
+    /ThreePEBlock/run
+    /ThreePEBlock/run_straight
+    /ThreePEBlock/run_branch_cat
+    /ThreePEBlock/run_shortcut
+    /three_pe_block/ThreePEBlock
+    /three_pe_block/ThreePEBlock/run
+    /three_pe_block/ThreePEBlock/run_straight
+    /three_pe_block/ThreePEBlock/run_branch_cat
+    /three_pe_block/ThreePEBlock/run_shortcut
+
+set design_names {}
+catch {set design_names [solution design get]}
+0
+foreach d $design_names {
+    if {[string first "::" $d] >= 0} { continue }
+    lappend roots "/$d"
+    lappend roots "/$d/run"
+}
+set roots [lsort -unique $roots]
+/GenericConvPE /GenericConvPE/run /ThreePEBlock /ThreePEBlock/run /ThreePEBlock/run_branch_cat /ThreePEBlock/run_shortcut /ThreePEBlock/run_straight /three_pe_block/ThreePEBlock /three_pe_block/ThreePEBlock/run /three_pe_block/ThreePEBlock/run_branch_cat /three_pe_block/ThreePEBlock/run_shortcut /three_pe_block/ThreePEBlock/run_straight
+puts "Roots: $roots"
+Roots: /GenericConvPE /GenericConvPE/run /ThreePEBlock /ThreePEBlock/run /ThreePEBlock/run_branch_cat /ThreePEBlock/run_shortcut /ThreePEBlock/run_straight /three_pe_block/ThreePEBlock /three_pe_block/ThreePEBlock/run /three_pe_block/ThreePEBlock/run_branch_cat /three_pe_block/ThreePEBlock/run_shortcut /three_pe_block/ThreePEBlock/run_straight
+if {[catch {directive set -MEM_MAP_THRESHOLD 8192} err]} {
+    puts "MEM_MAP_THRESHOLD failed: $err"
+} else {
+    puts "MEM_MAP_THRESHOLD = 8192"
+}
+MEM_MAP_THRESHOLD = 8192
+if {[catch {directive set -CLOCK_OVERHEAD 0} err]} {
+    puts "CLOCK_OVERHEAD failed: $err"
+} else {
+    puts "CLOCK_OVERHEAD = 0"
+}
+CLOCK_OVERHEAD = 0
+puts "======== BRAM MAPPINGS ========"
+======== BRAM MAPPINGS ========
+map_bram "line_buf" {
+    line_buf run/line_buf
+    run_straight/line_buf
+    run_branch_cat/line_buf
+    run_shortcut/line_buf
+} $roots
+BRAM SKIP: line_buf
+0
+map_bram "w3_a_mem" {
+    w3_a_mem run/w3_a_mem
+    run_straight/w3_a_mem
+    run_branch_cat/w3_a_mem
+    run_shortcut/w3_a_mem
+} $roots
+BRAM SKIP: w3_a_mem
+0
+map_bram "shortcut_buf" {
+    shortcut_buf run/shortcut_buf
+} $roots
+BRAM SKIP: shortcut_buf
+0
+puts "======== BRAM MAPPINGS DONE ========"
+======== BRAM MAPPINGS DONE ========
+puts "======== REGISTER MAPPINGS ========"
+======== REGISTER MAPPINGS ========
+map_register "w1_a_mem" {w1_a_mem run/w1_a_mem} $roots
+REG SKIP : w1_a_mem
+0
+map_register "w_dw_mem" {w_dw_mem run/w_dw_mem} $roots
+REG SKIP : w_dw_mem
+0
+map_register "shift_a"  {shift_a  run/shift_a}  $roots
+REG SKIP : shift_a
+0
+map_register "bias_a"   {bias_a   run/bias_a}   $roots
+REG SKIP : bias_a
+0
+map_register "w1_b_mem" {w1_b_mem run/w1_b_mem} $roots
+REG SKIP : w1_b_mem
+0
+map_register "shift_b"  {shift_b  run/shift_b}  $roots
+REG SKIP : shift_b
+0
+map_register "bias_b"   {bias_b   run/bias_b}   $roots
+REG SKIP : bias_b
+0
+map_register "w1_c_mem" {w1_c_mem run/w1_c_mem} $roots
+REG SKIP : w1_c_mem
+0
+map_register "shift_c"  {shift_c  run/shift_c}  $roots
+REG SKIP : shift_c
+0
+map_register "bias_c"   {bias_c   run/bias_c}   $roots
+REG SKIP : bias_c
+0
+map_register "w_ccat_mem"  {w_ccat_mem  run/w_ccat_mem}  $roots
+REG SKIP : w_ccat_mem
+0
+map_register "shift_ccat"  {shift_ccat  run/shift_ccat}  $roots
+REG SKIP : shift_ccat
+0
+map_register "bias_ccat"   {bias_ccat   run/bias_ccat}   $roots
+REG SKIP : bias_ccat
+0
+puts "======== REGISTER MAPPINGS DONE ========"
+======== REGISTER MAPPINGS DONE ========
+puts "======== LOOP DEPENDENCE ========"
+======== LOOP DEPENDENCE ========
+set_dependence "STRAIGHT IC_GRP acc" {
+    run_straight/STRAIGHT_MAIN:for:STR_COL:for:STR_IC_GRP:for/acc_a
+    STRAIGHT_MAIN:for:STR_COL:for:STR_IC_GRP:for/acc_a
+} $roots
+DEP SKIP : STRAIGHT IC_GRP acc
+0
+set_dependence "BRANCH IC_GRP acc_a" {
+    run_branch_cat/BRANCH_MAIN:for:BR_COL:for:BR_IC_GRP:for/acc_a
+    BRANCH_MAIN:for:BR_COL:for:BR_IC_GRP:for/acc_a
+} $roots
+DEP SKIP : BRANCH IC_GRP acc_a
+0
+set_dependence "SHORTCUT IC_GRP acc_a" {
+    run_shortcut/SC_MAIN:for:SC_COL:for:SC_IC_GRP:for/acc_a
+    SC_MAIN:for:SC_COL:for:SC_IC_GRP:for/acc_a
+} $roots
+DEP SKIP : SHORTCUT IC_GRP acc_a
+0
+set_dependence "SHUFFLE SH_OC_B acc_b" {
+    run_shuffle2v_s1/SH_MAIN:for:SH_READ_ROW:for:SH_OC_B:for/acc_b
+    SH_MAIN:for:SH_READ_ROW:for:SH_OC_B:for/acc_b
+} $roots
+DEP SKIP : SHUFFLE SH_OC_B acc_b
+0
+set_dependence "SHUFFLE SH_OC_C acc_c" {
+    run_shuffle2v_s1/SH_MAIN:for:SH_COL:for:SH_OC_C:for/acc_c
+    SH_MAIN:for:SH_COL:for:SH_OC_C:for/acc_c
+} $roots
+DEP SKIP : SHUFFLE SH_OC_C acc_c
+0
+puts "======== LOOP DEPENDENCE DONE ========"
+======== LOOP DEPENDENCE DONE ========
+go compile
+# Info: Starting transformation 'compile' on solution 'ThreePEBlock.v1' (SOL-8)
+Generating synthesis internal form... (CIN-3)
+Found top design routine 'ThreePEBlock' specified by directive (CIN-52)
+# Warning: Instantiating global variable 'PE_IC_PAR' which may be accessed outside this scope (CIN-18)
+# Warning: Instantiating global variable 'PE_MAX_ICH' which may be accessed outside this scope (CIN-18)
+# Warning: Instantiating global variable 'PE_LINE_MASK' which may be accessed outside this scope (CIN-18)
+# Warning: Instantiating global variable 'PE_MAX_OCH' which may be accessed outside this scope (CIN-18)
+Inlining member function 'ThreePEBlock::ThreePEBlock' on object '' (CIN-64)
+Synthesizing method 'ThreePEBlock::run' (CIN-13)
+Inlining member function 'ThreePEBlock::run' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::run_straight' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_w3_a' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_bn_into' on object '' (CIN-64)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/STR_READ_ROW' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR_STORE_CH' (CIN-203)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/STR_COL' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR_ACC_INIT' (CIN-203)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/STR_PRELOAD' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR_IC_PAR' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR_KR' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR_KC' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR_BN' (CIN-203)
+Inlining method 'ThreePEBlock::apply_bn_relu' (CIN-14)
+Inlining routine 'operator<<<20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining routine 'operator><20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining member function 'ThreePEBlock::load_w1_into' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_bn_into' on object '' (CIN-64)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/STR1_COL' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR1_UNPACK' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR1_ACC_ZERO' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR1_IC' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR1_BN' (CIN-203)
+Inlining method 'ThreePEBlock::apply_bn_relu' (CIN-14)
+Inlining routine 'operator<<<20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining routine 'operator><20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/STR_MP_READ' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR_MP_STORE' (CIN-203)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/STR_MP_COL' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR_MP_CH' (CIN-203)
+Inlining member function 'ThreePEBlock::load_dw' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_bn_into' on object '' (CIN-64)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/STR_DW_READ' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR_DW_STORE' (CIN-203)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/STR_DW_COL' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR_DW_OC' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR_DW_KR' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/STR_DW_KC' (CIN-203)
+Inlining method 'ThreePEBlock::apply_bn_relu' (CIN-14)
+Inlining routine 'operator<<<20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining routine 'operator><20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining member function 'ThreePEBlock::run_branch_cat' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_w3_a' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_bn_into' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_w1_into' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_bn_into' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_w1_into' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_bn_into' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_ccat_weights' on object '' (CIN-64)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/BR_READ_ROW' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_STORE_CH' (CIN-203)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/BR_COL' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_ACC_INIT' (CIN-203)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/BR_PRELOAD' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_IC_PAR' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_KR' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_KC' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_PA_BN' (CIN-203)
+Inlining method 'ThreePEBlock::apply_bn_relu' (CIN-14)
+Inlining routine 'operator<<<20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining routine 'operator><20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_ACC_B_ZERO' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_IC_B' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_PB_BN' (CIN-203)
+Inlining method 'ThreePEBlock::apply_bn_relu' (CIN-14)
+Inlining routine 'operator<<<20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining routine 'operator><20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_ACC_C_ZERO' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_IC_C' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_PC_BN' (CIN-203)
+Inlining method 'ThreePEBlock::apply_bn_relu' (CIN-14)
+Inlining routine 'operator<<<20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining routine 'operator><20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_CAT_A' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/BR_CAT_B' (CIN-203)
+Inlining method 'ThreePEBlock::apply_ccat' (CIN-14)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/UNPACK_CAT' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/CCAT_ACC_ZERO' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/CCAT_IC' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/CCAT_BN' (CIN-203)
+Inlining method 'ThreePEBlock::apply_bn_relu' (CIN-14)
+Inlining routine 'operator<<<20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining routine 'operator><20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining member function 'ThreePEBlock::run_shortcut' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_w3_a' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_bn_into' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_w1_into' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_bn_into' on object '' (CIN-64)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/SC_READ_ROW' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SC_STORE_CH' (CIN-203)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/SC_COL' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SC_ACC_INIT' (CIN-203)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/SC_PRELOAD' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SC_IC_PAR' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SC_KR' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SC_KC' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SC_PA_BN' (CIN-203)
+Inlining method 'ThreePEBlock::apply_bn_relu' (CIN-14)
+Inlining routine 'operator<<<20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining routine 'operator><20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SC_ACC_B_ZERO' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SC_IC_B' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SC_ADD' (CIN-203)
+Inlining method 'ThreePEBlock::apply_bn_relu' (CIN-14)
+Inlining routine 'operator<<<20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining routine 'operator><20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining routine 'operator><20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining member function 'ThreePEBlock::run_shuffle2v_s1' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_w1_into' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_bn_into' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_dw' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_bn_into' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_w1_into' on object '' (CIN-64)
+Inlining member function 'ThreePEBlock::load_bn_into' on object '' (CIN-64)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SH_UNPACK_UP' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SH_ACC_B_ZERO' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SH_IC_B' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SH_STORE_LB' (CIN-203)
+Inlining method 'ThreePEBlock::apply_bn_relu' (CIN-14)
+Inlining routine 'operator<<<20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining routine 'operator><20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SH_STORE_SC' (CIN-203)
+Pragma 'hls_pipeline_init_interval<1>' detected on '/ThreePEBlock/run/SH_COL' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SH_DW_OC' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SH_DW_KR' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SH_DW_KC' (CIN-203)
+Inlining method 'ThreePEBlock::apply_bn_relu' (CIN-14)
+Inlining routine 'operator<<<20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining routine 'operator><20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SH_ACC_C_ZERO' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SH_IC_C' (CIN-203)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SH_CAT' (CIN-203)
+Inlining method 'ThreePEBlock::apply_bn_relu' (CIN-14)
+Inlining routine 'operator<<<20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining routine 'operator><20, true>' (CIN-14)
+Inlining routine 'operator<<20, true>' (CIN-14)
+Inlining method 'ThreePEBlock::apply_shuffle' (CIN-14)
+Pragma 'hls_unroll<yes>' detected on '/ThreePEBlock/run/SHUFFLE_LOOP' (CIN-203)
+Optimizing block '/ThreePEBlock' ... (CIN-4)
+INOUT port 'cfg.topo' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_a.in_h' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_a.in_w' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_a.out_h' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_a.out_w' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_a.in_ch' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_a.out_ch' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_a.stride' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_a.pad' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_a.op' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_a.relu' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_b.in_h' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_b.in_w' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_b.out_h' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_b.out_w' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_b.in_ch' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_b.out_ch' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_b.stride' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_b.pad' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_b.op' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_b.relu' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_c.in_h' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_c.in_w' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_c.out_h' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_c.out_w' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_c.in_ch' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_c.out_ch' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_c.stride' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_c.pad' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_c.op' is only used as an input. (OPT-10)
+INOUT port 'cfg.pe_c.relu' is only used as an input. (OPT-10)
+INOUT port 'cfg.cat_conv.in_h' is only used as an input. (OPT-10)
+INOUT port 'cfg.cat_conv.in_w' is only used as an input. (OPT-10)
+INOUT port 'cfg.cat_conv.out_h' is only used as an input. (OPT-10)
+INOUT port 'cfg.cat_conv.out_w' is only used as an input. (OPT-10)
+INOUT port 'cfg.cat_conv.in_ch' is only used as an input. (OPT-10)
+INOUT port 'cfg.cat_conv.out_ch' is only used as an input. (OPT-10)
+INOUT port 'cfg.cat_conv.stride' is only used as an input. (OPT-10)
+INOUT port 'cfg.cat_conv.pad' is only used as an input. (OPT-10)
+INOUT port 'cfg.cat_conv.op' is only used as an input. (OPT-10)
+INOUT port 'cfg.cat_conv.relu' is only used as an input. (OPT-10)
+INOUT port 'input_stream' is only used as an input. (OPT-10)
+INOUT port 'weight_stream' is only used as an input. (OPT-10)
+INOUT port 'output_stream' is only used as an output. (OPT-11)
+# Info: Partition '/ThreePEBlock/constructor' is found empty and is optimized away. (OPT-12)
+Loop '/ThreePEBlock/run/LOAD_W3A_ICP' iterated at most 8 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR_STORE_CH' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR_ACC_INIT' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR_KC' iterated at most 3 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR_KR' iterated at most 3 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR_IC_PAR' iterated at most 8 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR_BN' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR1_UNPACK' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR1_ACC_ZERO' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR1_IC' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR1_BN' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR_MP_STORE' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR_MP_CH' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR_DW_STORE' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR_DW_KC' iterated at most 3 times. (LOOP-2)
+Loop '/ThreePEBlock/run/STR_DW_KR' iterated at most 3 times. (LOOP-2)
+Loop '/ThreePEBlock/run/LOAD_W3A_ICP#1' iterated at most 8 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_STORE_CH' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_ACC_INIT' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_KC' iterated at most 3 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_KR' iterated at most 3 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_IC_PAR' iterated at most 8 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_PA_BN' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_ACC_B_ZERO' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_IC_B' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_PB_BN' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_ACC_C_ZERO' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_IC_C' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_PC_BN' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_CAT_A' iterated at most 32 times. (LOOP-2)
+Loop '/ThreePEBlock/run/BR_CAT_B' iterated at most 32 times. (LOOP-2)
+Loop '/ThreePEBlock/run/UNPACK_CAT' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/CCAT_ACC_ZERO' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/CCAT_IC' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/CCAT_BN' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/LOAD_W3A_ICP#2' iterated at most 8 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SC_STORE_CH' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SC_ACC_INIT' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SC_KC' iterated at most 3 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SC_KR' iterated at most 3 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SC_IC_PAR' iterated at most 8 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SC_PA_BN' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SC_ACC_B_ZERO' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SC_IC_B' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SC_ADD' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SH_UNPACK_UP' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SH_ACC_B_ZERO' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SH_IC_B' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SH_STORE_LB' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SH_STORE_SC' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SH_DW_KC' iterated at most 3 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SH_DW_KR' iterated at most 3 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SH_ACC_C_ZERO' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SH_IC_C' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SH_CAT' iterated at most 64 times. (LOOP-2)
+Loop '/ThreePEBlock/run/SHUFFLE_LOOP' iterated at most 32 times. (LOOP-2)
+Detected constant initialization of array 'STR_COL:acc#1', optimizing loop 'STR_ACC_INIT' (LOOP-12)
+Detected constant initialization of array 'STR1_COL:acc#1', optimizing loop 'STR1_ACC_ZERO' (LOOP-12)
+Detected constant initialization of array 'BR_COL:acc_a', optimizing loop 'BR_ACC_INIT' (LOOP-12)
+Detected constant initialization of array 'BR_COL:acc_b', optimizing loop 'BR_ACC_B_ZERO' (LOOP-12)
+Detected constant initialization of array 'BR_COL:acc_c', optimizing loop 'BR_ACC_C_ZERO' (LOOP-12)
+Detected constant initialization of array 'ThreePEBlock::apply_ccat:acc', optimizing loop 'CCAT_ACC_ZERO' (LOOP-12)
+Detected constant initialization of array 'SC_COL:acc_a', optimizing loop 'SC_ACC_INIT' (LOOP-12)
+Detected constant initialization of array 'SC_COL:acc_b', optimizing loop 'SC_ACC_B_ZERO' (LOOP-12)
+Detected constant initialization of array 'SH_READ_ROW:acc_b', optimizing loop 'SH_ACC_B_ZERO' (LOOP-12)
+Detected constant initialization of array 'SH_COL:acc_c', optimizing loop 'SH_ACC_C_ZERO' (LOOP-12)
+# Info: Running transformation 'compile' on solution 'ThreePEBlock.v1': elapsed time 29.95 seconds, memory usage 1821880kB, peak memory usage 1821880kB (SOL-15)
+Design 'ThreePEBlock' was read (SOL-1)
+Makefile for Original Design + Testbench written to file './scverify/Verify_orig_cxx_osci.mk'
+# Info: CDesignChecker Shell script written to '/mnt/HDD/soc_lab_LMJ/catapultwork/git/HLS/Binary_cnn/three_pe_block/ThreePEBlock.v1/CDesignChecker/design_checker.sh'
+# Info: Completed transformation 'compile' on solution 'ThreePEBlock.v1': elapsed time 47.98 seconds, memory usage 1821880kB, peak memory usage 1821880kB (SOL-9)
+# Info: Design complexity at end of 'compile': Total ops = 2186, Real ops = 788, Vars = 480 (SOL-21)
+
+# Messages from "go libraries"
+
+> end dofile ./three_pe_block.ccs
+quit
+> end dofile ./three_pe_block.ccs
+solution library add mgc_Xilinx-ZYNQ-uplus-1_beh -- -rtlsyntool Vivado -manufacturer Xilinx -family ZYNQ-uplus -speed -1 -part xczu11eg-ffvb1517-1-e
+solution library add Xilinx_RAMS
+solution library add Xilinx_FIFO
+go libraries
+# Info: Starting transformation 'libraries' on solution 'ThreePEBlock.v1' (SOL-8)
+# Info: Please set ComponentLibs/TechLibSearchPath to enable flows that use downstream synthesis tools (LIB-220)
+Reading component library '$MGC_HOME/pkgs/siflibs/mgc_busdefs.lib' [mgc_busdefs]... (LIB-49)
+Reading component library '$MGC_HOME/pkgs/siflibs/stdops.lib' [STDOPS]... (LIB-49)
+Reading component library '$MGC_HOME/pkgs/siflibs/fpops.lib' [FPOPS]... (LIB-49)
+Reading component library '$MGC_HOME/pkgs/siflibs/ccs_dw_ops.lib' [CCS_DW_OPS]... (LIB-49)
+Reading component library '$MGC_HOME/pkgs/siflibs/ccs_ioport.lib' [ccs_ioport]... (LIB-49)
+Reading component library '$MGC_HOME/pkgs/siflibs/mgc_ioport.lib' [mgc_ioport]... (LIB-49)
+Reading component library '$MGC_HOME/pkgs/cds_assert/assert_ops.lib' [ASSERT_OPS]... (LIB-49)
+Reading component library '$MGC_HOME/pkgs/cds_assert/assert_mods.lib' [assert_mods]... (LIB-49)
+Reading component library '$MGC_HOME/pkgs/siflibs/ccs_connections.lib' [ccs_connections]... (LIB-49)
+Reading component library '$MGC_HOME/pkgs/ccs_xilinx/mgc_Xilinx-ZYNQ-uplus-1_beh.lib' [mgc_Xilinx-ZYNQ-uplus-1_beh]... (LIB-49)
+# Warning: Detected an old component library 'mgc_Xilinx-ZYNQ-uplus-1_beh' - it is recommended that the user update this component library to the latest version. It can be done by reading this old component library in Catapult Library Builder (2025.2_1/1197638 or later) and saving the library into the target file. (LIB-82)
+Reading component library '$MGC_HOME/pkgs/ccs_xilinx/Xilinx_RAMS.lib' [Xilinx_RAMS]... (LIB-49)
+Reading component library '$MGC_HOME/pkgs/ccs_xilinx/Xilinx_FIFO.lib' [Xilinx_FIFO]... (LIB-49)
+# Info: Completed transformation 'libraries' on solution 'ThreePEBlock.v1': elapsed time 0.69 seconds, memory usage 1565144kB, peak memory usage 1565144kB (SOL-9)
+# Info: Design complexity at end of 'libraries': Total ops = 2186, Real ops = 788, Vars = 480 (SOL-21)
+
+# Messages from "go assembly"
+
+directive set -CLOCKS {clk {-CLOCK_PERIOD 3.33 -CLOCK_EDGE rising -CLOCK_HIGH_TIME 1.665 -CLOCK_OFFSET 0.000000 -CLOCK_UNCERTAINTY 0.0 -RESET_KIND sync -RESET_SYNC_NAME rst -RESET_SYNC_ACTIVE high -RESET_ASYNC_NAME arst_n -RESET_ASYNC_ACTIVE low -ENABLE_NAME {} -ENABLE_ACTIVE high}}
+/CLOCKS {clk {-CLOCK_PERIOD 3.33 -CLOCK_EDGE rising -CLOCK_HIGH_TIME 1.665 -CLOCK_OFFSET 0.000000 -CLOCK_UNCERTAINTY 0.0 -RESET_KIND sync -RESET_SYNC_NAME rst -RESET_SYNC_ACTIVE high -RESET_ASYNC_NAME arst_n -RESET_ASYNC_ACTIVE low -ENABLE_NAME {} -ENABLE_ACTIVE high}}
+go architect
+# Info: Starting transformation 'assembly' on solution 'ThreePEBlock.v1' (SOL-8)
+# Info: Completed transformation 'assembly' on solution 'ThreePEBlock.v1': elapsed time 11.84 seconds, memory usage 1565144kB, peak memory usage 1565144kB (SOL-9)
+# Info: Design complexity at end of 'assembly': Total ops = 2187, Real ops = 789, Vars = 482 (SOL-21)
