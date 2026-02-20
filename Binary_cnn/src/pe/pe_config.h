@@ -43,7 +43,8 @@ enum pe_op_t {
     PE_CONV3x3 = 0,   // 표준 3×3 컨볼루션 (stride 1 또는 2, padding 0 또는 1)
     PE_CONV1x1 = 1,   // Pointwise 1×1 컨볼루션 (라인버퍼 불필요)
     PE_MAXPOOL = 2,   // 2×2 MaxPool stride-2 (가중치 없음)
-    PE_DW3x3   = 3    // Depthwise 3×3 컨볼루션 (채널별 독립, 9b/ch)
+    PE_DW3x3   = 3,   // Depthwise 3×3 컨볼루션 (채널별 독립, 9b/ch)
+    PE_UPSAMPLE = 4   // Nearest x2 업샘플링 (가중치 없음)
 };
 
 // ============================================================================
@@ -121,6 +122,26 @@ struct ThreePECfg {
 
     // CCAT: Branch Cat 이후 1×1 Conv (TOPO_BRANCH_CAT 전용, 인라인 실행)
     PELayerCfg cat_conv;
+
+    // Branch channel split ratio (TOPO_BRANCH_CAT):
+    //   branch_a_ch = pe_a.out_ch * split_num / split_den
+    //   branch_b_ch = pe_a.out_ch - branch_a_ch
+    int split_num;
+    int split_den;
+
+    // Sampling rule gate:
+    //   true  -> downsample must be Conv3x3 s=2 p=1
+    //   false -> MaxPool downsample also allowed
+    bool strict_downsample;
+
+    // Shortcut mismatch policy (TOPO_SHORTCUT):
+    //   true  -> if shortcut shape/channel mismatch, projection path is mandatory
+    //   false -> mismatch is disallowed by validator
+    bool shortcut_use_projection;
+
+    // Projection layer for shortcut mismatch:
+    //   op must be PE_CONV1x1, and output shape/ch must match pe_b output
+    PELayerCfg shortcut_proj;
 };
 
 // ============================================================================

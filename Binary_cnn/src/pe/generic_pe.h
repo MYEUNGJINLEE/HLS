@@ -8,7 +8,7 @@
 // ============================================================================
 //
 // 특징:
-//   - Conv3×3, Conv1×1, MaxPool 을 런타임 PELayerCfg.op 로 선택
+//   - Conv3×3, Conv1×1, MaxPool, Upsample(x2) 을 런타임 PELayerCfg.op 로 선택
 //   - Catapult HLS #pragma hls_design → 독립 하드웨어 프로세스
 //   - Stem preload-tile 패턴 적용 → SCHD-4/SCHD-9 MUX 경고 방지
 //   - 브랜치 팬아웃 지원: branch_out 채널에 동일 픽셀 복사본 전송
@@ -90,6 +90,10 @@ private:
     void exec_maxpool(const PELayerCfg &cfg,
                       ac_channel<stem_packed_act_t> &in_stream,
                       ac_channel<stem_packed_act_t> &out_stream);
+
+    void exec_upsample_nearest_x2(const PELayerCfg &cfg,
+                                  ac_channel<stem_packed_act_t> &in_stream,
+                                  ac_channel<stem_packed_act_t> &out_stream);
 
     // BN + ReLU + int8 클램프 (공유 헬퍼)
     static stem_act_t apply_bn_relu(stem_acc_t acc,

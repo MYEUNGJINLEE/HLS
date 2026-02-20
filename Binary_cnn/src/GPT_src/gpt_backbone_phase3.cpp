@@ -151,36 +151,91 @@ static void read_block2_input(ac_channel<stem_packed_act_t> &input_stream) {
     }
 }
 
-static void run_block2_ds(bool use_relu) {
-    for (int orow = 0; orow < GPT_B2_DS_OUT_H; orow++) {
-        for (int ocol = 0; ocol < GPT_B2_DS_OUT_W; ocol++) {
-            for (int oc = 0; oc < GPT_B2_DS_OUT_CH; oc++) {
+static inline int gpt_act_idx(int row, int col, int ch, int width, int channels) {
+    return (row * width + col) * channels + ch;
+}
+
+static inline int gpt_w1_idx(int oc, int ic, int in_channels) {
+    return oc * in_channels + ic;
+}
+
+static inline int gpt_w3_idx(int oc, int ic, int kr, int kc, int in_channels) {
+    return ((oc * in_channels + ic) * 3 + kr) * 3 + kc;
+}
+
+// Shared binary-conv engine.
+// kernel=1: weights layout [OC][IC]
+// kernel=3: weights layout [OC][IC][3][3]
+static void gpt_conv_common(
+    const stem_act_t *in_buf,
+    stem_act_t *out_buf,
+    const stem_bw_t *w_buf,
+    const stem_shift_t *shift,
+    const stem_bias_t *bias,
+    int in_h, int in_w, int in_ch,
+    int out_h, int out_w, int out_ch,
+    int kernel, int stride, int pad,
+    bool use_relu
+) {
+    for (int orow = 0; orow < out_h; orow++) {
+        for (int ocol = 0; ocol < out_w; ocol++) {
+            for (int oc = 0; oc < out_ch; oc++) {
                 stem_acc_t acc = 0;
-                for (int ic = 0; ic < GPT_B2_IN_CH; ic++) {
-                    for (int kr = 0; kr < 3; kr++) {
-                        for (int kc = 0; kc < 3; kc++) {
-                            const int in_r = orow * GPT_B2_DS_S + kr - GPT_B2_DS_P;
-                            const int in_c = ocol * GPT_B2_DS_S + kc - GPT_B2_DS_P;
 
-                            stem_act_t in_v = 0;
-                            if (in_r >= 0 && in_r < GPT_B2_IN_H && in_c >= 0 && in_c < GPT_B2_IN_W) {
-                                in_v = b2_input_buf[in_r][in_c][ic];
-                            }
+                if (kernel == 1) {
+                    for (int ic = 0; ic < in_ch; ic++) {
+                        int in_row = orow * stride;
+                        int in_col = ocol * stride;
+                        stem_act_t in_v = in_buf[gpt_act_idx(in_row, in_col, ic, in_w, in_ch)];
+                        stem_bw_t w = w_buf[gpt_w1_idx(oc, ic, in_ch)];
+                        if (w == 0) {
+                            acc += in_v;
+                        } else {
+                            acc -= in_v;
+                        }
+                    }
+                } else {
+                    for (int ic = 0; ic < in_ch; ic++) {
+                        for (int kr = 0; kr < 3; kr++) {
+                            for (int kc = 0; kc < 3; kc++) {
+                                const int in_r = orow * stride + kr - pad;
+                                const int in_c = ocol * stride + kc - pad;
 
-                            if (b2_w_ds[oc][ic][kr][kc] == 0) {
-                                acc += in_v;
-                            } else {
-                                acc -= in_v;
+                                stem_act_t in_v = 0;
+                                if (in_r >= 0 && in_r < in_h && in_c >= 0 && in_c < in_w) {
+                                    in_v = in_buf[gpt_act_idx(in_r, in_c, ic, in_w, in_ch)];
+                                }
+
+                                stem_bw_t w = w_buf[gpt_w3_idx(oc, ic, kr, kc, in_ch)];
+                                if (w == 0) {
+                                    acc += in_v;
+                                } else {
+                                    acc -= in_v;
+                                }
                             }
                         }
                     }
                 }
-                b2_ds_out_buf[orow][ocol][oc] = gpt_apply_bn_relu(
-                    acc, b2_shift_ds[oc], b2_bias_ds[oc], use_relu
-                );
+
+                out_buf[gpt_act_idx(orow, ocol, oc, out_w, out_ch)] =
+                    gpt_apply_bn_relu(acc, shift[oc], bias[oc], use_relu);
             }
         }
     }
+}
+
+static void run_block2_ds(bool use_relu) {
+    gpt_conv_common(
+        &b2_input_buf[0][0][0],
+        &b2_ds_out_buf[0][0][0],
+        &b2_w_ds[0][0][0][0],
+        &b2_shift_ds[0],
+        &b2_bias_ds[0],
+        GPT_B2_IN_H, GPT_B2_IN_W, GPT_B2_IN_CH,
+        GPT_B2_DS_OUT_H, GPT_B2_DS_OUT_W, GPT_B2_DS_OUT_CH,
+        3, GPT_B2_DS_S, GPT_B2_DS_P,
+        use_relu
+    );
 }
 
 static void copy_ds_to_c3_input() {
@@ -195,73 +250,43 @@ static void copy_ds_to_c3_input() {
 
 static void run_block2_c3_repeat(int rep, bool use_relu) {
     // Branch A: C3A1 1x1 (128 -> 64)
-    for (int r = 0; r < GPT_B2_C3_H; r++) {
-        for (int c = 0; c < GPT_B2_C3_W; c++) {
-            for (int oc = 0; oc < GPT_B2_C3_MID_CH; oc++) {
-                stem_acc_t acc = 0;
-                for (int ic = 0; ic < GPT_B2_C3_IN_CH; ic++) {
-                    if (b2_w_c3a1[rep][oc][ic] == 0) {
-                        acc += b2_c3_in_buf[r][c][ic];
-                    } else {
-                        acc -= b2_c3_in_buf[r][c][ic];
-                    }
-                }
-                b2_a1_buf[r][c][oc] = gpt_apply_bn_relu(
-                    acc, b2_shift_c3a1[rep][oc], b2_bias_c3a1[rep][oc], use_relu
-                );
-            }
-        }
-    }
+    gpt_conv_common(
+        &b2_c3_in_buf[0][0][0],
+        &b2_a1_buf[0][0][0],
+        &b2_w_c3a1[rep][0][0],
+        &b2_shift_c3a1[rep][0],
+        &b2_bias_c3a1[rep][0],
+        GPT_B2_C3_H, GPT_B2_C3_W, GPT_B2_C3_IN_CH,
+        GPT_B2_C3_H, GPT_B2_C3_W, GPT_B2_C3_MID_CH,
+        1, 1, 0,
+        use_relu
+    );
 
     // Branch A: C3A2 3x3 (64 -> 64)
-    for (int r = 0; r < GPT_B2_C3_H; r++) {
-        for (int c = 0; c < GPT_B2_C3_W; c++) {
-            for (int oc = 0; oc < GPT_B2_C3_MID_CH; oc++) {
-                stem_acc_t acc = 0;
-                for (int ic = 0; ic < GPT_B2_C3_MID_CH; ic++) {
-                    for (int kr = 0; kr < 3; kr++) {
-                        for (int kc = 0; kc < 3; kc++) {
-                            const int in_r = r + kr - 1;
-                            const int in_c = c + kc - 1;
-
-                            stem_act_t in_v = 0;
-                            if (in_r >= 0 && in_r < GPT_B2_C3_H && in_c >= 0 && in_c < GPT_B2_C3_W) {
-                                in_v = b2_a1_buf[in_r][in_c][ic];
-                            }
-
-                            if (b2_w_c3a2[rep][oc][ic][kr][kc] == 0) {
-                                acc += in_v;
-                            } else {
-                                acc -= in_v;
-                            }
-                        }
-                    }
-                }
-                b2_a2_buf[r][c][oc] = gpt_apply_bn_relu(
-                    acc, b2_shift_c3a2[rep][oc], b2_bias_c3a2[rep][oc], use_relu
-                );
-            }
-        }
-    }
+    gpt_conv_common(
+        &b2_a1_buf[0][0][0],
+        &b2_a2_buf[0][0][0],
+        &b2_w_c3a2[rep][0][0][0][0],
+        &b2_shift_c3a2[rep][0],
+        &b2_bias_c3a2[rep][0],
+        GPT_B2_C3_H, GPT_B2_C3_W, GPT_B2_C3_MID_CH,
+        GPT_B2_C3_H, GPT_B2_C3_W, GPT_B2_C3_MID_CH,
+        3, 1, 1,
+        use_relu
+    );
 
     // Branch B: C3B1 1x1 (128 -> 64)
-    for (int r = 0; r < GPT_B2_C3_H; r++) {
-        for (int c = 0; c < GPT_B2_C3_W; c++) {
-            for (int oc = 0; oc < GPT_B2_C3_MID_CH; oc++) {
-                stem_acc_t acc = 0;
-                for (int ic = 0; ic < GPT_B2_C3_IN_CH; ic++) {
-                    if (b2_w_c3b1[rep][oc][ic] == 0) {
-                        acc += b2_c3_in_buf[r][c][ic];
-                    } else {
-                        acc -= b2_c3_in_buf[r][c][ic];
-                    }
-                }
-                b2_b1_buf[r][c][oc] = gpt_apply_bn_relu(
-                    acc, b2_shift_c3b1[rep][oc], b2_bias_c3b1[rep][oc], use_relu
-                );
-            }
-        }
-    }
+    gpt_conv_common(
+        &b2_c3_in_buf[0][0][0],
+        &b2_b1_buf[0][0][0],
+        &b2_w_c3b1[rep][0][0],
+        &b2_shift_c3b1[rep][0],
+        &b2_bias_c3b1[rep][0],
+        GPT_B2_C3_H, GPT_B2_C3_W, GPT_B2_C3_IN_CH,
+        GPT_B2_C3_H, GPT_B2_C3_W, GPT_B2_C3_MID_CH,
+        1, 1, 0,
+        use_relu
+    );
 
     // Cat [A2(64) | B1(64)] -> 128 channels
     for (int r = 0; r < GPT_B2_C3_H; r++) {
@@ -274,23 +299,17 @@ static void run_block2_c3_repeat(int rep, bool use_relu) {
     }
 
     // C3CAT 1x1 (128 -> 128)
-    for (int r = 0; r < GPT_B2_C3_H; r++) {
-        for (int c = 0; c < GPT_B2_C3_W; c++) {
-            for (int oc = 0; oc < GPT_B2_C3_OUT_CH; oc++) {
-                stem_acc_t acc = 0;
-                for (int ic = 0; ic < GPT_B2_C3_IN_CH; ic++) {
-                    if (b2_w_ccat[rep][oc][ic] == 0) {
-                        acc += b2_cat_buf[r][c][ic];
-                    } else {
-                        acc -= b2_cat_buf[r][c][ic];
-                    }
-                }
-                b2_c3_out_buf[r][c][oc] = gpt_apply_bn_relu(
-                    acc, b2_shift_ccat[rep][oc], b2_bias_ccat[rep][oc], use_relu
-                );
-            }
-        }
-    }
+    gpt_conv_common(
+        &b2_cat_buf[0][0][0],
+        &b2_c3_out_buf[0][0][0],
+        &b2_w_ccat[rep][0][0],
+        &b2_shift_ccat[rep][0],
+        &b2_bias_ccat[rep][0],
+        GPT_B2_C3_H, GPT_B2_C3_W, GPT_B2_C3_IN_CH,
+        GPT_B2_C3_H, GPT_B2_C3_W, GPT_B2_C3_OUT_CH,
+        1, 1, 0,
+        use_relu
+    );
 
     // Swap by copy: output -> next repeat input
     for (int r = 0; r < GPT_B2_C3_H; r++) {

@@ -3,6 +3,7 @@
 
 #include "pe_config.h"
 #include "generic_pe.h"
+#include "three_pe_rules.h"
 
 // ============================================================================
 // ThreePEBlock — 3-단계 융합 연산 블록 (Fused Single-Loop 구조)
@@ -87,6 +88,13 @@ private:
     ac_int<PE_MAX_ICH, false> w1_c_mem[PE_MAX_OCH];
     stem_shift_t shift_c[PE_MAX_OCH];
     stem_bias_t  bias_c[PE_MAX_OCH];
+
+    // ------------------------------------------------------------------
+    // Shortcut projection 1x1 (TOPO_SHORTCUT mismatch case)
+    // ------------------------------------------------------------------
+    ac_int<PE_MAX_ICH, false> w1_sc_mem[PE_MAX_OCH];
+    stem_shift_t shift_sc[PE_MAX_OCH];
+    stem_bias_t  bias_sc[PE_MAX_OCH];
 
     // ------------------------------------------------------------------
     // CCAT Conv1×1 가중치/BN (TOPO_BRANCH_CAT Cat 병합 전용)

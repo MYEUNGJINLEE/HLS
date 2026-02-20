@@ -50,6 +50,11 @@ void ThreePEScheduler::run(
     ac_channel<stem_packed_bw_t>  &weight_stream,
     ac_channel<stem_packed_act_t> &output_stream
 ) {
+    RuleCheckResult rc = validate_scheduler_rules(cfg);
+    if (!rc.ok) {
+        return;
+    }
+
     const int num_layers = cfg.num_layers;
     if (num_layers <= 0 || num_layers > SCHED_MAX_LAYERS) {
         return;

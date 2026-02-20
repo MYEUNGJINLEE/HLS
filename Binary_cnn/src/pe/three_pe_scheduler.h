@@ -4,6 +4,7 @@
 #define THREE_PE_BLOCK_SUBMODULE
 #include "three_pe_block.h"
 #undef THREE_PE_BLOCK_SUBMODULE
+#include "three_pe_rules.h"
 
 // ============================================================================
 // LayerMemReader / LayerMemWriter

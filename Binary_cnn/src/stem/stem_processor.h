@@ -2,7 +2,20 @@
 #define STEM_PROCESSOR_H
 
 #include "stem_config.h"
-#include "stem_buffer.h"
+#include "stem_engine_a.h"
+#include "stem_engine_b.h"
+
+// ============================================================================
+// StemProcessor: Top-level 2-PE Wrapper
+// ============================================================================
+//
+// Instantiates StemEngineA (Input→Conv0→Conv1→Conv2) and StemEngineB
+// (MaxPool→Conv3→Output) connected via ac_channel pipes.
+//
+// Catapult schedules both engines for concurrent dataflow execution,
+// overlapping PE-A's Conv1→Conv2 with PE-B's MaxPool.
+//
+// ============================================================================
 
 #pragma hls_design top
 class StemProcessor {
@@ -20,10 +33,8 @@ public:
     );
 
 private:
-    // Internal line buffers used by the single-top PE schedule.
-    StemLineBufferT<CONV0_IN_CH, STEM_IC_PAR0> line_buf_a;
-    StemLineBufferT<CONV2_IN_CH, STEM_IC_PAR> conv1_buf;
-    StemLineBufferT<MP_IN_CH, STEM_MP_PAR> mp_buf;
+    StemEngineA engine_a;
+    StemEngineB engine_b;
 };
 
 #endif // STEM_PROCESSOR_H

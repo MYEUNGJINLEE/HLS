@@ -1,4 +1,4 @@
-.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean sched sched-log sched-gui sched-clean gpt gpt-log gpt-gui gpt-clean stem stem-log stem-gui stem-gui-build stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean three-pe three-pe-log three-pe-gui three-pe-tb three-pe-clean backbone backbone-log backbone-gui backbone-tb backbone-clean clean-artifacts clean
+.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean sched sched-log sched-gui sched-tb sched-clean gpt gpt-log gpt-gui gpt-clean stem stem-log stem-gui stem-gui-build stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean three-pe three-pe-log three-pe-gui three-pe-tb three-pe-clean backbone backbone-log backbone-gui backbone-tb backbone-clean clean-artifacts clean
 .SILENT:
 
 # Update local repository to latest origin/dev (stash handles unstaged changes)
@@ -202,6 +202,20 @@ sched-gui:
 	else \
 		echo "Could not find three_pe_scheduler*.ccs project file."; exit 1; \
 	fi
+
+# Run three PE scheduler batch flow then SCVerify testbench simulation
+sched-tb: sched-clean
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_three_pe_scheduler_catapult.tcl 2>&1 | tee logs/catapult_three_pe_scheduler.log
+	cd Binary_cnn && SOL_DIR=$$(ls -d three_pe_scheduler/ThreePEScheduler.v* 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SOL_DIR" ]; then echo "No ThreePEScheduler.v* solution directory found."; exit 1; fi; \
+	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
+	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
+	SCV_DIR=$$(dirname "$$SCV_MK"); \
+	SCV_BASENAME=$$(basename "$$SCV_MK"); \
+	$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_three_pe_scheduler_sim.log
 
 # Run GPT backbone phase3 with GUI and keep window open
 gpt-gui:

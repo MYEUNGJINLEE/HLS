@@ -96,9 +96,14 @@ void GenericConvPE::run(
         load_w1(w_stream, cfg.out_ch);
         load_bn(w_stream, cfg.out_ch);
         exec_conv1x1(cfg, in_stream, out_stream, branch_out, enable_branch);
-    } else {
+    } else if (cfg.op == PE_UPSAMPLE) {
+        exec_upsample_nearest_x2(cfg, in_stream, out_stream);
+    } else if (cfg.op == PE_MAXPOOL) {
         // PE_MAXPOOL: 가중치 없음
         exec_maxpool(cfg, in_stream, out_stream);
+    } else {
+        // Unsupported op in GenericConvPE path.
+        return;
     }
 }
 
@@ -394,6 +399,40 @@ void GenericConvPE::exec_maxpool(
                 out_stream.write(out_pkt);
             }
             out_row++;
+        }
+    }
+}
+
+// ============================================================================
+// Upsample Nearest x2 (stride=2 equivalent)
+//   in:  HxW
+//   out: 2H x 2W
+// ============================================================================
+
+void GenericConvPE::exec_upsample_nearest_x2(
+    const PELayerCfg &cfg,
+    ac_channel<stem_packed_act_t> &in_stream,
+    ac_channel<stem_packed_act_t> &out_stream
+) {
+    stem_packed_act_t row_buf[PE_MAX_W];
+
+    UPS_ROW:
+    for (int row = 0; row < cfg.in_h; row++) {
+        UPS_READ_COL:
+        #pragma hls_pipeline_init_interval 1
+        for (int col = 0; col < cfg.in_w; col++) {
+            row_buf[col] = in_stream.read();
+        }
+
+        UPS_DUP_ROW:
+        for (int rep = 0; rep < 2; rep++) {
+            UPS_COL:
+            #pragma hls_pipeline_init_interval 1
+            for (int col = 0; col < cfg.in_w; col++) {
+                stem_packed_act_t pkt = row_buf[col];
+                out_stream.write(pkt);
+                out_stream.write(pkt);
+            }
         }
     }
 }

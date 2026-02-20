@@ -152,6 +152,33 @@ void ThreePEBlock::run(
     ac_channel<stem_packed_bw_t>  &weight_stream,
     ac_channel<stem_packed_act_t> &output_stream
 ) {
+    RuleCheckResult r = validate_sampling_rules(cfg.pe_a, cfg.strict_downsample);
+    if (!r.ok) return;
+
+    if (cfg.topo == TOPO_BRANCH_CAT) {
+        r = validate_sampling_rules(cfg.pe_b, false);
+        if (!r.ok) return;
+        r = validate_sampling_rules(cfg.pe_c, false);
+        if (!r.ok) return;
+        r = validate_sampling_rules(cfg.cat_conv, false);
+        if (!r.ok) return;
+        r = validate_branch_cat_rules(cfg);
+        if (!r.ok) return;
+    } else if (cfg.topo == TOPO_SHORTCUT) {
+        r = validate_sampling_rules(cfg.pe_b, false);
+        if (!r.ok) return;
+        r = validate_shortcut_rules(cfg);
+        if (!r.ok) return;
+        bool mismatch =
+            (cfg.pe_a.out_h != cfg.pe_b.out_h) ||
+            (cfg.pe_a.out_w != cfg.pe_b.out_w) ||
+            (cfg.pe_a.out_ch != cfg.pe_b.out_ch);
+        if (mismatch) {
+            r = validate_sampling_rules(cfg.shortcut_proj, false);
+            if (!r.ok) return;
+        }
+    }
+
     if (cfg.topo == TOPO_STRAIGHT) {
         run_straight(cfg, input_stream, weight_stream, output_stream);
     } else if (cfg.topo == TOPO_BRANCH_CAT) {
@@ -387,6 +414,27 @@ void ThreePEBlock::run_straight(
                     output_stream.write(out_pkt);
                 }
                 out_row++;
+            }
+        }
+    } else if (cfg.pe_a.op == PE_UPSAMPLE) {
+        // Nearest x2 upsample
+        stem_packed_act_t row_buf[PE_MAX_W];
+        UP_ROW:
+        for (int row = 0; row < cfg.pe_a.in_h; row++) {
+            UP_READ_COL:
+            #pragma hls_pipeline_init_interval 1
+            for (int col = 0; col < cfg.pe_a.in_w; col++) {
+                row_buf[col] = input_stream.read();
+            }
+
+            UP_DUP_ROW:
+            for (int rep = 0; rep < 2; rep++) {
+                UP_COL:
+                #pragma hls_pipeline_init_interval 1
+                for (int col = 0; col < cfg.pe_a.in_w; col++) {
+                    output_stream.write(row_buf[col]);
+                    output_stream.write(row_buf[col]);
+                }
             }
         }
     } else {
@@ -661,17 +709,19 @@ void ThreePEBlock::run_branch_cat(
                     stem_packed_act_t cat_pkt = 0;
                     BR_CAT_A:
                     #pragma hls_unroll
-                    for (int ch = 0; ch < PE_MAX_ICH / 2; ch++) {
+                    for (int ch = 0; ch < PE_MAX_ICH; ch++) {
                         if (ch < cfg.pe_b.out_ch) {
                             cat_pkt.set_slc(ch * 8, pb_pkt.slc<8>(ch * 8));
                         }
                     }
                     BR_CAT_B:
                     #pragma hls_unroll
-                    for (int ch = 0; ch < PE_MAX_ICH / 2; ch++) {
+                    for (int ch = 0; ch < PE_MAX_ICH; ch++) {
                         if (ch < cfg.pe_c.out_ch) {
                             int dst = (cfg.pe_b.out_ch + ch) * 8;
-                            cat_pkt.set_slc(dst, pc_pkt.slc<8>(ch * 8));
+                            if (dst < (PE_MAX_ICH * 8)) {
+                                cat_pkt.set_slc(dst, pc_pkt.slc<8>(ch * 8));
+                            }
                         }
                     }
 
@@ -714,12 +764,23 @@ void ThreePEBlock::run_shortcut(
     ac_channel<stem_packed_bw_t>  &weight_stream,
     ac_channel<stem_packed_act_t> &output_stream
 ) {
+    bool shortcut_mismatch =
+        (cfg.pe_a.out_h != cfg.pe_b.out_h) ||
+        (cfg.pe_a.out_w != cfg.pe_b.out_w) ||
+        (cfg.pe_a.out_ch != cfg.pe_b.out_ch);
+    bool use_shortcut_proj = shortcut_mismatch && cfg.shortcut_use_projection;
+
     // ---- ① 가중치 선적재 ----
     load_w3_a(weight_stream, cfg.pe_a.out_ch, cfg.pe_a.in_ch);
     load_bn_into(weight_stream, shift_a, bias_a, cfg.pe_a.out_ch);
 
     load_w1_into(weight_stream, w1_b_mem, cfg.pe_b.out_ch);
     load_bn_into(weight_stream, shift_b, bias_b, cfg.pe_b.out_ch);
+
+    if (use_shortcut_proj) {
+        load_w1_into(weight_stream, w1_sc_mem, cfg.shortcut_proj.out_ch);
+        load_bn_into(weight_stream, shift_sc, bias_sc, cfg.shortcut_proj.out_ch);
+    }
 
     // ---- ② 융합 메인 루프 ----
     int n_igrp  = cfg.pe_a.in_ch / PE_IC_PAR;
@@ -836,6 +897,47 @@ void ThreePEBlock::run_shortcut(
                         }
                     }
 
+                    // Shortcut projection path (when shape/channel mismatch)
+                    stem_act_t sc_pix[PE_MAX_OCH];
+                    #pragma hls_array_partition variable=sc_pix complete
+                    if (use_shortcut_proj) {
+                        stem_acc_t acc_sc[PE_MAX_OCH];
+                        SC_ACC_SC_ZERO:
+                        #pragma hls_unroll
+                        for (int oc = 0; oc < PE_MAX_OCH; oc++) acc_sc[oc] = 0;
+
+                        SC_OC_SC:
+                        for (int oc = 0; oc < cfg.shortcut_proj.out_ch; oc++) {
+                            ac_int<PE_MAX_ICH, false> w_pack = w1_sc_mem[oc];
+                            SC_IC_SC:
+                            #pragma hls_unroll
+                            for (int ic = 0; ic < PE_MAX_ICH; ic++) {
+                                if (ic < cfg.shortcut_proj.in_ch) {
+                                    if (w_pack[ic] == 0) acc_sc[oc] += (stem_acc_t)pa_pix[ic];
+                                    else                 acc_sc[oc] -= (stem_acc_t)pa_pix[ic];
+                                }
+                            }
+                        }
+
+                        SC_SC_BN:
+                        #pragma hls_unroll
+                        for (int oc = 0; oc < PE_MAX_OCH; oc++) {
+                            if (oc < cfg.shortcut_proj.out_ch) {
+                                sc_pix[oc] = apply_bn_relu(
+                                    acc_sc[oc], shift_sc[oc], bias_sc[oc], cfg.shortcut_proj.relu
+                                );
+                            } else {
+                                sc_pix[oc] = 0;
+                            }
+                        }
+                    } else {
+                        SC_SC_ID:
+                        #pragma hls_unroll
+                        for (int oc = 0; oc < PE_MAX_OCH; oc++) {
+                            sc_pix[oc] = (oc < cfg.pe_a.out_ch) ? pa_pix[oc] : stem_act_t(0);
+                        }
+                    }
+
                     // PB BN + ReLU + shortcut add
                     stem_packed_act_t out_pkt = 0;
                     SC_ADD:
@@ -845,7 +947,7 @@ void ThreePEBlock::run_shortcut(
                             stem_act_t pb_val = apply_bn_relu(
                                 acc_b[oc], shift_b[oc], bias_b[oc], cfg.pe_b.relu);
                             // shortcut add: pb_val + pa_pix[oc]
-                            stem_acc_t sum = (stem_acc_t)pb_val + (stem_acc_t)pa_pix[oc];
+                            stem_acc_t sum = (stem_acc_t)pb_val + (stem_acc_t)sc_pix[oc];
                             if (sum >  127) sum =  127;
                             if (sum < -128) sum = -128;
                             out_pkt.set_slc(oc * 8, ((stem_act_t)sum).slc<8>(0));

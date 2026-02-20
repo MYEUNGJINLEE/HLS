@@ -1,236 +1,374 @@
 #include <cstdio>
-#include <cstdlib>
-#include <cassert>
+#include <cstring>
 #include "three_pe_block.h"
 
-// ============================================================================
-// ThreePEBlock 테스트벤치
-// ============================================================================
-//
-// 테스트:
-//   1. TOPO_STRAIGHT: Conv1×1 단독 — 출력 픽셀 수 검증
-//   2. TOPO_STRAIGHT: Conv3×3 단독 — stride=2 출력 크기 검증
-//   3. TOPO_BRANCH_CAT: Branch 구조 — 출력 픽셀 수 검증
-//
-// 검증 방법:
-//   - 모든 가중치 = 0 (+1), shift=0, bias=0, no relu
-//   - 모든 입력 = 0
-//   - 출력 값 자체보다 출력 개수(픽셀 수)와 가중치 스트림 소비 완료를 검증
-//
-// ============================================================================
-
-// ---------------------------------------------------------------------------
-// 가중치 스트림 주입 헬퍼
-// ---------------------------------------------------------------------------
-
-static void push_conv3x3_weights(
-    ac_channel<stem_packed_bw_t> &ws,
-    int OC, int IC,
-    int fill_w,    // 0=+1, 1=-1
-    int shift_v,
-    int bias_v
+static PELayerCfg make_layer(
+    int in_h, int in_w,
+    int out_h, int out_w,
+    int in_ch, int out_ch,
+    int stride, int pad,
+    pe_op_t op, bool relu
 ) {
-    // 가중치: OC × IC 팩, 각 64-bit 팩, bits[8:0]=9커널비트
-    for (int oc = 0; oc < OC; oc++) {
-        for (int ic = 0; ic < IC; ic++) {
-            stem_packed_bw_t pkt = 0;
-            for (int k = 0; k < 9; k++) pkt[k] = (stem_bw_t)fill_w;
-            ws.write(pkt);
-        }
-    }
-    // BN: OC 팩, bits[7:0]=shift, bits[23:8]=bias
-    for (int oc = 0; oc < OC; oc++) {
-        stem_packed_bw_t pkt = 0;
-        pkt.set_slc(0,  (ac_int<8,  false>)(unsigned char)(shift_v & 0xFF));
-        pkt.set_slc(8,  (ac_int<16, false>)(unsigned short)(bias_v & 0xFFFF));
-        ws.write(pkt);
-    }
+    PELayerCfg l;
+    l.in_h = in_h;
+    l.in_w = in_w;
+    l.out_h = out_h;
+    l.out_w = out_w;
+    l.in_ch = in_ch;
+    l.out_ch = out_ch;
+    l.stride = stride;
+    l.pad = pad;
+    l.op = op;
+    l.relu = relu;
+    return l;
 }
 
-static void push_conv1x1_weights(
+static void init_cfg(ThreePECfg &cfg, block_topo_t topo) {
+    std::memset(&cfg, 0, sizeof(cfg));
+    cfg.topo = topo;
+    cfg.split_num = 1;
+    cfg.split_den = 2;
+    cfg.strict_downsample = true;
+    cfg.shortcut_use_projection = true;
+    cfg.shortcut_proj = make_layer(8, 8, 8, 8, 32, 32, 1, 0, PE_CONV1x1, true);
+}
+
+static int push_conv3x3_weights(
     ac_channel<stem_packed_bw_t> &ws,
-    int OC, int IC,
+    int oc, int ic,
     int fill_w,
     int shift_v,
     int bias_v
 ) {
-    // 가중치: OC 팩, bits[IC-1:0]=IC 바이너리 비트
-    for (int oc = 0; oc < OC; oc++) {
-        stem_packed_bw_t pkt = 0;
-        for (int ic = 0; ic < IC; ic++) pkt[ic] = (stem_bw_t)fill_w;
-        ws.write(pkt);
+    int cnt = 0;
+    for (int o = 0; o < oc; o++) {
+        for (int i = 0; i < ic; i++) {
+            stem_packed_bw_t pkt = 0;
+            for (int k = 0; k < 9; k++) pkt[k] = (stem_bw_t)fill_w;
+            ws.write(pkt);
+            cnt++;
+        }
     }
-    // BN
-    for (int oc = 0; oc < OC; oc++) {
+    for (int o = 0; o < oc; o++) {
         stem_packed_bw_t pkt = 0;
-        pkt.set_slc(0,  (ac_int<8,  false>)(unsigned char)(shift_v & 0xFF));
-        pkt.set_slc(8,  (ac_int<16, false>)(unsigned short)(bias_v & 0xFFFF));
+        pkt.set_slc(0, (ac_int<8, false>)(unsigned char)(shift_v & 0xFF));
+        pkt.set_slc(8, (ac_int<16, false>)(unsigned short)(bias_v & 0xFFFF));
         ws.write(pkt);
+        cnt++;
     }
+    return cnt;
+}
+
+static int push_conv1x1_weights(
+    ac_channel<stem_packed_bw_t> &ws,
+    int oc, int ic,
+    int fill_w,
+    int shift_v,
+    int bias_v
+) {
+    int cnt = 0;
+    for (int o = 0; o < oc; o++) {
+        stem_packed_bw_t pkt = 0;
+        for (int i = 0; i < ic; i++) pkt[i] = (stem_bw_t)fill_w;
+        ws.write(pkt);
+        cnt++;
+    }
+    for (int o = 0; o < oc; o++) {
+        stem_packed_bw_t pkt = 0;
+        pkt.set_slc(0, (ac_int<8, false>)(unsigned char)(shift_v & 0xFF));
+        pkt.set_slc(8, (ac_int<16, false>)(unsigned short)(bias_v & 0xFFFF));
+        ws.write(pkt);
+        cnt++;
+    }
+    return cnt;
 }
 
 static void push_zero_input(
     ac_channel<stem_packed_act_t> &is,
-    int H, int W
+    int h, int w
 ) {
-    for (int r = 0; r < H; r++) {
-        for (int c = 0; c < W; c++) {
+    for (int r = 0; r < h; r++) {
+        for (int c = 0; c < w; c++) {
             is.write(0);
         }
     }
 }
 
-static int count_output(
-    ac_channel<stem_packed_act_t> &os, int expected
-) {
+static int drain_act(ac_channel<stem_packed_act_t> &s) {
     int cnt = 0;
-    while (os.available(1)) { os.read(); cnt++; }
-    if (cnt == expected) {
-        printf("  PASS: 출력 %d 픽셀 (기대 %d)\n", cnt, expected);
-        return 0;
-    } else {
-        printf("  FAIL: 출력 %d 픽셀 (기대 %d)\n", cnt, expected);
+    while (s.available(1)) {
+        (void)s.read();
+        cnt++;
+    }
+    return cnt;
+}
+
+static int drain_bw(ac_channel<stem_packed_bw_t> &s) {
+    int cnt = 0;
+    while (s.available(1)) {
+        (void)s.read();
+        cnt++;
+    }
+    return cnt;
+}
+
+static int check_eq(const char *name, int got, int exp) {
+    if (got != exp) {
+        std::printf("FAIL: %s got=%d exp=%d\n", name, got, exp);
         return 1;
     }
+    return 0;
 }
-
-// ---------------------------------------------------------------------------
-// 테스트 1: TOPO_STRAIGHT, Conv1×1, 8×8×32 → 8×8×32
-// ---------------------------------------------------------------------------
 
 static int test_straight_conv1x1() {
-    printf("[테스트 1] TOPO_STRAIGHT Conv1×1 8×8×32→32\n");
-
-    ac_channel<stem_packed_act_t> input_s, output_s;
-    ac_channel<stem_packed_bw_t>  weight_s;
-
-    const int H=8, W=8, IC=32, OC=32;
-
-    // 설정
+    std::printf("[TB] straight_conv1x1\n");
     ThreePECfg cfg;
-    cfg.topo = TOPO_STRAIGHT;
-    cfg.pe_a.in_h=H; cfg.pe_a.in_w=W;
-    cfg.pe_a.out_h=H; cfg.pe_a.out_w=W;
-    cfg.pe_a.in_ch=IC; cfg.pe_a.out_ch=OC;
-    cfg.pe_a.stride=1; cfg.pe_a.pad=0;
-    cfg.pe_a.op=PE_CONV1x1; cfg.pe_a.relu=true;
-    // pe_b, pe_c, cat_conv 미사용
+    init_cfg(cfg, TOPO_STRAIGHT);
+    cfg.pe_a = make_layer(8, 8, 8, 8, 32, 32, 1, 0, PE_CONV1x1, true);
 
-    push_conv1x1_weights(weight_s, OC, IC, 0, -4, 0);
-    push_zero_input(input_s, H, W);
+    ac_channel<stem_packed_act_t> in_s, out_s;
+    ac_channel<stem_packed_bw_t> w_s;
+    int w_cnt = push_conv1x1_weights(w_s, 32, 32, 0, -4, 0);
+    (void)w_cnt;
+    push_zero_input(in_s, 8, 8);
 
-    ThreePEBlock blk;
-    blk.run(cfg, input_s, weight_s, output_s);
+    ThreePEBlock dut;
+    dut.run(cfg, in_s, w_s, out_s);
 
-    return count_output(output_s, H * W);
+    int err = 0;
+    err += check_eq("straight_conv1x1.output", drain_act(out_s), 64);
+    err += check_eq("straight_conv1x1.weight_left", drain_bw(w_s), 0);
+    return err;
 }
 
-// ---------------------------------------------------------------------------
-// 테스트 2: TOPO_STRAIGHT, Conv3×3 stride=2, 16×16×32 → 8×8×32
-// ---------------------------------------------------------------------------
-
-static int test_straight_conv3x3() {
-    printf("[테스트 2] TOPO_STRAIGHT Conv3×3 s=2, 16×16×32→8×8×32\n");
-
-    ac_channel<stem_packed_act_t> input_s, output_s;
-    ac_channel<stem_packed_bw_t>  weight_s;
-
-    const int IH=16, IW=16, IC=32;
-    const int OH=8, OW=8, OC=32;
-
+static int test_straight_conv3x3_downsample() {
+    std::printf("[TB] straight_conv3x3_downsample\n");
     ThreePECfg cfg;
-    cfg.topo = TOPO_STRAIGHT;
-    cfg.pe_a.in_h=IH; cfg.pe_a.in_w=IW;
-    cfg.pe_a.out_h=OH; cfg.pe_a.out_w=OW;
-    cfg.pe_a.in_ch=IC; cfg.pe_a.out_ch=OC;
-    cfg.pe_a.stride=2; cfg.pe_a.pad=1;
-    cfg.pe_a.op=PE_CONV3x3; cfg.pe_a.relu=true;
+    init_cfg(cfg, TOPO_STRAIGHT);
+    cfg.pe_a = make_layer(16, 16, 8, 8, 32, 32, 2, 1, PE_CONV3x3, true);
 
-    push_conv3x3_weights(weight_s, OC, IC, 0, -4, 0);
-    push_zero_input(input_s, IH, IW);
+    ac_channel<stem_packed_act_t> in_s, out_s;
+    ac_channel<stem_packed_bw_t> w_s;
+    push_conv3x3_weights(w_s, 32, 32, 0, -4, 0);
+    push_zero_input(in_s, 16, 16);
 
-    ThreePEBlock blk;
-    blk.run(cfg, input_s, weight_s, output_s);
+    ThreePEBlock dut;
+    dut.run(cfg, in_s, w_s, out_s);
 
-    return count_output(output_s, OH * OW);
+    int err = 0;
+    err += check_eq("straight_conv3x3.output", drain_act(out_s), 64);
+    err += check_eq("straight_conv3x3.weight_left", drain_bw(w_s), 0);
+    return err;
 }
 
-// ---------------------------------------------------------------------------
-// 테스트 3: TOPO_BRANCH_CAT, 간단한 16×16 브랜치 테스트
-//   PE_A: Conv3×3 s=2, 16×16×32 → 8×8×32
-//   PE_B: Conv1×1,     8×8×32  → 8×8×16  (Branch A)
-//   PE_C: Conv1×1,     8×8×32  → 8×8×16  (Branch B)
-//   CCAT: Conv1×1,     8×8×32  → 8×8×32  (Cat 32ch → 32ch)
-// ---------------------------------------------------------------------------
-
-static int test_branch_cat() {
-    printf("[테스트 3] TOPO_BRANCH_CAT 16×16×32 → 8×8×32\n");
-
-    ac_channel<stem_packed_act_t> input_s, output_s;
-    ac_channel<stem_packed_bw_t>  weight_s;
-
-    // PE_A: Conv3×3 s=2
-    const int A_IH=16, A_IW=16, A_IC=32, A_OC=32;
-    const int A_OH=8,  A_OW=8;
-    // PE_B, PE_C: Conv1×1
-    const int B_IC=32, B_OC=16;
-    const int C_IC=32, C_OC=16;
-    // CCAT: Conv1×1 (cat 32ch → 32ch)
-    const int CAT_IC=32, CAT_OC=32;
-
+static int test_branch_cat_ratio_split() {
+    std::printf("[TB] branch_cat_ratio_split\n");
     ThreePECfg cfg;
-    cfg.topo = TOPO_BRANCH_CAT;
+    init_cfg(cfg, TOPO_BRANCH_CAT);
+    cfg.pe_a = make_layer(16, 16, 8, 8, 32, 32, 2, 1, PE_CONV3x3, true);
+    cfg.pe_b = make_layer(8, 8, 8, 8, 32, 8, 1, 0, PE_CONV1x1, true);
+    cfg.pe_c = make_layer(8, 8, 8, 8, 32, 24, 1, 0, PE_CONV1x1, true);
+    cfg.cat_conv = make_layer(8, 8, 8, 8, 32, 32, 1, 0, PE_CONV1x1, true);
+    cfg.split_num = 1;
+    cfg.split_den = 4;
 
-    cfg.pe_a.in_h=A_IH; cfg.pe_a.in_w=A_IW;
-    cfg.pe_a.out_h=A_OH; cfg.pe_a.out_w=A_OW;
-    cfg.pe_a.in_ch=A_IC; cfg.pe_a.out_ch=A_OC;
-    cfg.pe_a.stride=2; cfg.pe_a.pad=1;
-    cfg.pe_a.op=PE_CONV3x3; cfg.pe_a.relu=true;
+    ac_channel<stem_packed_act_t> in_s, out_s;
+    ac_channel<stem_packed_bw_t> w_s;
+    push_conv3x3_weights(w_s, 32, 32, 0, -4, 0);
+    push_conv1x1_weights(w_s, 8, 32, 0, -4, 0);
+    push_conv1x1_weights(w_s, 24, 32, 0, -4, 0);
+    push_conv1x1_weights(w_s, 32, 32, 0, -4, 0);
+    push_zero_input(in_s, 16, 16);
 
-    cfg.pe_b.in_h=A_OH; cfg.pe_b.in_w=A_OW;
-    cfg.pe_b.out_h=A_OH; cfg.pe_b.out_w=A_OW;
-    cfg.pe_b.in_ch=B_IC; cfg.pe_b.out_ch=B_OC;
-    cfg.pe_b.stride=1; cfg.pe_b.pad=0;
-    cfg.pe_b.op=PE_CONV1x1; cfg.pe_b.relu=true;
+    ThreePEBlock dut;
+    dut.run(cfg, in_s, w_s, out_s);
 
-    cfg.pe_c.in_h=A_OH; cfg.pe_c.in_w=A_OW;
-    cfg.pe_c.out_h=A_OH; cfg.pe_c.out_w=A_OW;
-    cfg.pe_c.in_ch=C_IC; cfg.pe_c.out_ch=C_OC;
-    cfg.pe_c.stride=1; cfg.pe_c.pad=0;
-    cfg.pe_c.op=PE_CONV1x1; cfg.pe_c.relu=true;
-
-    cfg.cat_conv.out_h=A_OH; cfg.cat_conv.out_w=A_OW;
-    cfg.cat_conv.in_ch=CAT_IC; cfg.cat_conv.out_ch=CAT_OC;
-    cfg.cat_conv.relu=true;
-
-    // 가중치 주입 순서: PE_A → PE_B → PE_C → CCAT
-    push_conv3x3_weights(weight_s, A_OC, A_IC, 0, -4, 0);  // PE_A
-    push_conv1x1_weights(weight_s, B_OC, B_IC, 0, -4, 0);  // PE_B
-    push_conv1x1_weights(weight_s, C_OC, C_IC, 0, -4, 0);  // PE_C
-    push_conv1x1_weights(weight_s, CAT_OC, CAT_IC, 0, -4, 0); // CCAT
-
-    // 입력: 16×16 픽셀
-    push_zero_input(input_s, A_IH, A_IW);
-
-    ThreePEBlock blk;
-    blk.run(cfg, input_s, weight_s, output_s);
-
-    return count_output(output_s, A_OH * A_OW);
+    int err = 0;
+    err += check_eq("branch_cat_ratio.output", drain_act(out_s), 64);
+    err += check_eq("branch_cat_ratio.weight_left", drain_bw(w_s), 0);
+    return err;
 }
 
-// ---------------------------------------------------------------------------
-// 메인
-// ---------------------------------------------------------------------------
+static int test_shortcut_identity() {
+    std::printf("[TB] shortcut_identity\n");
+    ThreePECfg cfg;
+    init_cfg(cfg, TOPO_SHORTCUT);
+    cfg.pe_a = make_layer(8, 8, 8, 8, 32, 32, 1, 1, PE_CONV3x3, true);
+    cfg.pe_b = make_layer(8, 8, 8, 8, 32, 32, 1, 0, PE_CONV1x1, true);
+
+    ac_channel<stem_packed_act_t> in_s, out_s;
+    ac_channel<stem_packed_bw_t> w_s;
+    push_conv3x3_weights(w_s, 32, 32, 0, -4, 0);
+    push_conv1x1_weights(w_s, 32, 32, 0, -4, 0);
+    push_zero_input(in_s, 8, 8);
+
+    ThreePEBlock dut;
+    dut.run(cfg, in_s, w_s, out_s);
+
+    int err = 0;
+    err += check_eq("shortcut_identity.output", drain_act(out_s), 64);
+    err += check_eq("shortcut_identity.weight_left", drain_bw(w_s), 0);
+    return err;
+}
+
+static int test_shortcut_projection() {
+    std::printf("[TB] shortcut_projection\n");
+    ThreePECfg cfg;
+    init_cfg(cfg, TOPO_SHORTCUT);
+    cfg.pe_a = make_layer(8, 8, 8, 8, 32, 32, 1, 1, PE_CONV3x3, true);
+    cfg.pe_b = make_layer(8, 8, 8, 8, 32, 48, 1, 0, PE_CONV1x1, true);
+    cfg.shortcut_use_projection = true;
+    cfg.shortcut_proj = make_layer(8, 8, 8, 8, 32, 48, 1, 0, PE_CONV1x1, true);
+
+    ac_channel<stem_packed_act_t> in_s, out_s;
+    ac_channel<stem_packed_bw_t> w_s;
+    push_conv3x3_weights(w_s, 32, 32, 0, -4, 0);
+    push_conv1x1_weights(w_s, 48, 32, 0, -4, 0);
+    push_conv1x1_weights(w_s, 48, 32, 0, -4, 0);
+    push_zero_input(in_s, 8, 8);
+
+    ThreePEBlock dut;
+    dut.run(cfg, in_s, w_s, out_s);
+
+    int err = 0;
+    err += check_eq("shortcut_projection.output", drain_act(out_s), 64);
+    err += check_eq("shortcut_projection.weight_left", drain_bw(w_s), 0);
+    return err;
+}
+
+static int test_fail_split_non_integer() {
+    std::printf("[TB] fail_split_non_integer\n");
+    ThreePECfg cfg;
+    init_cfg(cfg, TOPO_BRANCH_CAT);
+    cfg.pe_a = make_layer(16, 16, 8, 8, 32, 32, 2, 1, PE_CONV3x3, true);
+    cfg.pe_b = make_layer(8, 8, 8, 8, 32, 8, 1, 0, PE_CONV1x1, true);
+    cfg.pe_c = make_layer(8, 8, 8, 8, 32, 24, 1, 0, PE_CONV1x1, true);
+    cfg.cat_conv = make_layer(8, 8, 8, 8, 32, 32, 1, 0, PE_CONV1x1, true);
+    cfg.split_num = 1;
+    cfg.split_den = 3;
+
+    ac_channel<stem_packed_act_t> in_s, out_s;
+    ac_channel<stem_packed_bw_t> w_s;
+    int w_cnt = 0;
+    w_cnt += push_conv3x3_weights(w_s, 32, 32, 0, -4, 0);
+    w_cnt += push_conv1x1_weights(w_s, 8, 32, 0, -4, 0);
+    w_cnt += push_conv1x1_weights(w_s, 24, 32, 0, -4, 0);
+    w_cnt += push_conv1x1_weights(w_s, 32, 32, 0, -4, 0);
+    push_zero_input(in_s, 16, 16);
+
+    ThreePEBlock dut;
+    dut.run(cfg, in_s, w_s, out_s);
+
+    int err = 0;
+    err += check_eq("fail_split_non_integer.output", drain_act(out_s), 0);
+    err += check_eq("fail_split_non_integer.input_left", drain_act(in_s), 256);
+    err += check_eq("fail_split_non_integer.weight_left", drain_bw(w_s), w_cnt);
+    return err;
+}
+
+static int test_fail_shortcut_no_projection() {
+    std::printf("[TB] fail_shortcut_no_projection\n");
+    ThreePECfg cfg;
+    init_cfg(cfg, TOPO_SHORTCUT);
+    cfg.pe_a = make_layer(8, 8, 8, 8, 32, 32, 1, 1, PE_CONV3x3, true);
+    cfg.pe_b = make_layer(8, 8, 8, 8, 32, 48, 1, 0, PE_CONV1x1, true);
+    cfg.shortcut_use_projection = false;
+
+    ac_channel<stem_packed_act_t> in_s, out_s;
+    ac_channel<stem_packed_bw_t> w_s;
+    int w_cnt = 0;
+    w_cnt += push_conv3x3_weights(w_s, 32, 32, 0, -4, 0);
+    w_cnt += push_conv1x1_weights(w_s, 48, 32, 0, -4, 0);
+    push_zero_input(in_s, 8, 8);
+
+    ThreePEBlock dut;
+    dut.run(cfg, in_s, w_s, out_s);
+
+    int err = 0;
+    err += check_eq("fail_shortcut_no_projection.output", drain_act(out_s), 0);
+    err += check_eq("fail_shortcut_no_projection.input_left", drain_act(in_s), 64);
+    err += check_eq("fail_shortcut_no_projection.weight_left", drain_bw(w_s), w_cnt);
+    return err;
+}
+
+static int test_upsample_valid() {
+    std::printf("[TB] upsample_valid\n");
+    ThreePECfg cfg;
+    init_cfg(cfg, TOPO_STRAIGHT);
+    cfg.pe_a = make_layer(8, 8, 16, 16, 32, 32, 2, 0, PE_UPSAMPLE, false);
+
+    ac_channel<stem_packed_act_t> in_s, out_s;
+    ac_channel<stem_packed_bw_t> w_s;
+    push_zero_input(in_s, 8, 8);
+
+    ThreePEBlock dut;
+    dut.run(cfg, in_s, w_s, out_s);
+
+    int err = 0;
+    err += check_eq("upsample_valid.output", drain_act(out_s), 256);
+    err += check_eq("upsample_valid.weight_left", drain_bw(w_s), 0);
+    return err;
+}
+
+static int test_fail_upsample_shape() {
+    std::printf("[TB] fail_upsample_shape\n");
+    ThreePECfg cfg;
+    init_cfg(cfg, TOPO_STRAIGHT);
+    cfg.pe_a = make_layer(8, 8, 15, 16, 32, 32, 2, 0, PE_UPSAMPLE, false);
+
+    ac_channel<stem_packed_act_t> in_s, out_s;
+    ac_channel<stem_packed_bw_t> w_s;
+    push_zero_input(in_s, 8, 8);
+
+    ThreePEBlock dut;
+    dut.run(cfg, in_s, w_s, out_s);
+
+    int err = 0;
+    err += check_eq("fail_upsample_shape.output", drain_act(out_s), 0);
+    err += check_eq("fail_upsample_shape.input_left", drain_act(in_s), 64);
+    return err;
+}
+
+static int test_fail_strict_downsample() {
+    std::printf("[TB] fail_strict_downsample\n");
+    ThreePECfg cfg;
+    init_cfg(cfg, TOPO_STRAIGHT);
+    cfg.strict_downsample = true;
+    cfg.pe_a = make_layer(16, 16, 8, 8, 32, 32, 2, 0, PE_MAXPOOL, false);
+
+    ac_channel<stem_packed_act_t> in_s, out_s;
+    ac_channel<stem_packed_bw_t> w_s;
+    push_zero_input(in_s, 16, 16);
+
+    ThreePEBlock dut;
+    dut.run(cfg, in_s, w_s, out_s);
+
+    int err = 0;
+    err += check_eq("fail_strict_downsample.output", drain_act(out_s), 0);
+    err += check_eq("fail_strict_downsample.input_left", drain_act(in_s), 256);
+    return err;
+}
 
 int main() {
-    printf("=== ThreePEBlock 테스트벤치 ===\n\n");
+    std::printf("=== three_pe_block_tb ===\n");
 
     int errors = 0;
     errors += test_straight_conv1x1();
-    errors += test_straight_conv3x3();
-    errors += test_branch_cat();
+    errors += test_straight_conv3x3_downsample();
+    errors += test_branch_cat_ratio_split();
+    errors += test_shortcut_identity();
+    errors += test_shortcut_projection();
+    errors += test_fail_split_non_integer();
+    errors += test_fail_shortcut_no_projection();
+    errors += test_upsample_valid();
+    errors += test_fail_upsample_shape();
+    errors += test_fail_strict_downsample();
 
-    printf("\n=== 결과: %s ===\n",
-           errors == 0 ? "전체 통과" : "실패 있음");
+    if (errors == 0) {
+        std::printf("PASS\n");
+    } else {
+        std::printf("FAIL: %d case(s)\n", errors);
+    }
     return errors;
 }
+

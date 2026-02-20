@@ -15,6 +15,8 @@ solution options set /Output/GenerateCycleNetlist false
 
 solution file add ./src/stem/stem_config.h    -type C++
 solution file add ./src/pe/pe_config.h        -type C++
+solution file add ./src/pe/three_pe_rules.h   -type C++
+solution file add ./src/pe/three_pe_rules.cpp -type C++
 solution file add ./src/pe/generic_pe.h       -type C++
 solution file add ./src/pe/generic_pe.cpp     -type C++
 solution file add ./src/pe/three_pe_block.h   -type C++

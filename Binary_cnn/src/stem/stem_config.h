@@ -58,6 +58,7 @@ typedef ac_int<16, true>  stem_bias_t;  // bias (signed)
 
 // Packed types for streaming
 typedef ac_int<512, false> stem_packed_act_t;  // 64ch x 8bit
+typedef ac_int<256, false> stem_packed_32ch_t; // 32ch x 8bit (inter-PE pipe)
 typedef ac_int<64, false>  stem_packed_bw_t;   // 64-bit packed weight/param
 typedef ac_int<24, false>  stem_packed_rgb_t;  // 3ch x 8bit RGB input
 
