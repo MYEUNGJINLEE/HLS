@@ -1,4 +1,4 @@
-.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean gpt gpt-log gpt-gui gpt-clean stem stem-log stem-gui stem-gui-build stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean clean-artifacts clean
+.PHONY: update push push-compile-results weight-dir stream stream-log stream-tb stream-gui stream-clean block block-log block-gui block-tb block-clean sched sched-log sched-gui sched-clean gpt gpt-log gpt-gui gpt-clean stem stem-log stem-gui stem-gui-build stem-tb stem-tb-weight stem-tb-no-weight stem-clean stem2 stem2-log stem2-tb stem2-gui stem2-clean three-pe three-pe-log three-pe-gui three-pe-tb three-pe-clean clean-artifacts clean
 .SILENT:
 
 # Update local repository to latest origin/dev (stash handles unstaged changes)
@@ -57,6 +57,10 @@ stream-clean:
 block-clean:
 	cd Binary_cnn && rm -rf block_processor* block_processor.ccs
 
+# Clean three PE scheduler projects (including numbered variants _1, _2, ...)
+sched-clean:
+	cd Binary_cnn && rm -rf three_pe_scheduler* three_pe_scheduler.ccs
+
 # Clean GPT backbone phase3 projects (including numbered variants _1, _2, ...)
 gpt-clean:
 	cd Binary_cnn && rm -rf gpt_backbone_phase3* gpt_backbone_phase3.ccs
@@ -86,7 +90,45 @@ clean-artifacts:
 	find Binary_cnn -type d \( -name CDesignChecker -o -name scverify \) -prune -exec rm -rf {} +
 	find Binary_cnn -type f \( -name '*.ccs' -o -name '*.vcd' -o -name '*.wlf' -o -name 'transcript' \) -delete
 
-clean: stream-clean block-clean gpt-clean stem-clean stem2-clean clean-artifacts
+three-pe-clean:
+	cd Binary_cnn && rm -rf three_pe_block* three_pe_block.ccs
+
+# Run ThreePEBlock Catapult in batch mode with log (auto-cleans old project)
+three-pe: three-pe-clean
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_three_pe_catapult.tcl 2>&1 | tee logs/catapult_three_pe_block.log
+
+# Alias for three-pe
+three-pe-log: three-pe
+
+# Run ThreePEBlock with GUI (reuses existing project or runs batch first)
+three-pe-gui:
+	cd Binary_cnn && PRJ=$$(ls -t three_pe_block*.ccs 2>/dev/null | head -n 1); \
+	if [ -z "$$PRJ" ]; then \
+		echo "No three_pe_block*.ccs found. Running batch flow once to create project..."; \
+		catapult -shell -file scripts/run_three_pe_catapult.tcl; \
+		PRJ=$$(ls -t three_pe_block*.ccs 2>/dev/null | head -n 1); \
+	fi; \
+	if [ -n "$$PRJ" ]; then \
+		catapult "$$PRJ" & \
+	else \
+		echo "Could not find three_pe_block*.ccs project file."; exit 1; \
+	fi
+
+# Run ThreePEBlock batch flow then SCVerify testbench simulation
+three-pe-tb: three-pe-clean
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_three_pe_catapult.tcl 2>&1 | tee logs/catapult_three_pe_block.log
+	cd Binary_cnn && SOL_DIR=$$(ls -d three_pe_block/ThreePEBlock.v* 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SOL_DIR" ]; then echo "No ThreePEBlock.v* solution directory found."; exit 1; fi; \
+	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
+	if [ -z "$$SCV_MK" ]; then echo "SCVerify Makefile not found under $$SOL_DIR"; exit 1; fi; \
+	SCV_DIR=$$(dirname "$$SCV_MK"); \
+	SCV_BASENAME=$$(basename "$$SCV_MK"); \
+	$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_three_pe_block_sim.log
+
+clean: stream-clean block-clean sched-clean gpt-clean stem-clean stem2-clean three-pe-clean clean-artifacts
 
 # Run block processor Catapult in batch mode with log (auto-cleans old project)
 block: block-clean
@@ -95,12 +137,33 @@ block: block-clean
 # Alias for block
 block-log: block
 
+# Run three PE scheduler Catapult in batch mode with log (auto-cleans old project)
+sched: sched-clean
+	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_three_pe_scheduler_catapult.tcl 2>&1 | tee logs/catapult_three_pe_scheduler.log
+
+# Alias for sched
+sched-log: sched
+
 # Run GPT backbone phase3 Catapult in batch mode with log (auto-cleans old project)
 gpt: gpt-clean
 	cd Binary_cnn && mkdir -p logs && catapult -shell -file scripts/run_gpt_backbone_phase3_catapult.tcl 2>&1 | tee logs/catapult_gpt_backbone_phase3.log
 
 # Alias for gpt
 gpt-log: gpt
+
+# Run three PE scheduler with GUI and keep window open
+sched-gui:
+	cd Binary_cnn && PRJ=$$(ls -t three_pe_scheduler*.ccs 2>/dev/null | head -n 1); \
+	if [ -z "$$PRJ" ]; then \
+		echo "No three_pe_scheduler*.ccs found. Running batch flow once to create project..."; \
+		catapult -shell -file scripts/run_three_pe_scheduler_catapult.tcl; \
+		PRJ=$$(ls -t three_pe_scheduler*.ccs 2>/dev/null | head -n 1); \
+	fi; \
+	if [ -n "$$PRJ" ]; then \
+		catapult "$$PRJ" & \
+	else \
+		echo "Could not find three_pe_scheduler*.ccs project file."; exit 1; \
+	fi
 
 # Run GPT backbone phase3 with GUI and keep window open
 gpt-gui:
