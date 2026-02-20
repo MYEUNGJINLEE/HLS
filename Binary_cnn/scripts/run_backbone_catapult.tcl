@@ -123,6 +123,13 @@ puts "BackboneBlock1 roots: $roots"
 # Global Directives
 # ============================================================================
 
+# Clock: 300 MHz = 3.333 ns
+if {[catch {directive set -CLOCK_PERIOD 3.333} err]} {
+    puts "CLOCK_PERIOD set failed: $err"
+} else {
+    puts "CLOCK_PERIOD set to 3.333 ns (300 MHz)"
+}
+
 if {[catch {directive set -CLOCK_OVERHEAD 0} err]} {
     puts "CLOCK_OVERHEAD set failed: $err"
 } else {
