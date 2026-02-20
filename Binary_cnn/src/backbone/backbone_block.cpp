@@ -198,9 +198,9 @@ void BackboneBlock1::run(
     MAIN_LOOP_BB1:
     for (int iter = 0; iter < BB1_MAIN_ITERS; iter++) {
 
-        if (c3a2_out_row >= B1_C3_H) {
-            break;
-        }
+        // No break: static loop bound required for Catapult architecture phase.
+        // All three stages are guarded by conditions (ds_in_row < IN_H,
+        // ds_can_out, c3a2_can_out) so they become no-ops once their work is done.
 
         // ==================================================================
         // Stage 1: Read one input row → ds_input_buf
