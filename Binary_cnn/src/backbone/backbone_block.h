@@ -66,13 +66,14 @@ private:
     // no port conflict → keep as BRAM.
 
     // DS Conv input line buffer: 8 rows × 160 cols × 32 ch
-    #pragma hls_array_partition variable=ds_input_buf complete dim=1
-    #pragma hls_array_partition variable=ds_input_buf complete dim=3
+    // Partitioned via TCL post-compile: complete dim=1(rows=8) + complete dim=3(ch=32)
+    // → 256 banks × [160 col] × 8bit = 1280bit < MEM_MAP_THRESHOLD(8192) → distributed RAM
     stem_act_t ds_input_buf[BB_LINE_ROWS][B1_DS_IN_W][B1_DS_IN_CH];
 
     // C3A2 Conv input line buffer: 8 rows × 80 cols × 32 ch
-    #pragma hls_array_partition variable=c3a2_input_buf complete dim=1
-    #pragma hls_array_partition variable=c3a2_input_buf complete dim=3
+    // Partitioned via TCL post-compile: complete dim=1(rows=8) + complete dim=3(ch=32)
+    // → 256 banks × [80 col] × 8bit = 640bit < MEM_MAP_THRESHOLD(8192) → distributed RAM
+    // Solves SCHD-4: 9(3×3 window unrolled) × 32(ch unrolled) = 288 simultaneous reads
     stem_act_t c3a2_input_buf[BB_LINE_ROWS][B1_C3_W][B1_C3A1_OC];
 
     // DS output save buffer for C3B1: 2-slot circular × 80 cols × 64 channels

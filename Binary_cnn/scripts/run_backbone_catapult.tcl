@@ -338,6 +338,59 @@ puts "======== LOOP DIRECTIVES COMPLETE ========"
 go compile
 
 # ============================================================================
+# POST-COMPILE: Array partition (resource paths exist after go compile)
+# ============================================================================
+# Root cause of SCHD-4 error:
+#   c3a2_input_buf[8][80][32] accessed with 9(KR×KC unrolled) × 32(ch unrolled) = 288
+#   simultaneous reads → single BLOCK_1R1W_RBW provides only 1 port → SCHD-4 fail.
+#
+# Fix: complete partition on dim=1(rows=8) + dim=3(ch=32) → 256 banks × [col] only
+#   Each bank: 80×8bit=640bit or 160×8bit=1280bit < MEM_MAP_THRESHOLD(8192bit)
+#   → mapped to distributed RAM (LUTRAM) → no port conflict
+# ============================================================================
+puts "======== POST-COMPILE PARTITION ========"
+
+# Refresh roots post-compile (hierarchy is fully resolved)
+set post_roots $roots
+catch {
+    set design_names2 [solution design get]
+    foreach d $design_names2 {
+        if {[string first "::" $d] < 0} {
+            lappend post_roots "/$d"
+            lappend post_roots "/$d/run"
+        }
+    }
+}
+set post_roots [lsort -unique $post_roots]
+puts "Post-compile roots: $post_roots"
+
+# c3a2_input_buf[8][80][32]: partition dim=1 + dim=3
+#   256 banks × [80] col × 8bit = 640bit < 8192 → LUTRAM → no port conflict
+apply_complete_partition "POST c3a2_input_buf dim=1" {
+    c3a2_input_buf
+    run/c3a2_input_buf
+} $post_roots 1
+
+apply_complete_partition "POST c3a2_input_buf dim=3" {
+    c3a2_input_buf
+    run/c3a2_input_buf
+} $post_roots 3
+
+# ds_input_buf[8][160][32]: partition dim=1 + dim=3
+#   256 banks × [160] col × 8bit = 1280bit < 8192 → LUTRAM → no port conflict
+apply_complete_partition "POST ds_input_buf dim=1" {
+    ds_input_buf
+    run/ds_input_buf
+} $post_roots 1
+
+apply_complete_partition "POST ds_input_buf dim=3" {
+    ds_input_buf
+    run/ds_input_buf
+} $post_roots 3
+
+puts "======== POST-COMPILE PARTITION DONE ========"
+
+# ============================================================================
 # Technology Library (Xilinx Zynq UltraScale+, same as three_pe_block)
 # ============================================================================
 solution library remove *
