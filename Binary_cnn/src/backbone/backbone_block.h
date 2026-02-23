@@ -54,16 +54,25 @@ public:
     );
 
 private:
-    // ---- Internal line buffers (mapped to BRAM by Catapult) ----
+    // ---- Internal line buffers ----
+    //
+    // ds_input_buf / c3a2_input_buf: partitioned on dim=1 (rows, 8) and
+    // dim=3 (channels, 32) → 256 banks of [col] elements each.
+    // Each bank: 160×8b=1280b or 80×8b=640b < MEM_MAP_THRESHOLD(8192b)
+    // → mapped to distributed RAM (LUT), solving the BRAM port conflict
+    // caused by the fully-unrolled 3×3 window extraction (9×32=288 ports).
+    //
+    // ds_save_buf: accessed sequentially (DS_SAVE / PRELOAD_DS_LOCAL),
+    // no port conflict → keep as BRAM.
 
-    // DS Conv input line buffer: BB_LINE_ROWS rows × 160 cols × 32 channels
-    // Used for 3×3 window extraction with stride=2, pad=1
-    #pragma hls_memory impl=BLOCK_1R1W_RBW variable=ds_input_buf
+    // DS Conv input line buffer: 8 rows × 160 cols × 32 ch
+    #pragma hls_array_partition variable=ds_input_buf complete dim=1
+    #pragma hls_array_partition variable=ds_input_buf complete dim=3
     stem_act_t ds_input_buf[BB_LINE_ROWS][B1_DS_IN_W][B1_DS_IN_CH];
 
-    // C3A2 Conv input line buffer: BB_LINE_ROWS rows × 80 cols × 32 channels
-    // Stores C3A1 output for 3×3 window extraction with stride=1, pad=1
-    #pragma hls_memory impl=BLOCK_1R1W_RBW variable=c3a2_input_buf
+    // C3A2 Conv input line buffer: 8 rows × 80 cols × 32 ch
+    #pragma hls_array_partition variable=c3a2_input_buf complete dim=1
+    #pragma hls_array_partition variable=c3a2_input_buf complete dim=3
     stem_act_t c3a2_input_buf[BB_LINE_ROWS][B1_C3_W][B1_C3A1_OC];
 
     // DS output save buffer for C3B1: 2-slot circular × 80 cols × 64 channels
