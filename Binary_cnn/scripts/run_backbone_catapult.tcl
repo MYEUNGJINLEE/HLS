@@ -350,6 +350,27 @@ go compile
 # ============================================================================
 puts "======== POST-COMPILE PARTITION ========"
 
+# Arrays are now 2D (channels packed into 256-bit words):
+#   ds_input_buf[8][160]   × 256-bit  (was [8][160][32] × 8-bit)
+#   c3a2_input_buf[8][80]  × 256-bit  (was [8][80][32]  × 8-bit)
+#
+# Simultaneous reads after packing: KR(3)×KC(3) = 9  (was 9×32=288)
+# Partition dim=1 (rows=8) → 8 row BRAMs; 3 KC reads/row → 3 BRAM instances each
+# Total: 24 BRAM instances  (was 288 → SCHD-4 failure)
+
+# Diagnostic: dump resource paths to find correct hierarchy
+puts "--- POST-COMPILE RESOURCE PATHS (buf-related) ---"
+catch {
+    set all_dirs [directive get -rec]
+    foreach d $all_dirs {
+        if {[string match "*input_buf*" $d] || [string match "*save_buf*" $d]} {
+            puts "RSC PATH: $d"
+        }
+    }
+} diag_err
+if {$diag_err ne {}} { puts "diag err: $diag_err" }
+puts "--- END RESOURCE PATHS ---"
+
 # Refresh roots post-compile (hierarchy is fully resolved)
 set post_roots $roots
 catch {
@@ -364,29 +385,18 @@ catch {
 set post_roots [lsort -unique $post_roots]
 puts "Post-compile roots: $post_roots"
 
-# c3a2_input_buf[8][80][32]: partition dim=1 + dim=3
-#   256 banks × [80] col × 8bit = 640bit < 8192 → LUTRAM → no port conflict
+# Partition dim=1 (rows=8) only — channels are now packed (dim=3 no longer exists)
+# c3a2_input_buf[8][80] × 256-bit: 8 row BRAMs, 3 KC reads/row → 3 instances each
 apply_complete_partition "POST c3a2_input_buf dim=1" {
     c3a2_input_buf
     run/c3a2_input_buf
 } $post_roots 1
 
-apply_complete_partition "POST c3a2_input_buf dim=3" {
-    c3a2_input_buf
-    run/c3a2_input_buf
-} $post_roots 3
-
-# ds_input_buf[8][160][32]: partition dim=1 + dim=3
-#   256 banks × [160] col × 8bit = 1280bit < 8192 → LUTRAM → no port conflict
+# ds_input_buf[8][160] × 256-bit: 8 row BRAMs, 3 KC reads/row → 3 instances each
 apply_complete_partition "POST ds_input_buf dim=1" {
     ds_input_buf
     run/ds_input_buf
 } $post_roots 1
-
-apply_complete_partition "POST ds_input_buf dim=3" {
-    ds_input_buf
-    run/ds_input_buf
-} $post_roots 3
 
 puts "======== POST-COMPILE PARTITION DONE ========"
 

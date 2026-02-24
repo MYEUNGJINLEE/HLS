@@ -56,25 +56,26 @@ public:
 private:
     // ---- Internal line buffers ----
     //
-    // ds_input_buf / c3a2_input_buf: partitioned on dim=1 (rows, 8) and
-    // dim=3 (channels, 32) → 256 banks of [col] elements each.
-    // Each bank: 160×8b=1280b or 80×8b=640b < MEM_MAP_THRESHOLD(8192b)
-    // → mapped to distributed RAM (LUT), solving the BRAM port conflict
-    // caused by the fully-unrolled 3×3 window extraction (9×32=288 ports).
+    // ds_input_buf / c3a2_input_buf:
+    //   32 channels packed into stem_packed_32ch_t (ac_int<256,false>) per (row,col).
+    //   This eliminates the ch dimension from the array → unrolled 3×3 window extraction
+    //   performs 9 BRAM reads (KR×KC) instead of 288 (9×32), avoiding SCHD-4.
+    //   TCL post-compile: partition dim=1 (rows=8) → 8 row BRAMs;
+    //   KC=3 reads per row BRAM → Catapult allocates 3 instances/row = 24 total.
     //
     // ds_save_buf: accessed sequentially (DS_SAVE / PRELOAD_DS_LOCAL),
     // no port conflict → keep as BRAM.
 
-    // DS Conv input line buffer: 8 rows × 160 cols × 32 ch
-    // Partitioned via TCL post-compile: complete dim=1(rows=8) + complete dim=3(ch=32)
-    // → 256 banks × [160 col] × 8bit = 1280bit < MEM_MAP_THRESHOLD(8192) → distributed RAM
-    stem_act_t ds_input_buf[BB_LINE_ROWS][B1_DS_IN_W][B1_DS_IN_CH];
+    // DS Conv input line buffer: 8 rows × 160 cols, 32 channels packed as 256-bit
+    // stem_packed_32ch_t = ac_int<256,false> = 32ch × 8bit per (row,col)
+    // Packing channels eliminates ch dimension → EXTRACT reads: 288(9×32) → 9(KR×KC only)
+    // TCL partition dim=1 (rows=8) → 8 BRAMs; 3 KC reads/row = 24 BRAM instances total
+    stem_packed_32ch_t ds_input_buf[BB_LINE_ROWS][B1_DS_IN_W];
 
-    // C3A2 Conv input line buffer: 8 rows × 80 cols × 32 ch
-    // Partitioned via TCL post-compile: complete dim=1(rows=8) + complete dim=3(ch=32)
-    // → 256 banks × [80 col] × 8bit = 640bit < MEM_MAP_THRESHOLD(8192) → distributed RAM
-    // Solves SCHD-4: 9(3×3 window unrolled) × 32(ch unrolled) = 288 simultaneous reads
-    stem_act_t c3a2_input_buf[BB_LINE_ROWS][B1_C3_W][B1_C3A1_OC];
+    // C3A2 Conv input line buffer: 8 rows × 80 cols, 32 channels packed as 256-bit
+    // Same packing strategy: EXTRACT reads 288 → 9 (eliminates SCHD-4 BRAM port conflict)
+    // TCL partition dim=1 (rows=8) → 8 BRAMs × [80] × 256-bit; 3 KC reads/row = 24 BRAM instances
+    stem_packed_32ch_t c3a2_input_buf[BB_LINE_ROWS][B1_C3_W];
 
     // DS output save buffer for C3B1: 2-slot circular × 80 cols × 64 channels
     // Slot index = ds_out_row & 1

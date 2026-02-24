@@ -212,11 +212,8 @@ void BackboneBlock1::run(
             #pragma hls_pipeline_init_interval 1
             for (int col = 0; col < B1_DS_IN_W; col++) {
                 stem_packed_act_t pkt = input_stream.read();
-                STAGE1_CH:
-                #pragma hls_unroll yes
-                for (int ch = 0; ch < B1_DS_IN_CH; ch++) {
-                    ds_input_buf[buf_row][col][ch].set_slc(0, pkt.slc<8>(ch * 8));
-                }
+                // Pack 32ch × 8bit = 256-bit single write (was 32 individual writes)
+                ds_input_buf[buf_row][col] = pkt.slc<B1_DS_IN_CH * 8>(0);
             }
             ds_in_row++;
         }
@@ -268,10 +265,12 @@ void BackboneBlock1::run(
                                 }
                             } else {
                                 const int buf_row = in_row & BB_LINE_MASK;
-                                READ_DS:
+                                // Single 256-bit read → unpack via bit-slice (combinational)
+                                stem_packed_32ch_t packed = ds_input_buf[buf_row][in_col];
+                                UNPACK_DS:
                                 #pragma hls_unroll yes
                                 for (int ch = 0; ch < B1_DS_IN_CH; ch++) {
-                                    ds_window[kr][kc][ch] = ds_input_buf[buf_row][in_col][ch];
+                                    ds_window[kr][kc][ch].set_slc(0, packed.slc<8>(ch * 8));
                                 }
                             }
                         }
@@ -391,7 +390,10 @@ void BackboneBlock1::run(
                         }
                     }
 
-                    // Reduce + BN + ReLU → write to c3a2_input_buf
+                    // Reduce + BN + ReLU → accumulate into temp, then pack-write once
+                    stem_act_t c3a1_out_vals[B1_C3A1_OC];
+                    #pragma hls_array_partition variable=c3a1_out_vals complete
+
                     C3A1_REDUCE:
                     #pragma hls_pipeline_init_interval 2
                     for (int oc = 0; oc < B1_C3A1_OC; oc++) {
@@ -401,9 +403,18 @@ void BackboneBlock1::run(
                         for (int ig = 0; ig < B1_C3A1_IGRP; ig++) {
                             sum += acc_c3a1[ig][oc];
                         }
-                        c3a2_input_buf[c3a2_buf_row][col][oc] =
+                        c3a1_out_vals[oc] =
                             bb_apply_bn_relu(sum, shift_c3a1[oc], bias_c3a1[oc], true);
                     }
+
+                    // Pack 32 channels into 256-bit word and write once (1 BRAM write)
+                    stem_packed_32ch_t c3a2_packed = 0;
+                    PACK_C3A1:
+                    #pragma hls_unroll yes
+                    for (int oc = 0; oc < B1_C3A1_OC; oc++) {
+                        c3a2_packed.set_slc(oc * 8, c3a1_out_vals[oc].slc<8>(0));
+                    }
+                    c3a2_input_buf[c3a2_buf_row][col] = c3a2_packed;
 
                 }  // end STAGE2_COL
 
@@ -473,10 +484,12 @@ void BackboneBlock1::run(
                                 }
                             } else {
                                 const int buf_row = in_row & BB_LINE_MASK;
-                                READ_C3A2:
+                                // Single 256-bit read → unpack via bit-slice (combinational)
+                                stem_packed_32ch_t packed = c3a2_input_buf[buf_row][in_col];
+                                UNPACK_C3A2:
                                 #pragma hls_unroll yes
                                 for (int ch = 0; ch < B1_C3A2_IC; ch++) {
-                                    c3a2_window[kr][kc][ch] = c3a2_input_buf[buf_row][in_col][ch];
+                                    c3a2_window[kr][kc][ch].set_slc(0, packed.slc<8>(ch * 8));
                                 }
                             }
                         }
