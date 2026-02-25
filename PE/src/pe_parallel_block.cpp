@@ -344,6 +344,7 @@ bool PEParallelBlock::run(
         return false;
     }
 
+#if !defined(__SYNTHESIS__)
     if (!weight_stream.available(total_w)) {
         return false;
     }
@@ -353,6 +354,9 @@ bool PEParallelBlock::run(
     if (!input_stream.available(total_in)) {
         return false;
     }
+#else
+    (void)total_in;
+#endif
 
     for (int i = 0; i < total_w; i++) {
         backup_pkts[i] = weight_stream.read();
@@ -399,9 +403,11 @@ bool PEParallelBlock::run(
 
     if (cfg.topo == PE_TOPO_STRAIGHT) {
         ok = pe0.run(cfg.pe0, input_stream, ws0, output_stream);
+#if !defined(__SYNTHESIS__)
         if (ok && ws0.available(1)) {
             ok = false;
         }
+#endif
         if (!ok) {
             restore_weights(weight_stream, total_w);
         }
@@ -462,9 +468,11 @@ bool PEParallelBlock::run(
         ok = pe3.run(cfg.pe3, cat_in, ws3, output_stream);
     }
 
+#if !defined(__SYNTHESIS__)
     if (ok && (ws0.available(1) || ws1.available(1) || ws2.available(1) || ws3.available(1))) {
         ok = false;
     }
+#endif
 
     if (!ok) {
         restore_weights(weight_stream, total_w);

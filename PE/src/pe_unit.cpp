@@ -410,6 +410,7 @@ bool PEUnit::run(
         return false;
     }
 
+#if !defined(__SYNTHESIS__)
     const int expect_w = pe_weight_packets_for_kernel(cfg);
     const int expect_in = cfg.in_h * cfg.in_w * pe_packs_per_pixel(cfg.in_ch);
 
@@ -422,6 +423,7 @@ bool PEUnit::run(
     if (!input_stream.available(expect_in)) {
         return false;
     }
+#endif
 
     bool load_ok = false;
     if (cfg.op == PE_OP_CONV1X1) {
