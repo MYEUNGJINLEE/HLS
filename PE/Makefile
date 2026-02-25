@@ -1,4 +1,4 @@
-.PHONY: pe pe-log pe-gui pe-tb pe-clean clean
+.PHONY: pe pe-log pe-compile pe-compile-log pe-gui pe-tb pe-clean clean
 .SILENT:
 
 pe: pe-clean
@@ -6,6 +6,12 @@ pe: pe-clean
 	catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe.log
 
 pe-log: pe
+
+pe-compile: pe-clean
+	mkdir -p logs
+	PE_COMPILE_ONLY=1 catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe_compile.log
+
+pe-compile-log: pe-compile
 
 pe-gui:
 	PRJ=$$(ls -t PE.ccs PE*.ccs 2>/dev/null | head -n 1); \

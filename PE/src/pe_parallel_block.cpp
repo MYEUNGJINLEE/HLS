@@ -11,9 +11,14 @@ void PEParallelBlock::pack_lane(pe_packed_act_t &pkt, int lane, pe_act_t value) 
 }
 
 void PEParallelBlock::restore_weights(ac_channel<pe_weight_pkt_t> &weight_stream, int count) {
+#if !defined(__SYNTHESIS__)
     for (int i = 0; i < count; i++) {
         weight_stream.write(backup_pkts[i]);
     }
+#else
+    (void)weight_stream;
+    (void)count;
+#endif
 }
 
 bool PEParallelBlock::validate_kernel_packet_layout(
@@ -383,7 +388,9 @@ bool PEParallelBlock::run(
             w2_count,
             w3_start,
             w3_count)) {
+#if !defined(__SYNTHESIS__)
         restore_weights(weight_stream, total_w);
+#endif
         return false;
     }
 
@@ -402,14 +409,21 @@ bool PEParallelBlock::run(
     bool ok = true;
 
     if (cfg.topo == PE_TOPO_STRAIGHT) {
-        ok = pe0.run(cfg.pe0, input_stream, ws0, output_stream);
+        ac_channel<pe_packed_act_t> straight_in;
+        for (int i = 0; i < total_in; i++) {
+            straight_in.write(input_stream.read());
+        }
+
+        ok = pe0.run(cfg.pe0, straight_in, ws0, output_stream);
 #if !defined(__SYNTHESIS__)
         if (ok && ws0.available(1)) {
             ok = false;
         }
 #endif
         if (!ok) {
+#if !defined(__SYNTHESIS__)
             restore_weights(weight_stream, total_w);
+#endif
         }
         return ok;
     }
@@ -475,7 +489,9 @@ bool PEParallelBlock::run(
 #endif
 
     if (!ok) {
+#if !defined(__SYNTHESIS__)
         restore_weights(weight_stream, total_w);
+#endif
     }
 
     return ok;
