@@ -1,46 +1,40 @@
-SHELL := powershell.exe
-.SHELLFLAGS := -NoProfile -Command
-
 .PHONY: pe pe-log pe-gui pe-tb pe-clean clean
 .SILENT:
 
 pe: pe-clean
-	New-Item -ItemType Directory -Force -Path logs | Out-Null
-	catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | Tee-Object -FilePath logs/catapult_pe.log
+	mkdir -p logs
+	catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe.log
 
 pe-log: pe
 
 pe-gui:
-	$prj = Get-ChildItem -Path . -File -Filter *.ccs -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-	if (-not $prj) {
-		Write-Output "No PE.ccs found. Running batch flow once to create project..."
-		catapult -shell -file scripts/run_pe_catapult.tcl
-		$prj = Get-ChildItem -Path . -File -Filter *.ccs -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-	}
-	if ($prj) {
-		Start-Process catapult -ArgumentList $prj.FullName
-	} else {
-		Write-Error "Could not find PE project file."
-		exit 1
-	}
+	PRJ=$$(ls -t PE.ccs PE*.ccs 2>/dev/null | head -n 1); \
+	if [ -z "$$PRJ" ]; then \
+		echo "No PE.ccs found. Running batch flow once to create project..."; \
+		catapult -shell -file scripts/run_pe_catapult.tcl; \
+		PRJ=$$(ls -t PE.ccs PE*.ccs 2>/dev/null | head -n 1); \
+	fi; \
+	if [ -n "$$PRJ" ]; then \
+		catapult "$$PRJ" & \
+	else \
+		echo "Could not find PE project file."; exit 1; \
+	fi
 
 pe-tb: pe-clean
-	New-Item -ItemType Directory -Force -Path logs | Out-Null
-	catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | Tee-Object -FilePath logs/catapult_pe.log
-	$solDir = Get-ChildItem -Path . -Directory -Filter PE -ErrorAction SilentlyContinue | Select-Object -First 1
-	if (-not $solDir) { Write-Error "No PE project directory found."; exit 1 }
-	$solPath = Get-ChildItem -Path $solDir.FullName -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -like 'PEParallelBlock.v*' -or $_.Name -like 'solution.v*' } | Sort-Object Name | Select-Object -Last 1
-	if (-not $solPath) { Write-Error "No PE solution directory found."; exit 1 }
-	$scvMk = Get-ChildItem -Path $solPath.FullName -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like '*scverify*Makefile' -or $_.Name -like 'Verify_*.mk' } | Sort-Object FullName | Select-Object -Last 1
-	if (-not $scvMk) { Write-Error "SCVerify makefile not found under $($solPath.FullName)"; exit 1 }
-	make -C $scvMk.DirectoryName -f $scvMk.Name sim 2>&1 | Tee-Object -FilePath logs/scverify_pe_sim.log
+	mkdir -p logs
+	catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe.log
+	SOL_DIR=$$(ls -d PE/PEParallelBlock.v* PE/solution.v* 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SOL_DIR" ]; then echo "No PE solution directory found."; exit 1; fi; \
+	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
+	if [ -z "$$SCV_MK" ]; then echo "SCVerify makefile not found under $$SOL_DIR"; exit 1; fi; \
+	SCV_DIR=$$(dirname "$$SCV_MK"); \
+	SCV_BASENAME=$$(basename "$$SCV_MK"); \
+	$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_pe_sim.log
 
 pe-clean:
-	if (Test-Path logs) { Remove-Item -Recurse -Force logs -ErrorAction SilentlyContinue }
-	if (Test-Path PE) { Remove-Item -Recurse -Force PE -ErrorAction SilentlyContinue }
-	if (Test-Path PE.ccs) { Remove-Item -Force PE.ccs -ErrorAction SilentlyContinue }
-	if (Test-Path catapult.log) { Remove-Item -Force catapult.log -ErrorAction SilentlyContinue }
-	Get-ChildItem -Path . -Filter catapult_pid* -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-	Get-ChildItem -Path . -Filter .Catapult* -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+	rm -rf PE PE.ccs logs catapult.log catapult_pid* .Catapult*
 
 clean: pe-clean
