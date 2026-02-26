@@ -14,7 +14,17 @@ static ac_channel<pe_packed_act_t> g_b1_out;
 static ac_channel<pe_packed_act_t> g_cat_for_pe3;
 static ac_channel<pe_packed_act_t> g_block_out;
 
+static pe_packed_act_t g_route_buf[PE_MAX_H * PE_MAX_W * PE_MAX_PACKS_PER_PIXEL];
 static pe_packed_act_t g_split_b_buf[PE_MAX_H * PE_MAX_W * PE_MAX_PACKS_PER_PIXEL];
+
+#if !defined(__SYNTHESIS__)
+template <typename T>
+static void pe_drain_internal_channel(ac_channel<T> &ch) {
+    while (ch.available(1)) {
+        (void)ch.read();
+    }
+}
+#endif
 
 pe_act_t PEParallelBlock::unpack_lane(const pe_packed_act_t &pkt, int lane) {
     pe_act_t v = 0;
@@ -404,6 +414,21 @@ bool PEParallelBlock::run(
     ac_channel<pe_weight_pkt_t> &weight_stream,
     ac_channel<pe_packed_act_t> &output_stream
 ) {
+#if !defined(__SYNTHESIS__)
+    pe_drain_internal_channel(g_ws0);
+    pe_drain_internal_channel(g_ws1);
+    pe_drain_internal_channel(g_ws2);
+    pe_drain_internal_channel(g_ws3);
+    pe_drain_internal_channel(g_straight_in);
+    pe_drain_internal_channel(g_a1_in);
+    pe_drain_internal_channel(g_b1_in);
+    pe_drain_internal_channel(g_a1_out);
+    pe_drain_internal_channel(g_a2_out);
+    pe_drain_internal_channel(g_b1_out);
+    pe_drain_internal_channel(g_cat_for_pe3);
+    pe_drain_internal_channel(g_block_out);
+#endif
+
     if (!pe_validate_block_cfg(cfg)) {
         return false;
     }
@@ -554,8 +579,11 @@ bool PEParallelBlock::run(
         if (cfg.post_route == PE_POST_BRANCH) {
             for (int i = 0; i < route_pkt_count; i++) {
                 pe_packed_act_t pkt = g_block_out.read();
+                g_route_buf[i] = pkt;
                 output_stream.write(pkt);
-                output_stream.write(pkt);
+            }
+            for (int i = 0; i < route_pkt_count; i++) {
+                output_stream.write(g_route_buf[i]);
             }
         } else if (cfg.post_route == PE_POST_SPLIT) {
             split_stream_to_output(
