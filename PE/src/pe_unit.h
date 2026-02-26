@@ -4,12 +4,10 @@
 #include "../include/pe_config.h"
 #include "../include/pe_packets.h"
 
-#pragma hls_design
 class PEUnit {
 public:
     PEUnit() {}
 
-    #pragma hls_design interface
     bool run(
         const PEKernelCfg &cfg,
         ac_channel<pe_packed_act_t> &input_stream,
