@@ -1,19 +1,5 @@
 #include "pe_parallel_block.h"
 
-static ac_channel<pe_weight_pkt_t> g_ws0;
-static ac_channel<pe_weight_pkt_t> g_ws1;
-static ac_channel<pe_weight_pkt_t> g_ws2;
-static ac_channel<pe_weight_pkt_t> g_ws3;
-
-static ac_channel<pe_packed_act_t> g_straight_in;
-static ac_channel<pe_packed_act_t> g_a1_in;
-static ac_channel<pe_packed_act_t> g_b1_in;
-static ac_channel<pe_packed_act_t> g_a1_out;
-static ac_channel<pe_packed_act_t> g_a2_out;
-static ac_channel<pe_packed_act_t> g_b1_out;
-static ac_channel<pe_packed_act_t> g_cat_for_pe3;
-static ac_channel<pe_packed_act_t> g_block_out;
-
 static pe_packed_act_t g_route_buf[PE_MAX_H * PE_MAX_W * PE_MAX_PACKS_PER_PIXEL];
 static pe_packed_act_t g_split_b_buf[PE_MAX_H * PE_MAX_W * PE_MAX_PACKS_PER_PIXEL];
 
@@ -414,19 +400,33 @@ bool PEParallelBlock::run(
     ac_channel<pe_weight_pkt_t> &weight_stream,
     ac_channel<pe_packed_act_t> &output_stream
 ) {
+    static ac_channel<pe_weight_pkt_t> ws0;
+    static ac_channel<pe_weight_pkt_t> ws1;
+    static ac_channel<pe_weight_pkt_t> ws2;
+    static ac_channel<pe_weight_pkt_t> ws3;
+
+    static ac_channel<pe_packed_act_t> straight_in;
+    static ac_channel<pe_packed_act_t> a1_in;
+    static ac_channel<pe_packed_act_t> b1_in;
+    static ac_channel<pe_packed_act_t> a1_out;
+    static ac_channel<pe_packed_act_t> a2_out;
+    static ac_channel<pe_packed_act_t> b1_out;
+    static ac_channel<pe_packed_act_t> cat_for_pe3;
+    static ac_channel<pe_packed_act_t> block_out;
+
 #if !defined(__SYNTHESIS__)
-    pe_drain_internal_channel(g_ws0);
-    pe_drain_internal_channel(g_ws1);
-    pe_drain_internal_channel(g_ws2);
-    pe_drain_internal_channel(g_ws3);
-    pe_drain_internal_channel(g_straight_in);
-    pe_drain_internal_channel(g_a1_in);
-    pe_drain_internal_channel(g_b1_in);
-    pe_drain_internal_channel(g_a1_out);
-    pe_drain_internal_channel(g_a2_out);
-    pe_drain_internal_channel(g_b1_out);
-    pe_drain_internal_channel(g_cat_for_pe3);
-    pe_drain_internal_channel(g_block_out);
+    pe_drain_internal_channel(ws0);
+    pe_drain_internal_channel(ws1);
+    pe_drain_internal_channel(ws2);
+    pe_drain_internal_channel(ws3);
+    pe_drain_internal_channel(straight_in);
+    pe_drain_internal_channel(a1_in);
+    pe_drain_internal_channel(b1_in);
+    pe_drain_internal_channel(a1_out);
+    pe_drain_internal_channel(a2_out);
+    pe_drain_internal_channel(b1_out);
+    pe_drain_internal_channel(cat_for_pe3);
+    pe_drain_internal_channel(block_out);
 #endif
 
     if (!pe_validate_block_cfg(cfg)) {
@@ -482,12 +482,12 @@ bool PEParallelBlock::run(
         return false;
     }
 
-    feed_weight_channel(g_ws0, backup_pkts, w0_start, w0_count);
+    feed_weight_channel(ws0, backup_pkts, w0_start, w0_count);
     if (cfg.topo == PE_TOPO_SPLITCAT) {
-        feed_weight_channel(g_ws1, backup_pkts, w1_start, w1_count);
-        feed_weight_channel(g_ws2, backup_pkts, w2_start, w2_count);
+        feed_weight_channel(ws1, backup_pkts, w1_start, w1_count);
+        feed_weight_channel(ws2, backup_pkts, w2_start, w2_count);
         if (cfg.post_route != PE_POST_CONCAT) {
-            feed_weight_channel(g_ws3, backup_pkts, w3_start, w3_count);
+            feed_weight_channel(ws3, backup_pkts, w3_start, w3_count);
         }
     }
 
@@ -500,14 +500,14 @@ bool PEParallelBlock::run(
 
     if (is_straight) {
         for (int i = 0; i < total_in; i++) {
-            g_straight_in.write(input_stream.read());
+            straight_in.write(input_stream.read());
         }
     } else {
         if (cfg.use_input_split) {
             split_stream(
                 input_stream,
-                g_a1_in,
-                g_b1_in,
+                a1_in,
+                b1_in,
                 cfg.pe0.in_h,
                 cfg.pe0.in_w,
                 cfg.pe0.in_ch + cfg.pe2.in_ch,
@@ -516,8 +516,8 @@ bool PEParallelBlock::run(
         } else {
             fork_stream(
                 input_stream,
-                g_a1_in,
-                g_b1_in,
+                a1_in,
+                b1_in,
                 cfg.pe0.in_h,
                 cfg.pe0.in_w,
                 cfg.pe0.in_ch
@@ -525,10 +525,10 @@ bool PEParallelBlock::run(
         }
     }
 
-    ac_channel<pe_packed_act_t> *pe0_in_ch = is_straight ? &g_straight_in : &g_a1_in;
-    ac_channel<pe_packed_act_t> *pe0_out_ch = is_straight ? &g_block_out : &g_a1_out;
+    ac_channel<pe_packed_act_t> *pe0_in_ch = is_straight ? &straight_in : &a1_in;
+    ac_channel<pe_packed_act_t> *pe0_out_ch = is_straight ? &block_out : &a1_out;
     if (ok) {
-        ok = pe0.run(cfg.pe0, *pe0_in_ch, g_ws0, *pe0_out_ch);
+        ok = pe0.run(cfg.pe0, *pe0_in_ch, ws0, *pe0_out_ch);
     }
 
     if (is_straight) {
@@ -538,17 +538,17 @@ bool PEParallelBlock::run(
         route_valid = true;
     } else {
         if (ok) {
-            ok = pe1.run(cfg.pe1, g_a1_out, g_ws1, g_a2_out);
+            ok = pe1.run(cfg.pe1, a1_out, ws1, a2_out);
         }
         if (ok) {
-            ok = pe2.run(cfg.pe2, g_b1_in, g_ws2, g_b1_out);
+            ok = pe2.run(cfg.pe2, b1_in, ws2, b1_out);
         }
 
         if (ok && cfg.post_route == PE_POST_CONCAT) {
             concat_stream(
-                g_a2_out,
+                a2_out,
                 cfg.pe1.out_ch,
-                g_b1_out,
+                b1_out,
                 cfg.pe2.out_ch,
                 output_stream,
                 cfg.pe1.out_h,
@@ -556,15 +556,15 @@ bool PEParallelBlock::run(
             );
         } else if (ok) {
             concat_stream(
-                g_a2_out,
+                a2_out,
                 cfg.pe1.out_ch,
-                g_b1_out,
+                b1_out,
                 cfg.pe2.out_ch,
-                g_cat_for_pe3,
+                cat_for_pe3,
                 cfg.pe1.out_h,
                 cfg.pe1.out_w
             );
-            ok = pe3.run(cfg.pe3, g_cat_for_pe3, g_ws3, g_block_out);
+            ok = pe3.run(cfg.pe3, cat_for_pe3, ws3, block_out);
             route_h = cfg.pe3.out_h;
             route_w = cfg.pe3.out_w;
             route_ch = cfg.pe3.out_ch;
@@ -578,7 +578,7 @@ bool PEParallelBlock::run(
 
         if (cfg.post_route == PE_POST_BRANCH) {
             for (int i = 0; i < route_pkt_count; i++) {
-                pe_packed_act_t pkt = g_block_out.read();
+                pe_packed_act_t pkt = block_out.read();
                 g_route_buf[i] = pkt;
                 output_stream.write(pkt);
             }
@@ -587,7 +587,7 @@ bool PEParallelBlock::run(
             }
         } else if (cfg.post_route == PE_POST_SPLIT) {
             split_stream_to_output(
-                g_block_out,
+                block_out,
                 output_stream,
                 route_h,
                 route_w,
@@ -596,7 +596,7 @@ bool PEParallelBlock::run(
             );
         } else {
             for (int i = 0; i < route_pkt_count; i++) {
-                output_stream.write(g_block_out.read());
+                output_stream.write(block_out.read());
             }
         }
     }
@@ -606,13 +606,13 @@ bool PEParallelBlock::run(
     bool ws2_left = false;
     bool ws3_left = false;
     if (cfg.topo == PE_TOPO_SPLITCAT) {
-        ws1_left = g_ws1.available(1);
-        ws2_left = g_ws2.available(1);
+        ws1_left = ws1.available(1);
+        ws2_left = ws2.available(1);
         if (cfg.post_route != PE_POST_CONCAT) {
-            ws3_left = g_ws3.available(1);
+            ws3_left = ws3.available(1);
         }
     }
-    if (ok && (g_ws0.available(1) || ws1_left || ws2_left || ws3_left)) {
+    if (ok && (ws0.available(1) || ws1_left || ws2_left || ws3_left)) {
         ok = false;
     }
 #endif

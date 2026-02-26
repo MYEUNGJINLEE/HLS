@@ -9,6 +9,17 @@ solution new -state initial
 solution options defaults
 solution options set /Output/GenerateCycleNetlist false
 
+# HIER-10 is promoted to Error by default in Message/ErrorOverride.
+# For this PE flow, local static channels are intentional; restore HIER-10 to warning.
+set err_override [options get Message/ErrorOverride]
+set err_override_new {}
+foreach msg_id $err_override {
+    if {$msg_id ne "HIER-10"} {
+        lappend err_override_new $msg_id
+    }
+}
+options set Message/ErrorOverride $err_override_new
+
 solution file add ./include/pe_types.h          -type C++
 solution file add ./include/pe_packets.h        -type C++
 solution file add ./include/pe_config.h         -type C++
