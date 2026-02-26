@@ -67,15 +67,21 @@ private:
     // no port conflict → keep as BRAM.
 
     // DS Conv input line buffer: 8 rows × 160 cols, 32 channels packed as 256-bit
-    // stem_packed_32ch_t = ac_int<256,false> = 32ch × 8bit per (row,col)
-    // Packing channels eliminates ch dimension → EXTRACT reads: 288(9×32) → 9(KR×KC only)
-    // TCL partition dim=1 (rows=8) → 8 BRAMs; 3 KC reads/row = 24 BRAM instances total
+    // One 256-bit write per (row,col) in Stage 1.
+    // Sliding window reads: 1 new column per KR row per in_col step → no port conflict.
     stem_packed_32ch_t ds_input_buf[BB_LINE_ROWS][B1_DS_IN_W];
 
     // C3A2 Conv input line buffer: 8 rows × 80 cols, 32 channels packed as 256-bit
-    // Same packing strategy: EXTRACT reads 288 → 9 (eliminates SCHD-4 BRAM port conflict)
-    // TCL partition dim=1 (rows=8) → 8 BRAMs × [80] × 256-bit; 3 KC reads/row = 24 BRAM instances
+    // One 256-bit write per (row,col) in Stage 2.
+    // Sliding window reads: 1 new column per KR row per out_col step → no port conflict.
     stem_packed_32ch_t c3a2_input_buf[BB_LINE_ROWS][B1_C3_W];
+
+    // ── Sliding window registers (3 KC columns × BB_LINE_ROWS × 32 ch) ──
+    // Size: 8×3×32×8 = 6144 bits < MEM_MAP_THRESHOLD(8192) → synthesised as registers.
+    // Only the 3 KR rows active for the current output row are updated each column step.
+    // Window extraction (KR×KC×CH) reads only these registers → zero BRAM port pressure.
+    stem_act_t ds_win  [BB_LINE_ROWS][3][B1_DS_IN_CH];   // DS Conv  sliding window
+    stem_act_t c3a2_win[BB_LINE_ROWS][3][B1_C3A2_IC];    // C3A2 Conv sliding window
 
     // DS output save buffer for C3B1: 2-slot circular × 80 cols × 64 channels
     // Slot index = ds_out_row & 1

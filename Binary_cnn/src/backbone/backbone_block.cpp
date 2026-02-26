@@ -236,42 +236,76 @@ void BackboneBlock1::run(
             if (ds_can_out) {
                 const int ds_row_slot = ds_out_row & 1;      // ds_save_buf slot
                 const int c3a2_buf_row = ds_out_row & BB_LINE_MASK;  // c3a2_input_buf row
+                const int in_row_start = ds_out_row * 2 - B1_DS_P;  // first KR input row
 
+                // ── Init ds_win: zero the 3 KR rows (provides left-edge zero padding) ──
+                DS_WIN_INIT:
+                for (int kr = 0; kr < 3; kr++) {
+                    const int in_row_i = in_row_start + kr;
+                    if (in_row_i >= 0 && in_row_i < B1_DS_IN_H) {
+                        const int row_i = in_row_i & BB_LINE_MASK;
+                        DS_WIN_INIT_KC:
+                        #pragma hls_unroll yes
+                        for (int kc = 0; kc < 3; kc++) {
+                            DS_WIN_INIT_CH:
+                            #pragma hls_unroll yes
+                            for (int ch = 0; ch < B1_DS_IN_CH; ch++) {
+                                ds_win[row_i][kc][ch] = 0;
+                            }
+                        }
+                    }
+                }
+
+                // ── Sweep input columns; produce DS+C3A1 output at odd in_col ──
+                // After slide at in_col=N: ds_win[kr_row][kc] = input col (N-2+kc).
+                // At in_col=2c+1 (odd): window holds {2c-1, 2c, 2c+1} → DS out_col=c.
                 STAGE2_COL:
-                #pragma hls_pipeline_init_interval 1
-                for (int col = 0; col < B1_DS_OUT_W; col++) {
+                for (int in_col = 0; in_col < B1_DS_IN_W; in_col++) {
 
-                    // -- Extract 3×3 window from ds_input_buf (32 channels) --
+                    // Slide: shift window left + load column in_col (1 BRAM read per KR row)
+                    SLIDE_DS:
+                    for (int kr = 0; kr < 3; kr++) {
+                        const int in_row_s = in_row_start + kr;
+                        if (in_row_s >= 0 && in_row_s < B1_DS_IN_H) {
+                            const int row_s = in_row_s & BB_LINE_MASK;
+                            SLIDE_DS_SHIFT:
+                            #pragma hls_unroll yes
+                            for (int ch = 0; ch < B1_DS_IN_CH; ch++) {
+                                ds_win[row_s][0][ch] = ds_win[row_s][1][ch];
+                                ds_win[row_s][1][ch] = ds_win[row_s][2][ch];
+                            }
+                            stem_packed_32ch_t ds_packed = ds_input_buf[row_s][in_col];
+                            SLIDE_DS_UNPACK:
+                            #pragma hls_unroll yes
+                            for (int ch = 0; ch < B1_DS_IN_CH; ch++) {
+                                ds_win[row_s][2][ch].set_slc(0, ds_packed.slc<8>(ch * 8));
+                            }
+                        }
+                    }
+
+                    // DS computation only at odd input columns (= DS output column boundary)
+                    if ((in_col & 1) == 1) {
+                    const int out_col = (in_col - 1) >> 1;
+
+                    // Extract 3×3×32 window from ds_win registers (pure register reads, no BRAM)
                     stem_act_t ds_window[3][3][B1_DS_IN_CH];
                     #pragma hls_array_partition variable=ds_window complete dim=3
-
-                    const int in_row_start = ds_out_row * 2 - B1_DS_P;
-                    const int in_col_start = col * 2 - B1_DS_P;
 
                     EXTRACT_DS_KR:
                     #pragma hls_unroll yes
                     for (int kr = 0; kr < 3; kr++) {
+                        const int in_row = in_row_start + kr;
+                        const int buf_row = in_row & BB_LINE_MASK;
                         EXTRACT_DS_KC:
                         #pragma hls_unroll yes
                         for (int kc = 0; kc < 3; kc++) {
-                            const int in_row = in_row_start + kr;
-                            const int in_col = in_col_start + kc;
-                            if (in_row < 0 || in_row >= B1_DS_IN_H ||
-                                in_col < 0 || in_col >= B1_DS_IN_W) {
-                                ZERO_DS:
-                                #pragma hls_unroll yes
-                                for (int ch = 0; ch < B1_DS_IN_CH; ch++) {
-                                    ds_window[kr][kc][ch] = 0;
-                                }
-                            } else {
-                                const int buf_row = in_row & BB_LINE_MASK;
-                                // Single 256-bit read → unpack via bit-slice (combinational)
-                                stem_packed_32ch_t packed = ds_input_buf[buf_row][in_col];
-                                UNPACK_DS:
-                                #pragma hls_unroll yes
-                                for (int ch = 0; ch < B1_DS_IN_CH; ch++) {
-                                    ds_window[kr][kc][ch].set_slc(0, packed.slc<8>(ch * 8));
-                                }
+                            EXTRACT_DS_CH:
+                            #pragma hls_unroll yes
+                            for (int ch = 0; ch < B1_DS_IN_CH; ch++) {
+                                ds_window[kr][kc][ch] =
+                                    (in_row >= 0 && in_row < B1_DS_IN_H)
+                                    ? ds_win[buf_row][kc][ch]
+                                    : (stem_act_t)0;
                             }
                         }
                     }
@@ -349,7 +383,7 @@ void BackboneBlock1::run(
                     DS_SAVE:
                     #pragma hls_pipeline_init_interval 1
                     for (int ch = 0; ch < B1_DS_OUT_CH; ch++) {
-                        ds_save_buf[ds_row_slot][col][ch] = ds_out[ch];
+                        ds_save_buf[ds_row_slot][out_col][ch] = ds_out[ch];
                     }
 
                     // -- C3A1 Conv1×1: 64 IC → 32 OC (from ds_out, point-wise) --
@@ -414,7 +448,9 @@ void BackboneBlock1::run(
                     for (int oc = 0; oc < B1_C3A1_OC; oc++) {
                         c3a2_packed.set_slc(oc * 8, c3a1_out_vals[oc].slc<8>(0));
                     }
-                    c3a2_input_buf[c3a2_buf_row][col] = c3a2_packed;
+                    c3a2_input_buf[c3a2_buf_row][out_col] = c3a2_packed;
+
+                    }  // end if odd in_col (DS computation)
 
                 }  // end STAGE2_COL
 
@@ -440,14 +476,49 @@ void BackboneBlock1::run(
 
             if (c3a2_can_out) {
                 // C3B1 reads from ds_save_buf at slot c3a2_out_row & 1
-                // This slot was written when ds_out_row == c3a2_out_row,
-                // and will not be overwritten until ds_out_row == c3a2_out_row+2.
-                // Since c3a2_out_row < ds_out_row (ensured by can_out condition),
-                // the slot is safe.
                 const int c3b1_slot = c3a2_out_row & 1;
+                const int c3a2_in_row_start = c3a2_out_row - 1;  // stride=1, pad=1
+
+                // ── Init c3a2_win: pre-load cols 0 and 1 for the 3 KR rows ──
+                // Invariant entering col c: c3a2_win[kr_row][kc] = input col (c-1+kc)
+                // Init: {col-1=pad(0), col0, col1} before col=0.
+                C3A2_WIN_INIT:
+                for (int kr = 0; kr < 3; kr++) {
+                    const int in_row_i = c3a2_in_row_start + kr;
+                    const int row_i    = in_row_i & BB_LINE_MASK;
+                    // kc=0: left-edge padding
+                    C3A2_WIN_INIT_PAD:
+                    #pragma hls_unroll yes
+                    for (int ch = 0; ch < B1_C3A2_IC; ch++) {
+                        c3a2_win[row_i][0][ch] = 0;
+                    }
+                    if (in_row_i >= 0 && in_row_i < B1_C3_H) {
+                        // kc=1: col 0
+                        stem_packed_32ch_t pk0 = c3a2_input_buf[row_i][0];
+                        C3A2_WIN_INIT_C0:
+                        #pragma hls_unroll yes
+                        for (int ch = 0; ch < B1_C3A2_IC; ch++) {
+                            c3a2_win[row_i][1][ch].set_slc(0, pk0.slc<8>(ch * 8));
+                        }
+                        // kc=2: col 1 (right edge of window for col=0)
+                        stem_packed_32ch_t pk1 = c3a2_input_buf[row_i][1];
+                        C3A2_WIN_INIT_C1:
+                        #pragma hls_unroll yes
+                        for (int ch = 0; ch < B1_C3A2_IC; ch++) {
+                            c3a2_win[row_i][2][ch].set_slc(0, pk1.slc<8>(ch * 8));
+                        }
+                    } else {
+                        // Row OOB: all zeros
+                        C3A2_WIN_INIT_OOB:
+                        #pragma hls_unroll yes
+                        for (int ch = 0; ch < B1_C3A2_IC; ch++) {
+                            c3a2_win[row_i][1][ch] = 0;
+                            c3a2_win[row_i][2][ch] = 0;
+                        }
+                    }
+                }
 
                 STAGE3_COL:
-                #pragma hls_pipeline_init_interval 1
                 for (int col = 0; col < B1_C3_W; col++) {
 
                     // -- Preload DS saved output for C3B1 (64 channels → registers) --
@@ -460,37 +531,25 @@ void BackboneBlock1::run(
                         ds_local[ch] = ds_save_buf[c3b1_slot][col][ch];
                     }
 
-                    // -- Extract 3×3 window from c3a2_input_buf (32 channels) --
+                    // -- Extract 3×3 window from c3a2_win registers (no BRAM reads) --
                     stem_act_t c3a2_window[3][3][B1_C3A2_IC];
                     #pragma hls_array_partition variable=c3a2_window complete dim=3
-
-                    const int in_row_start = c3a2_out_row - 1;  // stride=1, pad=1
-                    const int in_col_start = col - 1;
 
                     EXTRACT_C3A2_KR:
                     #pragma hls_unroll yes
                     for (int kr = 0; kr < 3; kr++) {
+                        const int in_row = c3a2_in_row_start + kr;
+                        const int buf_row = in_row & BB_LINE_MASK;
                         EXTRACT_C3A2_KC:
                         #pragma hls_unroll yes
                         for (int kc = 0; kc < 3; kc++) {
-                            const int in_row = in_row_start + kr;
-                            const int in_col = in_col_start + kc;
-                            if (in_row < 0 || in_row >= B1_C3_H ||
-                                in_col < 0 || in_col >= B1_C3_W) {
-                                ZERO_C3A2:
-                                #pragma hls_unroll yes
-                                for (int ch = 0; ch < B1_C3A2_IC; ch++) {
-                                    c3a2_window[kr][kc][ch] = 0;
-                                }
-                            } else {
-                                const int buf_row = in_row & BB_LINE_MASK;
-                                // Single 256-bit read → unpack via bit-slice (combinational)
-                                stem_packed_32ch_t packed = c3a2_input_buf[buf_row][in_col];
-                                UNPACK_C3A2:
-                                #pragma hls_unroll yes
-                                for (int ch = 0; ch < B1_C3A2_IC; ch++) {
-                                    c3a2_window[kr][kc][ch].set_slc(0, packed.slc<8>(ch * 8));
-                                }
+                            EXTRACT_C3A2_CH:
+                            #pragma hls_unroll yes
+                            for (int ch = 0; ch < B1_C3A2_IC; ch++) {
+                                c3a2_window[kr][kc][ch] =
+                                    (in_row >= 0 && in_row < B1_C3_H)
+                                    ? c3a2_win[buf_row][kc][ch]
+                                    : (stem_act_t)0;
                             }
                         }
                     }
@@ -688,6 +747,37 @@ void BackboneBlock1::run(
                         out_pkt.set_slc(ch * 8, final_out[ch].slc<8>(0));
                     }
                     output_stream.write(out_pkt);
+
+                    // ── Slide c3a2 window: shift + load col+2 for next iteration ──
+                    // After col c, next iteration needs {c, c+1, c+2} → shift left, load c+2.
+                    SLIDE_C3A2:
+                    for (int kr = 0; kr < 3; kr++) {
+                        const int in_row_sl = c3a2_in_row_start + kr;
+                        if (in_row_sl >= 0 && in_row_sl < B1_C3_H) {
+                            const int row_sl = in_row_sl & BB_LINE_MASK;
+                            SLIDE_C3A2_SHIFT:
+                            #pragma hls_unroll yes
+                            for (int ch = 0; ch < B1_C3A2_IC; ch++) {
+                                c3a2_win[row_sl][0][ch] = c3a2_win[row_sl][1][ch];
+                                c3a2_win[row_sl][1][ch] = c3a2_win[row_sl][2][ch];
+                            }
+                            const int next_col = col + 2;
+                            if (next_col < B1_C3_W) {
+                                stem_packed_32ch_t sl_packed = c3a2_input_buf[row_sl][next_col];
+                                SLIDE_C3A2_UNPACK:
+                                #pragma hls_unroll yes
+                                for (int ch = 0; ch < B1_C3A2_IC; ch++) {
+                                    c3a2_win[row_sl][2][ch].set_slc(0, sl_packed.slc<8>(ch * 8));
+                                }
+                            } else {
+                                SLIDE_C3A2_PAD:
+                                #pragma hls_unroll yes
+                                for (int ch = 0; ch < B1_C3A2_IC; ch++) {
+                                    c3a2_win[row_sl][2][ch] = 0;
+                                }
+                            }
+                        }
+                    }
 
                 }  // end STAGE3_COL
 
