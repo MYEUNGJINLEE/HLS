@@ -11,10 +11,10 @@ static ac_channel<pe_packed_act_t> g_b1_in;
 static ac_channel<pe_packed_act_t> g_a1_out;
 static ac_channel<pe_packed_act_t> g_a2_out;
 static ac_channel<pe_packed_act_t> g_b1_out;
-static ac_channel<pe_packed_act_t> g_cat_in;
+static ac_channel<pe_packed_act_t> g_cat_for_pe3;
 static ac_channel<pe_packed_act_t> g_block_out;
-static ac_channel<pe_packed_act_t> g_post_split_a;
-static ac_channel<pe_packed_act_t> g_post_split_b;
+
+static pe_packed_act_t g_split_b_buf[PE_MAX_H * PE_MAX_W * PE_MAX_PACKS_PER_PIXEL];
 
 pe_act_t PEParallelBlock::unpack_lane(const pe_packed_act_t &pkt, int lane) {
     pe_act_t v = 0;
@@ -289,6 +289,63 @@ void PEParallelBlock::split_stream(
     }
 }
 
+void PEParallelBlock::split_stream_to_output(
+    ac_channel<pe_packed_act_t> &in_stream,
+    ac_channel<pe_packed_act_t> &out_stream,
+    int h,
+    int w,
+    int in_ch,
+    int split_a_ch
+) {
+    const int split_b_ch = in_ch - split_a_ch;
+    const int in_packs = pe_packs_per_pixel(in_ch);
+    const int out_a_packs = pe_packs_per_pixel(split_a_ch);
+    const int out_b_packs = pe_packs_per_pixel(split_b_ch);
+
+    pe_act_t pixel[PE_MAX_CH];
+    int b_idx = 0;
+
+    for (int r = 0; r < h; r++) {
+        for (int c = 0; c < w; c++) {
+            for (int p = 0; p < in_packs; p++) {
+                pe_packed_act_t pkt = in_stream.read();
+                for (int lane = 0; lane < PE_CH_PACK; lane++) {
+                    const int ch = p * PE_CH_PACK + lane;
+                    if (ch < in_ch) {
+                        pixel[ch] = unpack_lane(pkt, lane);
+                    }
+                }
+            }
+
+            for (int p = 0; p < out_a_packs; p++) {
+                pe_packed_act_t pkt = 0;
+                for (int lane = 0; lane < PE_CH_PACK; lane++) {
+                    const int ch = p * PE_CH_PACK + lane;
+                    if (ch < split_a_ch) {
+                        pack_lane(pkt, lane, pixel[ch]);
+                    }
+                }
+                out_stream.write(pkt);
+            }
+
+            for (int p = 0; p < out_b_packs; p++) {
+                pe_packed_act_t pkt = 0;
+                for (int lane = 0; lane < PE_CH_PACK; lane++) {
+                    const int ch = p * PE_CH_PACK + lane;
+                    if (ch < split_b_ch) {
+                        pack_lane(pkt, lane, pixel[split_a_ch + ch]);
+                    }
+                }
+                g_split_b_buf[b_idx++] = pkt;
+            }
+        }
+    }
+
+    for (int i = 0; i < b_idx; i++) {
+        out_stream.write(g_split_b_buf[i]);
+    }
+}
+
 void PEParallelBlock::concat_stream(
     ac_channel<pe_packed_act_t> &in_a,
     int ch_a,
@@ -413,7 +470,7 @@ bool PEParallelBlock::run(
     int route_h = 0;
     int route_w = 0;
     int route_ch = 0;
-    bool route_from_concat = false;
+    bool route_valid = false;
 
     if (cfg.topo == PE_TOPO_STRAIGHT) {
         for (int i = 0; i < total_in; i++) {
@@ -424,7 +481,7 @@ bool PEParallelBlock::run(
         route_h = cfg.pe0.out_h;
         route_w = cfg.pe0.out_w;
         route_ch = cfg.pe0.out_ch;
-        route_from_concat = false;
+        route_valid = true;
 #if !defined(__SYNTHESIS__)
         if (ok && g_ws0.available(1)) {
             ok = false;
@@ -462,98 +519,57 @@ bool PEParallelBlock::run(
             ok = pe2.run(cfg.pe2, g_b1_in, g_ws2, g_b1_out);
         }
 
-        if (ok) {
+        if (ok && cfg.post_route == PE_POST_CONCAT) {
             concat_stream(
                 g_a2_out,
                 cfg.pe1.out_ch,
                 g_b1_out,
                 cfg.pe2.out_ch,
-                g_cat_in,
+                output_stream,
                 cfg.pe1.out_h,
                 cfg.pe1.out_w
             );
-        }
-
-        if (ok && cfg.post_route == PE_POST_CONCAT) {
-            route_h = cfg.pe3.in_h;
-            route_w = cfg.pe3.in_w;
-            route_ch = cfg.pe3.in_ch;
-            route_from_concat = true;
         } else if (ok) {
-            ok = pe3.run(cfg.pe3, g_cat_in, g_ws3, g_block_out);
+            concat_stream(
+                g_a2_out,
+                cfg.pe1.out_ch,
+                g_b1_out,
+                cfg.pe2.out_ch,
+                g_cat_for_pe3,
+                cfg.pe1.out_h,
+                cfg.pe1.out_w
+            );
+            ok = pe3.run(cfg.pe3, g_cat_for_pe3, g_ws3, g_block_out);
             route_h = cfg.pe3.out_h;
             route_w = cfg.pe3.out_w;
             route_ch = cfg.pe3.out_ch;
-            route_from_concat = false;
+            route_valid = true;
         }
     }
 
-    if (ok) {
+    if (ok && route_valid) {
         const int route_packs = pe_packs_per_pixel(route_ch);
         const int route_pkt_count = route_h * route_w * route_packs;
 
         if (cfg.post_route == PE_POST_BRANCH) {
-            if (route_from_concat) {
-                for (int i = 0; i < route_pkt_count; i++) {
-                    pe_packed_act_t pkt = g_cat_in.read();
-                    output_stream.write(pkt);
-                    output_stream.write(pkt);
-                }
-            } else {
-                for (int i = 0; i < route_pkt_count; i++) {
-                    pe_packed_act_t pkt = g_block_out.read();
-                    output_stream.write(pkt);
-                    output_stream.write(pkt);
-                }
+            for (int i = 0; i < route_pkt_count; i++) {
+                pe_packed_act_t pkt = g_block_out.read();
+                output_stream.write(pkt);
+                output_stream.write(pkt);
             }
         } else if (cfg.post_route == PE_POST_SPLIT) {
-            if (route_from_concat) {
-                split_stream(
-                    g_cat_in,
-                    g_post_split_a,
-                    g_post_split_b,
-                    route_h,
-                    route_w,
-                    route_ch,
-                    cfg.post_split_a_ch
-                );
-            } else {
-                split_stream(
-                    g_block_out,
-                    g_post_split_a,
-                    g_post_split_b,
-                    route_h,
-                    route_w,
-                    route_ch,
-                    cfg.post_split_a_ch
-                );
-            }
-
-            const int split_a_packs = pe_packs_per_pixel(cfg.post_split_a_ch);
-            const int split_b_packs = pe_packs_per_pixel(route_ch - cfg.post_split_a_ch);
-            const int split_a_pkt = route_h * route_w * split_a_packs;
-            const int split_b_pkt = route_h * route_w * split_b_packs;
-
-            for (int i = 0; i < split_a_pkt; i++) {
-                output_stream.write(g_post_split_a.read());
-            }
-            for (int i = 0; i < split_b_pkt; i++) {
-                output_stream.write(g_post_split_b.read());
-            }
+            split_stream_to_output(
+                g_block_out,
+                output_stream,
+                route_h,
+                route_w,
+                route_ch,
+                cfg.post_split_a_ch
+            );
         } else {
-            if (route_from_concat) {
-                for (int i = 0; i < route_pkt_count; i++) {
-                    output_stream.write(g_cat_in.read());
-                }
-            } else {
-                for (int i = 0; i < route_pkt_count; i++) {
-                    output_stream.write(g_block_out.read());
-                }
+            for (int i = 0; i < route_pkt_count; i++) {
+                output_stream.write(g_block_out.read());
             }
-        }
-
-        if (cfg.post_route == PE_POST_CONCAT) {
-            // CONCAT mode bypasses pe3 by construction.
         }
     }
 

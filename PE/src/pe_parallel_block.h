@@ -79,6 +79,15 @@ private:
         int split_a_ch
     );
 
+    void split_stream_to_output(
+        ac_channel<pe_packed_act_t> &in_stream,
+        ac_channel<pe_packed_act_t> &out_stream,
+        int h,
+        int w,
+        int in_ch,
+        int split_a_ch
+    );
+
     void concat_stream(
         ac_channel<pe_packed_act_t> &in_a,
         int ch_a,
