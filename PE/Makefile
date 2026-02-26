@@ -36,10 +36,17 @@ tb: compile
 	fi; \
 	if [ -z "$$SCV_MK" ]; then echo "SCVerify makefile not found under $$SOL_DIR"; exit 1; fi; \
 	mkdir -p logs; \
-	SCV_DIR=$$(dirname "$$SCV_MK"); \
-	SCV_BASENAME=$$(basename "$$SCV_MK"); \
-	make -C "$$SCV_DIR" -f "$$SCV_BASENAME" SIMTOOL=osci build 2>&1 | tee logs/scverify_pe_build.log; \
-	make -C "$$SCV_DIR" -f "$$SCV_BASENAME" SIMTOOL=osci sim 2>&1 | tee logs/scverify_pe_sim.log
+	ROOT_DIR=$$(pwd); \
+	PROJ_DIR=$$(dirname "$$SOL_DIR"); \
+	PROJ_DIR_ABS="$$ROOT_DIR/$$PROJ_DIR"; \
+	SCV_MK_ABS="$$ROOT_DIR/$$SCV_MK"; \
+	LAUNCH_TCL="$$ROOT_DIR/logs/pe_scverify_launch.tcl"; \
+	printf "if {![file isdirectory {%s}]} { error {missing PE project directory} }\nproject load {%s} 2025.2\nflow package require /SCVerify\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci build\nflow run /SCVerify/launch_make %s {} SIMTOOL=osci sim\nexit\n" "$$PROJ_DIR_ABS" "$$PROJ_DIR_ABS" "$$SCV_MK_ABS" "$$SCV_MK_ABS" > "$$LAUNCH_TCL"; \
+	catapult -shell -file "$$LAUNCH_TCL" > logs/scverify_pe.log 2>&1; \
+	SCV_RC=$$?; \
+	cat logs/scverify_pe.log; \
+	rm -f "$$LAUNCH_TCL"; \
+	if [ "$$SCV_RC" -ne 0 ]; then exit "$$SCV_RC"; fi
 
 clean:
 	rm -rf PE PE.ccs pe.ccs logs catapult.log catapult_pid* .Catapult*
