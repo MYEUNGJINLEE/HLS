@@ -90,26 +90,23 @@ Important: when `post_route == PE_POST_CONCAT`, `pe3` weights are not fetched.
 - `tb/pe_reference_model.h`: scalar reference model
 - `tb/pe_parallel_block_tb.cpp`: deterministic + random + fail tests
 - `scripts/run_pe_catapult.tcl`: Catapult flow script
-- `Makefile`: local build/compile/gui aliases
+- `Makefile`: local clean/compile/tb/gui targets
 
 ## 6) Build and Run Commands
 
 Inside `PE/`:
 
-- Full flow: `make pe`
-- Analyze only: `make pe-analyze`
-- Compile only: `make pe-compile`
-- Compile aliases: `make compile`, `make comple`, `make COMPILE`, `make COMPLE`
-- GUI: `make pe-gui` or `make gui`
-- TB: `make pe-tb`
-- Clean: `make clean` (also `make pe-clean`)
+- Compile: `make compile`
+- TB: `make tb` (runs compile, then SCVerify build/sim)
+- GUI: `make gui`
+- Clean: `make clean`
 
 GUI behavior:
 - `make gui` resolves `.ccs`, normalizes to `pe.ccs`, then runs:
   - `catapult -f pe.ccs &`
 
 From repo root (proxy targets exist):
-- `make pe`, `make pe-log`, `make pe-tb`, `make pe-clean`, `make pe-gui`
+- `make pe`, `make pe-clean`, `make pe-gui`
 
 ## 7) Catapult Notes / Previous Error Context
 

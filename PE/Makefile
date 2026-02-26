@@ -1,38 +1,17 @@
-.PHONY: pe pe-log pe-analyze pe-analyze-log pe-compile pe-compile-log pe-gui pe-tb pe-tb-fast pe-clean clean
-.PHONY: compile comple COMPILE COMPLE gui GUI
+.PHONY: clean compile gui tb
 .SILENT:
 
-pe: pe-clean
-	mkdir -p logs
-	catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe.log
-
-pe-log: pe
-
-pe-analyze: pe-clean
-	mkdir -p logs
-	PE_ANALYZE_ONLY=1 catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe_analyze.log
-
-pe-analyze-log: pe-analyze
-
-pe-compile: pe-clean
+compile: clean
 	mkdir -p logs
 	PE_COMPILE_ONLY=1 catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe_compile.log
 
-pe-compile-log: pe-compile
-
-compile: pe-compile
-
-comple: pe-compile
-
-COMPILE: pe-compile
-
-COMPLE: pe-compile
-
-pe-gui:
+gui:
 	PRJ=$$(ls -t pe.ccs PE.ccs pe*.ccs PE*.ccs 2>/dev/null | head -n 1); \
 	if [ -z "$$PRJ" ]; then \
-		echo "No PE.ccs found. Running batch flow once to create project..."; \
-		catapult -shell -file scripts/run_pe_catapult.tcl; \
+		echo "No .ccs found. Running compile first..."; \
+		rm -rf PE PE.ccs pe.ccs logs catapult.log catapult_pid* .Catapult*; \
+		mkdir -p logs; \
+		PE_COMPILE_ONLY=1 catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe_compile.log; \
 		PRJ=$$(ls -t pe.ccs PE.ccs pe*.ccs PE*.ccs 2>/dev/null | head -n 1); \
 	fi; \
 	if [ -n "$$PRJ" ]; then \
@@ -42,39 +21,25 @@ pe-gui:
 		echo "Could not find PE project file."; exit 1; \
 	fi
 
-gui: pe-gui
-
-GUI: pe-gui
-
-pe-tb: pe-clean
-	mkdir -p logs
-	catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe.log
+tb: compile
 	SOL_DIR=$$(ls -d PE/PEParallelBlock.v* PE/solution.v* 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$SOL_DIR" ]; then echo "No PE solution directory found."; exit 1; fi; \
-	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_orig_cxx_osci.mk" 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/verify_orig_cxx_osci.mk" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
 	if [ -z "$$SCV_MK" ]; then \
 		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
 	fi; \
 	if [ -z "$$SCV_MK" ]; then echo "SCVerify makefile not found under $$SOL_DIR"; exit 1; fi; \
+	mkdir -p logs; \
 	SCV_DIR=$$(dirname "$$SCV_MK"); \
 	SCV_BASENAME=$$(basename "$$SCV_MK"); \
-	$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_pe_sim.log
-
-pe-tb-fast: pe-clean
-	mkdir -p logs
-	catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe.log
-	SOL_DIR=$$(ls -d PE/PEParallelBlock.v* PE/solution.v* 2>/dev/null | sort -V | tail -n 1); \
-	if [ -z "$$SOL_DIR" ]; then echo "No PE solution directory found."; exit 1; fi; \
-	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
-	if [ -z "$$SCV_MK" ]; then \
-		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
-	fi; \
-	if [ -z "$$SCV_MK" ]; then echo "SCVerify makefile not found under $$SOL_DIR"; exit 1; fi; \
-	SCV_DIR=$$(dirname "$$SCV_MK"); \
-	SCV_BASENAME=$$(basename "$$SCV_MK"); \
-	PE_TB_RANDOM_CASES=20 $(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_pe_sim_fast.log
+	make -C "$$SCV_DIR" -f "$$SCV_BASENAME" SIMTOOL=osci build 2>&1 | tee logs/scverify_pe_build.log; \
+	make -C "$$SCV_DIR" -f "$$SCV_BASENAME" SIMTOOL=osci sim 2>&1 | tee logs/scverify_pe_sim.log
 
 clean:
 	rm -rf PE PE.ccs pe.ccs logs catapult.log catapult_pid* .Catapult*
-
-pe-clean: clean

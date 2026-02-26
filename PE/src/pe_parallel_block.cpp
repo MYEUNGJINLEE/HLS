@@ -496,22 +496,12 @@ bool PEParallelBlock::run(
     int route_w = 0;
     int route_ch = 0;
     bool route_valid = false;
+    const bool is_straight = (cfg.topo == PE_TOPO_STRAIGHT);
 
-    if (cfg.topo == PE_TOPO_STRAIGHT) {
+    if (is_straight) {
         for (int i = 0; i < total_in; i++) {
             g_straight_in.write(input_stream.read());
         }
-
-        ok = pe0.run(cfg.pe0, g_straight_in, g_ws0, g_block_out);
-        route_h = cfg.pe0.out_h;
-        route_w = cfg.pe0.out_w;
-        route_ch = cfg.pe0.out_ch;
-        route_valid = true;
-#if !defined(__SYNTHESIS__)
-        if (ok && g_ws0.available(1)) {
-            ok = false;
-        }
-#endif
     } else {
         if (cfg.use_input_split) {
             split_stream(
@@ -533,10 +523,26 @@ bool PEParallelBlock::run(
                 cfg.pe0.in_ch
             );
         }
+    }
 
-        if (ok) {
-            ok = pe0.run(cfg.pe0, g_a1_in, g_ws0, g_a1_out);
+    ac_channel<pe_packed_act_t> *pe0_in_ch = is_straight ? &g_straight_in : &g_a1_in;
+    ac_channel<pe_packed_act_t> *pe0_out_ch = is_straight ? &g_block_out : &g_a1_out;
+
+    if (ok) {
+        ok = pe0.run(cfg.pe0, *pe0_in_ch, g_ws0, *pe0_out_ch);
+    }
+
+    if (is_straight) {
+        route_h = cfg.pe0.out_h;
+        route_w = cfg.pe0.out_w;
+        route_ch = cfg.pe0.out_ch;
+        route_valid = true;
+#if !defined(__SYNTHESIS__)
+        if (ok && g_ws0.available(1)) {
+            ok = false;
         }
+#endif
+    } else {
         if (ok) {
             ok = pe1.run(cfg.pe1, g_a1_out, g_ws1, g_a2_out);
         }
