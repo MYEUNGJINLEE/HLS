@@ -1,5 +1,5 @@
 .PHONY: pe pe-log pe-analyze pe-analyze-log pe-compile pe-compile-log pe-gui pe-tb pe-clean clean
-.PHONY: compile comple COMPILE COMPLE
+.PHONY: compile comple COMPILE COMPLE gui GUI
 .SILENT:
 
 pe: pe-clean
@@ -29,17 +29,22 @@ COMPILE: pe-compile
 COMPLE: pe-compile
 
 pe-gui:
-	PRJ=$$(ls -t PE.ccs PE*.ccs 2>/dev/null | head -n 1); \
+	PRJ=$$(ls -t pe.ccs PE.ccs pe*.ccs PE*.ccs 2>/dev/null | head -n 1); \
 	if [ -z "$$PRJ" ]; then \
 		echo "No PE.ccs found. Running batch flow once to create project..."; \
 		catapult -shell -file scripts/run_pe_catapult.tcl; \
-		PRJ=$$(ls -t PE.ccs PE*.ccs 2>/dev/null | head -n 1); \
+		PRJ=$$(ls -t pe.ccs PE.ccs pe*.ccs PE*.ccs 2>/dev/null | head -n 1); \
 	fi; \
 	if [ -n "$$PRJ" ]; then \
-		catapult "$$PRJ" & \
+		if [ "$$PRJ" != "pe.ccs" ]; then cp "$$PRJ" pe.ccs; fi; \
+		catapult -f pe.ccs & \
 	else \
 		echo "Could not find PE project file."; exit 1; \
 	fi
+
+gui: pe-gui
+
+GUI: pe-gui
 
 pe-tb: pe-clean
 	mkdir -p logs
@@ -55,7 +60,7 @@ pe-tb: pe-clean
 	SCV_BASENAME=$$(basename "$$SCV_MK"); \
 	$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_pe_sim.log
 
-pe-clean:
-	rm -rf PE PE.ccs logs catapult.log catapult_pid* .Catapult*
+clean:
+	rm -rf PE PE.ccs pe.ccs logs catapult.log catapult_pid* .Catapult*
 
-clean: pe-clean
+pe-clean: clean
