@@ -497,6 +497,9 @@ bool PEParallelBlock::run(
     int route_ch = 0;
     bool route_valid = false;
     const bool is_straight = (cfg.topo == PE_TOPO_STRAIGHT);
+    const bool is_splitcat = !is_straight;
+    const bool need_pe3 = is_splitcat && (cfg.post_route != PE_POST_CONCAT);
+    const PEKernelCfg null_cfg = pe_null_kernel();
 
     if (is_straight) {
         for (int i = 0; i < total_in; i++) {
@@ -527,56 +530,65 @@ bool PEParallelBlock::run(
 
     ac_channel<pe_packed_act_t> *pe0_in_ch = is_straight ? &g_straight_in : &g_a1_in;
     ac_channel<pe_packed_act_t> *pe0_out_ch = is_straight ? &g_block_out : &g_a1_out;
+    const bool pe0_ok = pe0.run(cfg.pe0, *pe0_in_ch, g_ws0, *pe0_out_ch);
 
-    if (ok) {
-        ok = pe0.run(cfg.pe0, *pe0_in_ch, g_ws0, *pe0_out_ch);
-    }
+    const PEKernelCfg &pe1_cfg = (is_splitcat && pe0_ok) ? cfg.pe1 : null_cfg;
+    const PEKernelCfg &pe2_cfg = (is_splitcat && pe0_ok) ? cfg.pe2 : null_cfg;
+    const bool pe1_ok = pe1.run(pe1_cfg, g_a1_out, g_ws1, g_a2_out);
+    const bool pe2_ok = pe2.run(pe2_cfg, g_b1_in, g_ws2, g_b1_out);
+    const bool stage12_ok = pe0_ok && (!is_splitcat || (pe1_ok && pe2_ok));
 
     if (is_straight) {
         route_h = cfg.pe0.out_h;
         route_w = cfg.pe0.out_w;
         route_ch = cfg.pe0.out_ch;
         route_valid = true;
-#if !defined(__SYNTHESIS__)
-        if (ok && g_ws0.available(1)) {
-            ok = false;
-        }
-#endif
     } else {
-        if (ok) {
-            ok = pe1.run(cfg.pe1, g_a1_out, g_ws1, g_a2_out);
+        if (stage12_ok) {
+            if (cfg.post_route == PE_POST_CONCAT) {
+                concat_stream(
+                    g_a2_out,
+                    cfg.pe1.out_ch,
+                    g_b1_out,
+                    cfg.pe2.out_ch,
+                    output_stream,
+                    cfg.pe1.out_h,
+                    cfg.pe1.out_w
+                );
+            } else {
+                concat_stream(
+                    g_a2_out,
+                    cfg.pe1.out_ch,
+                    g_b1_out,
+                    cfg.pe2.out_ch,
+                    g_cat_for_pe3,
+                    cfg.pe1.out_h,
+                    cfg.pe1.out_w
+                );
+            }
         }
-        if (ok) {
-            ok = pe2.run(cfg.pe2, g_b1_in, g_ws2, g_b1_out);
-        }
+    }
 
-        if (ok && cfg.post_route == PE_POST_CONCAT) {
-            concat_stream(
-                g_a2_out,
-                cfg.pe1.out_ch,
-                g_b1_out,
-                cfg.pe2.out_ch,
-                output_stream,
-                cfg.pe1.out_h,
-                cfg.pe1.out_w
-            );
-        } else if (ok) {
-            concat_stream(
-                g_a2_out,
-                cfg.pe1.out_ch,
-                g_b1_out,
-                cfg.pe2.out_ch,
-                g_cat_for_pe3,
-                cfg.pe1.out_h,
-                cfg.pe1.out_w
-            );
-            ok = pe3.run(cfg.pe3, g_cat_for_pe3, g_ws3, g_block_out);
+    const PEKernelCfg &pe3_cfg = (need_pe3 && stage12_ok) ? cfg.pe3 : null_cfg;
+    const bool pe3_ok = pe3.run(pe3_cfg, g_cat_for_pe3, g_ws3, g_block_out);
+
+    ok = stage12_ok;
+    if (need_pe3) {
+        ok = ok && pe3_ok;
+    }
+
+    if (ok && is_splitcat && need_pe3) {
             route_h = cfg.pe3.out_h;
             route_w = cfg.pe3.out_w;
             route_ch = cfg.pe3.out_ch;
             route_valid = true;
-        }
     }
+
+#if !defined(__SYNTHESIS__)
+    if (ok && g_ws0.available(1)) {
+        ok = false;
+    }
+#endif
 
     if (ok && route_valid) {
         const int route_packs = pe_packs_per_pixel(route_ch);
