@@ -180,24 +180,17 @@ if {[map_buffer_resource "ds_save_buf" {
 puts "Memory mapping: ${map_ok}/${map_total}"
 
 # ============================================================================
-# Array Partitioning: Channel dimensions → parallel access
+# Array Partitioning
 # ============================================================================
+# Sliding window pattern: ds_win / c3a2_win are class member registers.
+# ds_input_buf / c3a2_input_buf are now 2D packed (256-bit per col), no ch dim.
+# BRAM reads: 1 sequential read per KR row per column step → no port conflict.
+# No dim=3 partition needed (channel dim removed by packing).
+# ds_win/c3a2_win: 8×3×32×8=6144 bits < MEM_MAP_THRESHOLD → auto registers.
 puts "======== ARRAY PARTITIONING ========"
 
 set part_total 0
 set part_ok 0
-
-# ds_input_buf: partition channel dim (dim=3) by 8 for BB_IC_PAR-wide reads
-incr part_total
-if {[apply_array_partition "ds_input_buf ch-dim" {
-    ds_input_buf run/ds_input_buf
-} $roots 3 8]} { incr part_ok }
-
-# c3a2_input_buf: partition channel dim (dim=3) by 8
-incr part_total
-if {[apply_array_partition "c3a2_input_buf ch-dim" {
-    c3a2_input_buf run/c3a2_input_buf
-} $roots 3 8]} { incr part_ok }
 
 # ds_save_buf: complete partition on channel dim (dim=3) for parallel preload
 incr part_total
@@ -205,14 +198,14 @@ if {[apply_complete_partition "ds_save_buf ch-dim" {
     ds_save_buf run/ds_save_buf
 } $roots 3]} { incr part_ok }
 
-# DS window array: complete partition on channel dim for unrolled access
+# ds_window local: complete partition on channel dim for unrolled access
 incr part_total
 if {[apply_complete_partition "ds_window dim3" {
     MAIN_LOOP_BB1:for:STAGE2_COL:for/ds_window
     run/MAIN_LOOP_BB1:for:STAGE2_COL:for/ds_window
 } $roots 3]} { incr part_ok }
 
-# c3a2 window array: complete partition on channel dim
+# c3a2_window local: complete partition on channel dim
 incr part_total
 if {[apply_complete_partition "c3a2_window dim3" {
     MAIN_LOOP_BB1:for:STAGE3_COL:for/c3a2_window
@@ -279,6 +272,16 @@ map_to_register "final output" {
     run/MAIN_LOOP_BB1:for:STAGE3_COL:for/final_out
 } $roots
 
+# Sliding window register arrays (class members, 6144 bits each → auto-registers)
+# Explicit mapping to prevent Catapult from mapping them to BRAM
+map_to_register "ds_win" {
+    ds_win run/ds_win
+} $roots
+
+map_to_register "c3a2_win" {
+    c3a2_win run/c3a2_win
+} $roots
+
 # Weight arrays (small ones → registers, large → BRAM via MEM_MAP_THRESHOLD)
 map_to_register "shift arrays" {
     run/shift_ds shift_ds
@@ -340,23 +343,12 @@ go compile
 # ============================================================================
 # POST-COMPILE: Array partition (resource paths exist after go compile)
 # ============================================================================
-# Root cause of SCHD-4 error:
-#   c3a2_input_buf[8][80][32] accessed with 9(KR×KC unrolled) × 32(ch unrolled) = 288
-#   simultaneous reads → single BLOCK_1R1W_RBW provides only 1 port → SCHD-4 fail.
-#
-# Fix: complete partition on dim=1(rows=8) + dim=3(ch=32) → 256 banks × [col] only
-#   Each bank: 80×8bit=640bit or 160×8bit=1280bit < MEM_MAP_THRESHOLD(8192bit)
-#   → mapped to distributed RAM (LUTRAM) → no port conflict
+# Sliding window pattern: BRAM reads are now sequential (1 per KR row per col step).
+# No SCHD-4 risk from these buffers.
+# Partition dim=1 (rows=8) is optional but helps Catapult allocate independent
+# row BRAMs → simpler scheduling.
 # ============================================================================
 puts "======== POST-COMPILE PARTITION ========"
-
-# Arrays are now 2D (channels packed into 256-bit words):
-#   ds_input_buf[8][160]   × 256-bit  (was [8][160][32] × 8-bit)
-#   c3a2_input_buf[8][80]  × 256-bit  (was [8][80][32]  × 8-bit)
-#
-# Simultaneous reads after packing: KR(3)×KC(3) = 9  (was 9×32=288)
-# Partition dim=1 (rows=8) → 8 row BRAMs; 3 KC reads/row → 3 BRAM instances each
-# Total: 24 BRAM instances  (was 288 → SCHD-4 failure)
 
 # Diagnostic: dump resource paths to find correct hierarchy
 puts "--- POST-COMPILE RESOURCE PATHS (buf-related) ---"
