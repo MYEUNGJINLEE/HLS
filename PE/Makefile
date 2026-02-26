@@ -1,4 +1,4 @@
-.PHONY: pe pe-log pe-compile pe-compile-log pe-gui pe-tb pe-clean clean
+.PHONY: pe pe-log pe-analyze pe-analyze-log pe-compile pe-compile-log pe-gui pe-tb pe-clean clean
 .SILENT:
 
 pe: pe-clean
@@ -6,6 +6,12 @@ pe: pe-clean
 	catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe.log
 
 pe-log: pe
+
+pe-analyze: pe-clean
+	mkdir -p logs
+	PE_ANALYZE_ONLY=1 catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe_analyze.log
+
+pe-analyze-log: pe-analyze
 
 pe-compile: pe-clean
 	mkdir -p logs
