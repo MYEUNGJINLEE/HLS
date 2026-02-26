@@ -1,4 +1,5 @@
 .PHONY: pe pe-log pe-analyze pe-analyze-log pe-compile pe-compile-log pe-gui pe-tb pe-clean clean
+.PHONY: compile comple COMPILE COMPLE
 .SILENT:
 
 pe: pe-clean
@@ -18,6 +19,14 @@ pe-compile: pe-clean
 	PE_COMPILE_ONLY=1 catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe_compile.log
 
 pe-compile-log: pe-compile
+
+compile: pe-compile
+
+comple: pe-compile
+
+COMPILE: pe-compile
+
+COMPLE: pe-compile
 
 pe-gui:
 	PRJ=$$(ls -t PE.ccs PE*.ccs 2>/dev/null | head -n 1); \

@@ -1,5 +1,21 @@
 #include "pe_parallel_block.h"
 
+static ac_channel<pe_weight_pkt_t> g_ws0;
+static ac_channel<pe_weight_pkt_t> g_ws1;
+static ac_channel<pe_weight_pkt_t> g_ws2;
+static ac_channel<pe_weight_pkt_t> g_ws3;
+
+static ac_channel<pe_packed_act_t> g_straight_in;
+static ac_channel<pe_packed_act_t> g_a1_in;
+static ac_channel<pe_packed_act_t> g_b1_in;
+static ac_channel<pe_packed_act_t> g_a1_out;
+static ac_channel<pe_packed_act_t> g_a2_out;
+static ac_channel<pe_packed_act_t> g_b1_out;
+static ac_channel<pe_packed_act_t> g_cat_in;
+static ac_channel<pe_packed_act_t> g_block_out;
+static ac_channel<pe_packed_act_t> g_post_split_a;
+static ac_channel<pe_packed_act_t> g_post_split_b;
+
 pe_act_t PEParallelBlock::unpack_lane(const pe_packed_act_t &pkt, int lane) {
     pe_act_t v = 0;
     v.set_slc(0, pkt.slc<8>(lane * 8));
@@ -8,17 +24,6 @@ pe_act_t PEParallelBlock::unpack_lane(const pe_packed_act_t &pkt, int lane) {
 
 void PEParallelBlock::pack_lane(pe_packed_act_t &pkt, int lane, pe_act_t value) {
     pkt.set_slc(lane * 8, value.slc<8>(0));
-}
-
-void PEParallelBlock::restore_weights(ac_channel<pe_weight_pkt_t> &weight_stream, int count) {
-#if !defined(__SYNTHESIS__)
-    for (int i = 0; i < count; i++) {
-        weight_stream.write(backup_pkts[i]);
-    }
-#else
-    (void)weight_stream;
-    (void)count;
-#endif
 }
 
 bool PEParallelBlock::validate_kernel_packet_layout(
@@ -189,6 +194,10 @@ bool PEParallelBlock::validate_weight_layout(
         return false;
     }
     w2_count = idx - w2_start;
+
+    if (cfg.post_route == PE_POST_CONCAT) {
+        return idx == total_count;
+    }
 
     w3_start = idx;
     if (!validate_kernel_packet_layout(cfg.pe3, pkts, total_count, idx, idx)) {
@@ -388,111 +397,181 @@ bool PEParallelBlock::run(
             w2_count,
             w3_start,
             w3_count)) {
-#if !defined(__SYNTHESIS__)
-        restore_weights(weight_stream, total_w);
-#endif
         return false;
     }
 
-    static ac_channel<pe_weight_pkt_t> ws0;
-    static ac_channel<pe_weight_pkt_t> ws1;
-    static ac_channel<pe_weight_pkt_t> ws2;
-    static ac_channel<pe_weight_pkt_t> ws3;
-
-    feed_weight_channel(ws0, backup_pkts, w0_start, w0_count);
+    feed_weight_channel(g_ws0, backup_pkts, w0_start, w0_count);
     if (cfg.topo == PE_TOPO_SPLITCAT) {
-        feed_weight_channel(ws1, backup_pkts, w1_start, w1_count);
-        feed_weight_channel(ws2, backup_pkts, w2_start, w2_count);
-        feed_weight_channel(ws3, backup_pkts, w3_start, w3_count);
+        feed_weight_channel(g_ws1, backup_pkts, w1_start, w1_count);
+        feed_weight_channel(g_ws2, backup_pkts, w2_start, w2_count);
+        if (cfg.post_route != PE_POST_CONCAT) {
+            feed_weight_channel(g_ws3, backup_pkts, w3_start, w3_count);
+        }
     }
 
     bool ok = true;
+    int route_h = 0;
+    int route_w = 0;
+    int route_ch = 0;
+    bool route_from_concat = false;
 
     if (cfg.topo == PE_TOPO_STRAIGHT) {
-        static ac_channel<pe_packed_act_t> straight_in;
         for (int i = 0; i < total_in; i++) {
-            straight_in.write(input_stream.read());
+            g_straight_in.write(input_stream.read());
         }
 
-        ok = pe0.run(cfg.pe0, straight_in, ws0, output_stream);
+        ok = pe0.run(cfg.pe0, g_straight_in, g_ws0, g_block_out);
+        route_h = cfg.pe0.out_h;
+        route_w = cfg.pe0.out_w;
+        route_ch = cfg.pe0.out_ch;
+        route_from_concat = false;
 #if !defined(__SYNTHESIS__)
-        if (ok && ws0.available(1)) {
+        if (ok && g_ws0.available(1)) {
             ok = false;
         }
 #endif
-        if (!ok) {
-#if !defined(__SYNTHESIS__)
-            restore_weights(weight_stream, total_w);
-#endif
-        }
-        return ok;
-    }
-
-    static ac_channel<pe_packed_act_t> a1_in;
-    static ac_channel<pe_packed_act_t> b1_in;
-    static ac_channel<pe_packed_act_t> a1_out;
-    static ac_channel<pe_packed_act_t> a2_out;
-    static ac_channel<pe_packed_act_t> b1_out;
-    static ac_channel<pe_packed_act_t> cat_in;
-
-    if (cfg.use_input_split) {
-        split_stream(
-            input_stream,
-            a1_in,
-            b1_in,
-            cfg.pe0.in_h,
-            cfg.pe0.in_w,
-            cfg.pe0.in_ch + cfg.pe2.in_ch,
-            cfg.pe0.in_ch
-        );
     } else {
-        fork_stream(
-            input_stream,
-            a1_in,
-            b1_in,
-            cfg.pe0.in_h,
-            cfg.pe0.in_w,
-            cfg.pe0.in_ch
-        );
+        if (cfg.use_input_split) {
+            split_stream(
+                input_stream,
+                g_a1_in,
+                g_b1_in,
+                cfg.pe0.in_h,
+                cfg.pe0.in_w,
+                cfg.pe0.in_ch + cfg.pe2.in_ch,
+                cfg.pe0.in_ch
+            );
+        } else {
+            fork_stream(
+                input_stream,
+                g_a1_in,
+                g_b1_in,
+                cfg.pe0.in_h,
+                cfg.pe0.in_w,
+                cfg.pe0.in_ch
+            );
+        }
+
+        if (ok) {
+            ok = pe0.run(cfg.pe0, g_a1_in, g_ws0, g_a1_out);
+        }
+        if (ok) {
+            ok = pe1.run(cfg.pe1, g_a1_out, g_ws1, g_a2_out);
+        }
+        if (ok) {
+            ok = pe2.run(cfg.pe2, g_b1_in, g_ws2, g_b1_out);
+        }
+
+        if (ok) {
+            concat_stream(
+                g_a2_out,
+                cfg.pe1.out_ch,
+                g_b1_out,
+                cfg.pe2.out_ch,
+                g_cat_in,
+                cfg.pe1.out_h,
+                cfg.pe1.out_w
+            );
+        }
+
+        if (ok && cfg.post_route == PE_POST_CONCAT) {
+            route_h = cfg.pe3.in_h;
+            route_w = cfg.pe3.in_w;
+            route_ch = cfg.pe3.in_ch;
+            route_from_concat = true;
+        } else if (ok) {
+            ok = pe3.run(cfg.pe3, g_cat_in, g_ws3, g_block_out);
+            route_h = cfg.pe3.out_h;
+            route_w = cfg.pe3.out_w;
+            route_ch = cfg.pe3.out_ch;
+            route_from_concat = false;
+        }
     }
 
     if (ok) {
-        ok = pe0.run(cfg.pe0, a1_in, ws0, a1_out);
-    }
-    if (ok) {
-        ok = pe1.run(cfg.pe1, a1_out, ws1, a2_out);
-    }
-    if (ok) {
-        ok = pe2.run(cfg.pe2, b1_in, ws2, b1_out);
-    }
+        const int route_packs = pe_packs_per_pixel(route_ch);
+        const int route_pkt_count = route_h * route_w * route_packs;
 
-    if (ok) {
-        concat_stream(
-            a2_out,
-            cfg.pe1.out_ch,
-            b1_out,
-            cfg.pe2.out_ch,
-            cat_in,
-            cfg.pe1.out_h,
-            cfg.pe1.out_w
-        );
-    }
+        if (cfg.post_route == PE_POST_BRANCH) {
+            if (route_from_concat) {
+                for (int i = 0; i < route_pkt_count; i++) {
+                    pe_packed_act_t pkt = g_cat_in.read();
+                    output_stream.write(pkt);
+                    output_stream.write(pkt);
+                }
+            } else {
+                for (int i = 0; i < route_pkt_count; i++) {
+                    pe_packed_act_t pkt = g_block_out.read();
+                    output_stream.write(pkt);
+                    output_stream.write(pkt);
+                }
+            }
+        } else if (cfg.post_route == PE_POST_SPLIT) {
+            if (route_from_concat) {
+                split_stream(
+                    g_cat_in,
+                    g_post_split_a,
+                    g_post_split_b,
+                    route_h,
+                    route_w,
+                    route_ch,
+                    cfg.post_split_a_ch
+                );
+            } else {
+                split_stream(
+                    g_block_out,
+                    g_post_split_a,
+                    g_post_split_b,
+                    route_h,
+                    route_w,
+                    route_ch,
+                    cfg.post_split_a_ch
+                );
+            }
 
-    if (ok) {
-        ok = pe3.run(cfg.pe3, cat_in, ws3, output_stream);
+            const int split_a_packs = pe_packs_per_pixel(cfg.post_split_a_ch);
+            const int split_b_packs = pe_packs_per_pixel(route_ch - cfg.post_split_a_ch);
+            const int split_a_pkt = route_h * route_w * split_a_packs;
+            const int split_b_pkt = route_h * route_w * split_b_packs;
+
+            for (int i = 0; i < split_a_pkt; i++) {
+                output_stream.write(g_post_split_a.read());
+            }
+            for (int i = 0; i < split_b_pkt; i++) {
+                output_stream.write(g_post_split_b.read());
+            }
+        } else {
+            if (route_from_concat) {
+                for (int i = 0; i < route_pkt_count; i++) {
+                    output_stream.write(g_cat_in.read());
+                }
+            } else {
+                for (int i = 0; i < route_pkt_count; i++) {
+                    output_stream.write(g_block_out.read());
+                }
+            }
+        }
+
+        if (cfg.post_route == PE_POST_CONCAT) {
+            // CONCAT mode bypasses pe3 by construction.
+        }
     }
 
 #if !defined(__SYNTHESIS__)
-    if (ok && (ws0.available(1) || ws1.available(1) || ws2.available(1) || ws3.available(1))) {
+    bool ws1_left = false;
+    bool ws2_left = false;
+    bool ws3_left = false;
+    if (cfg.topo == PE_TOPO_SPLITCAT) {
+        ws1_left = g_ws1.available(1);
+        ws2_left = g_ws2.available(1);
+        if (cfg.post_route != PE_POST_CONCAT) {
+            ws3_left = g_ws3.available(1);
+        }
+    }
+    if (ok && (g_ws0.available(1) || ws1_left || ws2_left || ws3_left)) {
         ok = false;
     }
 #endif
-
-    if (!ok) {
-#if !defined(__SYNTHESIS__)
-        restore_weights(weight_stream, total_w);
-#endif
-    }
 
     return ok;
 }

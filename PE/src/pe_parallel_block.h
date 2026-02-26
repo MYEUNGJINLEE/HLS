@@ -31,8 +31,6 @@ private:
     static pe_act_t unpack_lane(const pe_packed_act_t &pkt, int lane);
     static void pack_lane(pe_packed_act_t &pkt, int lane, pe_act_t value);
 
-    void restore_weights(ac_channel<pe_weight_pkt_t> &weight_stream, int count);
-
     bool validate_kernel_packet_layout(
         const PEKernelCfg &cfg,
         const pe_weight_pkt_t *pkts,

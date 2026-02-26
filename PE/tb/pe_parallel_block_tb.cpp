@@ -78,7 +78,7 @@ static void tb_push_input(
     }
 }
 
-static bool tb_pop_output(
+static bool tb_pop_tensor(
     ac_channel<pe_packed_act_t> &s,
     int h,
     int w,
@@ -108,7 +108,79 @@ static bool tb_pop_output(
         }
     }
 
-    return !s.available(1);
+    return true;
+}
+
+static void tb_base_out_shape(const PEBlockCfg &cfg, int &h, int &w, int &ch) {
+    if (cfg.topo == PE_TOPO_STRAIGHT) {
+        h = cfg.pe0.out_h;
+        w = cfg.pe0.out_w;
+        ch = cfg.pe0.out_ch;
+        return;
+    }
+    if (cfg.post_route == PE_POST_CONCAT) {
+        h = cfg.pe3.in_h;
+        w = cfg.pe3.in_w;
+        ch = cfg.pe3.in_ch;
+        return;
+    }
+    h = cfg.pe3.out_h;
+    w = cfg.pe3.out_w;
+    ch = cfg.pe3.out_ch;
+}
+
+static bool tb_pop_output(
+    ac_channel<pe_packed_act_t> &s,
+    const PEBlockCfg &cfg,
+    std::vector<pe_act_t> &output
+) {
+    int base_h = 0;
+    int base_w = 0;
+    int base_ch = 0;
+    tb_base_out_shape(cfg, base_h, base_w, base_ch);
+
+    if (cfg.post_route == PE_POST_DIRECT || cfg.post_route == PE_POST_CONCAT) {
+        if (!tb_pop_tensor(s, base_h, base_w, base_ch, output)) {
+            return false;
+        }
+        return !s.available(1);
+    }
+
+    if (cfg.post_route == PE_POST_BRANCH) {
+        std::vector<pe_act_t> a;
+        std::vector<pe_act_t> b;
+        if (!tb_pop_tensor(s, base_h, base_w, base_ch, a)) {
+            return false;
+        }
+        if (!tb_pop_tensor(s, base_h, base_w, base_ch, b)) {
+            return false;
+        }
+        output.clear();
+        output.reserve(a.size() + b.size());
+        output.insert(output.end(), a.begin(), a.end());
+        output.insert(output.end(), b.begin(), b.end());
+        return !s.available(1);
+    }
+
+    if (cfg.post_route == PE_POST_SPLIT) {
+        const int split_a = cfg.post_split_a_ch;
+        const int split_b = base_ch - split_a;
+        std::vector<pe_act_t> a;
+        std::vector<pe_act_t> b;
+        if (!tb_pop_tensor(s, base_h, base_w, split_a, a)) {
+            return false;
+        }
+        if (!tb_pop_tensor(s, base_h, base_w, split_b, b)) {
+            return false;
+        }
+        output.clear();
+        output.reserve(a.size() + b.size());
+        output.insert(output.end(), a.begin(), a.end());
+        output.insert(output.end(), b.begin(), b.end());
+        return !s.available(1);
+    }
+
+    return false;
 }
 
 static pe_act_t tb_rand_act(std::mt19937 &rng) {
@@ -300,7 +372,7 @@ static int tb_run_success_case(
     }
 
     std::vector<pe_act_t> dut_out;
-    if (!tb_pop_output(out_stream, pe_block_out_h(cfg), pe_block_out_w(cfg), pe_block_out_ch(cfg), dut_out)) {
+    if (!tb_pop_output(out_stream, cfg, dut_out)) {
         std::printf("FAIL: %s output packet count mismatch\n", name);
         return 1;
     }
@@ -391,6 +463,29 @@ int main() {
     }
 
     {
+        PEKernelCfg k = pe_make_kernel(8, 8, 8, 8, 64, 64, 1, 0, PE_OP_CONV1X1, true);
+        PEBlockCfg cfg = pe_make_straight_cfg(k);
+        cfg.post_route = PE_POST_BRANCH;
+        std::vector<pe_act_t> input(8 * 8 * 64);
+        for (size_t i = 0; i < input.size(); i++) input[i] = tb_rand_act(rng);
+        std::vector<pe_weight_pkt_t> weights;
+        tb_append_kernel_weights(cfg.pe0, weights, rng);
+        errors += tb_run_success_case("det_straight_post_branch", cfg, input, weights);
+    }
+
+    {
+        PEKernelCfg k = pe_make_kernel(8, 8, 8, 8, 64, 128, 1, 0, PE_OP_CONV1X1, true);
+        PEBlockCfg cfg = pe_make_straight_cfg(k);
+        cfg.post_route = PE_POST_SPLIT;
+        cfg.post_split_a_ch = 64;
+        std::vector<pe_act_t> input(8 * 8 * 64);
+        for (size_t i = 0; i < input.size(); i++) input[i] = tb_rand_act(rng);
+        std::vector<pe_weight_pkt_t> weights;
+        tb_append_kernel_weights(cfg.pe0, weights, rng);
+        errors += tb_run_success_case("det_straight_post_split", cfg, input, weights);
+    }
+
+    {
         PEKernelCfg k = pe_make_kernel(8, 8, 8, 8, 64, 64, 1, 1, PE_OP_CONV3X3, true);
         PEBlockCfg cfg = pe_make_straight_cfg(k);
         std::vector<pe_act_t> input(8 * 8 * 64);
@@ -427,6 +522,25 @@ int main() {
         tb_append_kernel_weights(cfg.pe3, weights, rng);
 
         errors += tb_run_success_case("det_splitcat_basic", cfg, input, weights);
+    }
+
+    {
+        PEKernelCfg k0 = pe_make_kernel(8, 8, 8, 8, 64, 64, 1, 0, PE_OP_CONV1X1, true);
+        PEKernelCfg k1 = pe_make_kernel(8, 8, 8, 8, 64, 64, 1, 1, PE_OP_CONV3X3, true);
+        PEKernelCfg k2 = pe_make_kernel(8, 8, 8, 8, 64, 64, 1, 0, PE_OP_CONV1X1, true);
+        PEKernelCfg k3 = pe_make_kernel(8, 8, 8, 8, 128, 64, 1, 0, PE_OP_CONV1X1, true);
+        PEBlockCfg cfg = pe_make_splitcat_cfg(k0, k1, k2, k3, false, 1, 2);
+        cfg.post_route = PE_POST_CONCAT;
+
+        std::vector<pe_act_t> input(8 * 8 * 64);
+        for (size_t i = 0; i < input.size(); i++) input[i] = tb_rand_act(rng);
+
+        std::vector<pe_weight_pkt_t> weights;
+        tb_append_kernel_weights(cfg.pe0, weights, rng);
+        tb_append_kernel_weights(cfg.pe1, weights, rng);
+        tb_append_kernel_weights(cfg.pe2, weights, rng);
+
+        errors += tb_run_success_case("det_splitcat_post_concat", cfg, input, weights);
     }
 
     for (int i = 0; i < 200; i++) {

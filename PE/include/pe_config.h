@@ -43,6 +43,8 @@ inline PEBlockCfg pe_make_straight_cfg(const PEKernelCfg &k0) {
     cfg.split_num = 1;
     cfg.split_den = 2;
     cfg.use_input_split = false;
+    cfg.post_route = PE_POST_DIRECT;
+    cfg.post_split_a_ch = 0;
     return cfg;
 }
 
@@ -64,11 +66,20 @@ inline PEBlockCfg pe_make_splitcat_cfg(
     cfg.split_num = split_num;
     cfg.split_den = split_den;
     cfg.use_input_split = use_input_split;
+    cfg.post_route = PE_POST_DIRECT;
+    cfg.post_split_a_ch = 0;
     return cfg;
 }
 
 inline bool pe_is_valid_op(pe_op_t op) {
     return (op == PE_OP_CONV1X1) || (op == PE_OP_CONV3X3) || (op == PE_OP_DW3X3);
+}
+
+inline bool pe_is_valid_post_route(pe_post_route_t route) {
+    return (route == PE_POST_DIRECT) ||
+           (route == PE_POST_BRANCH) ||
+           (route == PE_POST_SPLIT) ||
+           (route == PE_POST_CONCAT);
 }
 
 inline bool pe_validate_kernel_cfg(const PEKernelCfg &cfg) {
@@ -128,57 +139,85 @@ inline bool pe_validate_kernel_cfg(const PEKernelCfg &cfg) {
 }
 
 inline bool pe_validate_block_cfg(const PEBlockCfg &cfg) {
+    if (!pe_is_valid_post_route(cfg.post_route)) {
+        return false;
+    }
+
     if (cfg.topo == PE_TOPO_STRAIGHT) {
-        return pe_validate_kernel_cfg(cfg.pe0);
-    }
-
-    if (cfg.topo != PE_TOPO_SPLITCAT) {
-        return false;
-    }
-
-    if (!pe_validate_kernel_cfg(cfg.pe0) ||
-        !pe_validate_kernel_cfg(cfg.pe1) ||
-        !pe_validate_kernel_cfg(cfg.pe2) ||
-        !pe_validate_kernel_cfg(cfg.pe3)) {
-        return false;
-    }
-
-    if (cfg.pe0.in_h != cfg.pe2.in_h || cfg.pe0.in_w != cfg.pe2.in_w) {
-        return false;
-    }
-
-    if (cfg.use_input_split) {
-        if (cfg.split_den <= 0 || cfg.split_num <= 0 || cfg.split_num >= cfg.split_den) {
-            return false;
-        }
-        const int total_in = cfg.pe0.in_ch + cfg.pe2.in_ch;
-        const int split_mul = total_in * cfg.split_num;
-        if ((split_mul % cfg.split_den) != 0) {
-            return false;
-        }
-        const int split_a = split_mul / cfg.split_den;
-        if (split_a != cfg.pe0.in_ch) {
+        if (!pe_validate_kernel_cfg(cfg.pe0)) {
             return false;
         }
     } else {
-        if (cfg.pe0.in_ch != cfg.pe2.in_ch) {
+        if (cfg.topo != PE_TOPO_SPLITCAT) {
+            return false;
+        }
+
+        if (!pe_validate_kernel_cfg(cfg.pe0) ||
+            !pe_validate_kernel_cfg(cfg.pe1) ||
+            !pe_validate_kernel_cfg(cfg.pe2) ||
+            !pe_validate_kernel_cfg(cfg.pe3)) {
+            return false;
+        }
+
+        if (cfg.pe0.in_h != cfg.pe2.in_h || cfg.pe0.in_w != cfg.pe2.in_w) {
+            return false;
+        }
+
+        if (cfg.use_input_split) {
+            if (cfg.split_den <= 0 || cfg.split_num <= 0 || cfg.split_num >= cfg.split_den) {
+                return false;
+            }
+            const int total_in = cfg.pe0.in_ch + cfg.pe2.in_ch;
+            const int split_mul = total_in * cfg.split_num;
+            if ((split_mul % cfg.split_den) != 0) {
+                return false;
+            }
+            const int split_a = split_mul / cfg.split_den;
+            if (split_a != cfg.pe0.in_ch) {
+                return false;
+            }
+        } else {
+            if (cfg.pe0.in_ch != cfg.pe2.in_ch) {
+                return false;
+            }
+        }
+
+        if (cfg.pe1.in_h != cfg.pe0.out_h || cfg.pe1.in_w != cfg.pe0.out_w || cfg.pe1.in_ch != cfg.pe0.out_ch) {
+            return false;
+        }
+
+        if (cfg.pe1.out_h != cfg.pe2.out_h || cfg.pe1.out_w != cfg.pe2.out_w) {
+            return false;
+        }
+
+        if (cfg.pe3.in_h != cfg.pe1.out_h || cfg.pe3.in_w != cfg.pe1.out_w) {
+            return false;
+        }
+
+        if (cfg.pe3.in_ch != (cfg.pe1.out_ch + cfg.pe2.out_ch)) {
             return false;
         }
     }
 
-    if (cfg.pe1.in_h != cfg.pe0.out_h || cfg.pe1.in_w != cfg.pe0.out_w || cfg.pe1.in_ch != cfg.pe0.out_ch) {
+    if (cfg.post_route == PE_POST_CONCAT && cfg.topo != PE_TOPO_SPLITCAT) {
         return false;
     }
 
-    if (cfg.pe1.out_h != cfg.pe2.out_h || cfg.pe1.out_w != cfg.pe2.out_w) {
-        return false;
+    int route_out_ch = 0;
+    if (cfg.topo == PE_TOPO_STRAIGHT) {
+        route_out_ch = cfg.pe0.out_ch;
+    } else {
+        route_out_ch = (cfg.post_route == PE_POST_CONCAT) ? cfg.pe3.in_ch : cfg.pe3.out_ch;
     }
 
-    if (cfg.pe3.in_h != cfg.pe1.out_h || cfg.pe3.in_w != cfg.pe1.out_w) {
-        return false;
-    }
-
-    if (cfg.pe3.in_ch != (cfg.pe1.out_ch + cfg.pe2.out_ch)) {
+    if (cfg.post_route == PE_POST_SPLIT) {
+        if (cfg.post_split_a_ch <= 0 || cfg.post_split_a_ch >= route_out_ch) {
+            return false;
+        }
+        if ((cfg.post_split_a_ch % PE_CH_PACK) != 0) {
+            return false;
+        }
+    } else if (cfg.post_split_a_ch != 0) {
         return false;
     }
 
@@ -186,15 +225,33 @@ inline bool pe_validate_block_cfg(const PEBlockCfg &cfg) {
 }
 
 inline int pe_block_out_h(const PEBlockCfg &cfg) {
-    return (cfg.topo == PE_TOPO_STRAIGHT) ? cfg.pe0.out_h : cfg.pe3.out_h;
+    if (cfg.topo == PE_TOPO_STRAIGHT) {
+        return cfg.pe0.out_h;
+    }
+    if (cfg.post_route == PE_POST_CONCAT) {
+        return cfg.pe3.in_h;
+    }
+    return cfg.pe3.out_h;
 }
 
 inline int pe_block_out_w(const PEBlockCfg &cfg) {
-    return (cfg.topo == PE_TOPO_STRAIGHT) ? cfg.pe0.out_w : cfg.pe3.out_w;
+    if (cfg.topo == PE_TOPO_STRAIGHT) {
+        return cfg.pe0.out_w;
+    }
+    if (cfg.post_route == PE_POST_CONCAT) {
+        return cfg.pe3.in_w;
+    }
+    return cfg.pe3.out_w;
 }
 
 inline int pe_block_out_ch(const PEBlockCfg &cfg) {
-    return (cfg.topo == PE_TOPO_STRAIGHT) ? cfg.pe0.out_ch : cfg.pe3.out_ch;
+    if (cfg.topo == PE_TOPO_STRAIGHT) {
+        return cfg.pe0.out_ch;
+    }
+    if (cfg.post_route == PE_POST_CONCAT) {
+        return cfg.pe3.in_ch;
+    }
+    return cfg.pe3.out_ch;
 }
 
 #endif // PE_CONFIG_H

@@ -372,6 +372,54 @@ inline bool pe_ref_concat_channels(
     return true;
 }
 
+inline bool pe_ref_apply_post_route(
+    const PEBlockCfg &cfg,
+    int h,
+    int w,
+    int ch,
+    const std::vector<pe_act_t> &src,
+    std::vector<pe_act_t> &dst
+) {
+    if ((int)src.size() != h * w * ch) {
+        return false;
+    }
+
+    if (cfg.post_route == PE_POST_DIRECT || cfg.post_route == PE_POST_CONCAT) {
+        dst = src;
+        return true;
+    }
+
+    if (cfg.post_route == PE_POST_BRANCH) {
+        dst.clear();
+        dst.reserve(src.size() * 2);
+        dst.insert(dst.end(), src.begin(), src.end());
+        dst.insert(dst.end(), src.begin(), src.end());
+        return true;
+    }
+
+    if (cfg.post_route == PE_POST_SPLIT) {
+        const int split_a = cfg.post_split_a_ch;
+        const int split_b = ch - split_a;
+        if (split_a <= 0 || split_b <= 0) {
+            return false;
+        }
+
+        std::vector<pe_act_t> a;
+        std::vector<pe_act_t> b;
+        if (!pe_ref_split_channels(src, h, w, ch, split_a, a, b)) {
+            return false;
+        }
+
+        dst.clear();
+        dst.reserve(a.size() + b.size());
+        dst.insert(dst.end(), a.begin(), a.end());
+        dst.insert(dst.end(), b.begin(), b.end());
+        return true;
+    }
+
+    return false;
+}
+
 inline bool pe_ref_run_block(
     const PEBlockCfg &cfg,
     const std::vector<pe_act_t> &input,
@@ -394,7 +442,18 @@ inline bool pe_ref_run_block(
         if ((int)input.size() != cfg.pe0.in_h * cfg.pe0.in_w * cfg.pe0.in_ch) {
             return false;
         }
-        return pe_ref_run_kernel(cfg.pe0, input, &weights[idx], w0, output);
+        std::vector<pe_act_t> base_out;
+        if (!pe_ref_run_kernel(cfg.pe0, input, &weights[idx], w0, base_out)) {
+            return false;
+        }
+        return pe_ref_apply_post_route(
+            cfg,
+            cfg.pe0.out_h,
+            cfg.pe0.out_w,
+            cfg.pe0.out_ch,
+            base_out,
+            output
+        );
     }
 
     std::vector<pe_act_t> a_in;
@@ -418,7 +477,7 @@ inline bool pe_ref_run_block(
     const int w0 = pe_weight_packets_for_kernel(cfg.pe0);
     const int w1 = pe_weight_packets_for_kernel(cfg.pe1);
     const int w2 = pe_weight_packets_for_kernel(cfg.pe2);
-    const int w3 = pe_weight_packets_for_kernel(cfg.pe3);
+    const int w3 = (cfg.post_route == PE_POST_CONCAT) ? 0 : pe_weight_packets_for_kernel(cfg.pe3);
 
     std::vector<pe_act_t> a1;
     std::vector<pe_act_t> a2;
@@ -444,12 +503,31 @@ inline bool pe_ref_run_block(
         return false;
     }
 
-    if (!pe_ref_run_kernel(cfg.pe3, cat, &weights[idx], w3, output)) {
+    std::vector<pe_act_t> base_out;
+    int base_h = 0;
+    int base_w = 0;
+    int base_ch = 0;
+
+    if (cfg.post_route == PE_POST_CONCAT) {
+        base_out = cat;
+        base_h = cfg.pe3.in_h;
+        base_w = cfg.pe3.in_w;
+        base_ch = cfg.pe3.in_ch;
+    } else {
+        if (!pe_ref_run_kernel(cfg.pe3, cat, &weights[idx], w3, base_out)) {
+            return false;
+        }
+        idx += w3;
+        base_h = cfg.pe3.out_h;
+        base_w = cfg.pe3.out_w;
+        base_ch = cfg.pe3.out_ch;
+    }
+
+    if (idx != total_w) {
         return false;
     }
 
-    idx += w3;
-    return idx == total_w;
+    return pe_ref_apply_post_route(cfg, base_h, base_w, base_ch, base_out, output);
 }
 
 #endif // PE_REFERENCE_MODEL_H

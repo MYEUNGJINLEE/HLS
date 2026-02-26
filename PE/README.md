@@ -7,6 +7,11 @@ This project is a standalone 4-PE parallel block for hardware-first YOLO bring-u
 - Topology:
   - `PE_TOPO_STRAIGHT`
   - `PE_TOPO_SPLITCAT`
+- Post-store route:
+  - `PE_POST_DIRECT`
+  - `PE_POST_BRANCH` (duplicate output stream A/B)
+  - `PE_POST_SPLIT` (serialize split-A then split-B)
+  - `PE_POST_CONCAT` (SplitCat only, bypass `pe3` and store concat tensor)
 - Ops:
   - `PE_OP_CONV1X1`
   - `PE_OP_CONV3X3`
@@ -45,6 +50,13 @@ Payload:
 - `WEIGHT+dw3x3`: `payload[8:0]` = 9 kernel bits
 - `BN`: `payload[7:0]=shift`, `payload[23:8]=bias`
 
+## Layer Execution Order
+
+- `cfg validate`
+- `weight fetch`
+- `compute`
+- `store(route by cfg.post_route)`
+
 ## Build / Run
 
 From `PE` directory:
@@ -69,9 +81,12 @@ make pe-tb
 
 - Deterministic tests:
   - Straight + conv1x1
+  - Straight + post-branch
+  - Straight + post-split
   - Straight + conv3x3
   - Straight + dw3x3
   - SplitCat chain (A1/A2/B1/CCAT)
+  - SplitCat + post-concat (bypass pe3)
 - Random stress:
   - 200 fixed-seed cases
   - includes both Straight and SplitCat
@@ -87,3 +102,4 @@ make pe-tb
 - `Shortcut/Upsample/MaxPool` are intentionally out of scope for v1.
 - Channel counts are validated as multiples of 64.
 - BN path is `Shift + Bias + ReLU + int8 clamp`.
+- `PE_POST_CONCAT` mode consumes only `pe0/pe1/pe2` weights (no `pe3` weight fetch).

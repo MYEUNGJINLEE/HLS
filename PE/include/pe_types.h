@@ -38,6 +38,13 @@ enum pe_topo_t {
     PE_TOPO_SPLITCAT = 1
 };
 
+enum pe_post_route_t {
+    PE_POST_DIRECT = 0,
+    PE_POST_BRANCH = 1,
+    PE_POST_SPLIT = 2,
+    PE_POST_CONCAT = 3
+};
+
 struct PEKernelCfg {
     int in_h;
     int in_w;
@@ -61,6 +68,8 @@ struct PEBlockCfg {
     int split_num;
     int split_den;
     bool use_input_split;
+    pe_post_route_t post_route;
+    int post_split_a_ch;
 };
 
 inline int pe_packs_per_pixel(int ch) {
@@ -97,10 +106,13 @@ inline int pe_weight_packets_for_block(const PEBlockCfg &cfg) {
         return pe_weight_packets_for_kernel(cfg.pe0);
     }
     if (cfg.topo == PE_TOPO_SPLITCAT) {
-        return pe_weight_packets_for_kernel(cfg.pe0)
-             + pe_weight_packets_for_kernel(cfg.pe1)
-             + pe_weight_packets_for_kernel(cfg.pe2)
-             + pe_weight_packets_for_kernel(cfg.pe3);
+        int total = pe_weight_packets_for_kernel(cfg.pe0)
+                  + pe_weight_packets_for_kernel(cfg.pe1)
+                  + pe_weight_packets_for_kernel(cfg.pe2);
+        if (cfg.post_route != PE_POST_CONCAT) {
+            total += pe_weight_packets_for_kernel(cfg.pe3);
+        }
+        return total;
     }
     return 0;
 }
@@ -117,13 +129,38 @@ inline int pe_input_packets_for_block(const PEBlockCfg &cfg) {
 }
 
 inline int pe_output_packets_for_block(const PEBlockCfg &cfg) {
+    int out_h = 0;
+    int out_w = 0;
+    int out_ch = 0;
+
     if (cfg.topo == PE_TOPO_STRAIGHT) {
-        return cfg.pe0.out_h * cfg.pe0.out_w * pe_packs_per_pixel(cfg.pe0.out_ch);
+        out_h = cfg.pe0.out_h;
+        out_w = cfg.pe0.out_w;
+        out_ch = cfg.pe0.out_ch;
+    } else if (cfg.topo == PE_TOPO_SPLITCAT) {
+        if (cfg.post_route == PE_POST_CONCAT) {
+            out_h = cfg.pe3.in_h;
+            out_w = cfg.pe3.in_w;
+            out_ch = cfg.pe3.in_ch;
+        } else {
+            out_h = cfg.pe3.out_h;
+            out_w = cfg.pe3.out_w;
+            out_ch = cfg.pe3.out_ch;
+        }
+    } else {
+        return 0;
     }
-    if (cfg.topo == PE_TOPO_SPLITCAT) {
-        return cfg.pe3.out_h * cfg.pe3.out_w * pe_packs_per_pixel(cfg.pe3.out_ch);
+
+    const int base = out_h * out_w;
+    if (cfg.post_route == PE_POST_BRANCH) {
+        return base * pe_packs_per_pixel(out_ch) * 2;
     }
-    return 0;
+    if (cfg.post_route == PE_POST_SPLIT) {
+        const int split_a = cfg.post_split_a_ch;
+        const int split_b = out_ch - split_a;
+        return base * (pe_packs_per_pixel(split_a) + pe_packs_per_pixel(split_b));
+    }
+    return base * pe_packs_per_pixel(out_ch);
 }
 
 #endif // PE_TYPES_H
