@@ -2,6 +2,7 @@
 #include <vector>
 #include <random>
 #include <cstring>
+#include <cstdlib>
 
 #include "../src/pe_parallel_block.h"
 #include "pe_reference_model.h"
@@ -206,6 +207,18 @@ static int tb_rand_from_set(std::mt19937 &rng, const int *vals, int n) {
 static bool tb_rand_bool(std::mt19937 &rng) {
     std::uniform_int_distribution<int> dist(0, 1);
     return dist(rng) == 1;
+}
+
+static int tb_get_env_int(const char *name, int def_val) {
+    const char *v = std::getenv(name);
+    if (v == 0 || *v == '\0') {
+        return def_val;
+    }
+    int x = std::atoi(v);
+    if (x <= 0) {
+        return def_val;
+    }
+    return x;
 }
 
 static void tb_append_kernel_weights(
@@ -451,6 +464,8 @@ int main() {
 
     int errors = 0;
     std::mt19937 rng(20260225u);
+    const int random_cases = tb_get_env_int("PE_TB_RANDOM_CASES", 200);
+    std::printf("Random stress cases: %d (env: PE_TB_RANDOM_CASES)\n", random_cases);
 
     {
         PEKernelCfg k = pe_make_kernel(8, 8, 8, 8, 64, 64, 1, 0, PE_OP_CONV1X1, true);
@@ -543,7 +558,10 @@ int main() {
         errors += tb_run_success_case("det_splitcat_post_concat", cfg, input, weights);
     }
 
-    for (int i = 0; i < 200; i++) {
+    for (int i = 0; i < random_cases; i++) {
+        if ((i % 10) == 0) {
+            std::printf("[TB] random progress: %d / %d\n", i, random_cases);
+        }
         PEBlockCfg cfg;
         bool made = false;
         for (int retry = 0; retry < 32; retry++) {
@@ -584,6 +602,7 @@ int main() {
         std::snprintf(name, sizeof(name), "random_%03d", i);
         errors += tb_run_success_case(name, cfg, input, weights);
     }
+    std::printf("[TB] random progress: %d / %d\n", random_cases, random_cases);
 
     {
         PEKernelCfg k0 = pe_make_kernel(8, 8, 8, 8, 64, 64, 1, 0, PE_OP_CONV1X1, true);

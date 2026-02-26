@@ -1,4 +1,4 @@
-.PHONY: pe pe-log pe-analyze pe-analyze-log pe-compile pe-compile-log pe-gui pe-tb pe-clean clean
+.PHONY: pe pe-log pe-analyze pe-analyze-log pe-compile pe-compile-log pe-gui pe-tb pe-tb-fast pe-clean clean
 .PHONY: compile comple COMPILE COMPLE gui GUI
 .SILENT:
 
@@ -59,6 +59,20 @@ pe-tb: pe-clean
 	SCV_DIR=$$(dirname "$$SCV_MK"); \
 	SCV_BASENAME=$$(basename "$$SCV_MK"); \
 	$(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_pe_sim.log
+
+pe-tb-fast: pe-clean
+	mkdir -p logs
+	catapult -shell -file scripts/run_pe_catapult.tcl 2>&1 | tee logs/catapult_pe.log
+	SOL_DIR=$$(ls -d PE/PEParallelBlock.v* PE/solution.v* 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SOL_DIR" ]; then echo "No PE solution directory found."; exit 1; fi; \
+	SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Makefile" 2>/dev/null | sort -V | tail -n 1); \
+	if [ -z "$$SCV_MK" ]; then \
+		SCV_MK=$$(find "$$SOL_DIR" -type f -path "*/scverify/Verify_*.mk" 2>/dev/null | sort -V | tail -n 1); \
+	fi; \
+	if [ -z "$$SCV_MK" ]; then echo "SCVerify makefile not found under $$SOL_DIR"; exit 1; fi; \
+	SCV_DIR=$$(dirname "$$SCV_MK"); \
+	SCV_BASENAME=$$(basename "$$SCV_MK"); \
+	PE_TB_RANDOM_CASES=20 $(MAKE) -C "$$SCV_DIR" -f "$$SCV_BASENAME" sim 2>&1 | tee logs/scverify_pe_sim_fast.log
 
 clean:
 	rm -rf PE PE.ccs pe.ccs logs catapult.log catapult_pid* .Catapult*

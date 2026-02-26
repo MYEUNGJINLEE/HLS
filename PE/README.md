@@ -64,6 +64,7 @@ From `PE` directory:
 ```bash
 make pe
 make pe-tb
+make pe-tb-fast
 make pe-gui
 make pe-clean
 ```
@@ -73,6 +74,12 @@ From repo root:
 ```bash
 make pe
 make pe-tb
+```
+
+TB random count override:
+
+```bash
+PE_TB_RANDOM_CASES=20 make pe-tb
 ```
 
 ## Test Coverage
