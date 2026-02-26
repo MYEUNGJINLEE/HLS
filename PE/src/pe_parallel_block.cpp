@@ -394,10 +394,10 @@ bool PEParallelBlock::run(
         return false;
     }
 
-    ac_channel<pe_weight_pkt_t> ws0;
-    ac_channel<pe_weight_pkt_t> ws1;
-    ac_channel<pe_weight_pkt_t> ws2;
-    ac_channel<pe_weight_pkt_t> ws3;
+    static ac_channel<pe_weight_pkt_t> ws0;
+    static ac_channel<pe_weight_pkt_t> ws1;
+    static ac_channel<pe_weight_pkt_t> ws2;
+    static ac_channel<pe_weight_pkt_t> ws3;
 
     feed_weight_channel(ws0, backup_pkts, w0_start, w0_count);
     if (cfg.topo == PE_TOPO_SPLITCAT) {
@@ -409,7 +409,7 @@ bool PEParallelBlock::run(
     bool ok = true;
 
     if (cfg.topo == PE_TOPO_STRAIGHT) {
-        ac_channel<pe_packed_act_t> straight_in;
+        static ac_channel<pe_packed_act_t> straight_in;
         for (int i = 0; i < total_in; i++) {
             straight_in.write(input_stream.read());
         }
@@ -428,12 +428,12 @@ bool PEParallelBlock::run(
         return ok;
     }
 
-    ac_channel<pe_packed_act_t> a1_in;
-    ac_channel<pe_packed_act_t> b1_in;
-    ac_channel<pe_packed_act_t> a1_out;
-    ac_channel<pe_packed_act_t> a2_out;
-    ac_channel<pe_packed_act_t> b1_out;
-    ac_channel<pe_packed_act_t> cat_in;
+    static ac_channel<pe_packed_act_t> a1_in;
+    static ac_channel<pe_packed_act_t> b1_in;
+    static ac_channel<pe_packed_act_t> a1_out;
+    static ac_channel<pe_packed_act_t> a2_out;
+    static ac_channel<pe_packed_act_t> b1_out;
+    static ac_channel<pe_packed_act_t> cat_in;
 
     if (cfg.use_input_split) {
         split_stream(
