@@ -12,9 +12,9 @@ static const int PE_MAX_H = 80;
 static const int PE_MAX_W = 80;
 static const int PE_MAX_CH = 256;
 
-static const int PE_MAX_PACKS_PER_PIXEL = PE_MAX_CH / PE_CH_PACK;
-static const int PE_MAX_IGRP_3X3 = PE_MAX_CH / PE_IC_PAR_3X3;
-static const int PE_MAX_IGRP_1X1 = PE_MAX_CH / PE_CH_PACK;
+static const int PE_MAX_PACKS_PER_PIXEL = (PE_MAX_CH >> 6);
+static const int PE_MAX_IGRP_3X3 = (PE_MAX_CH >> 3);
+static const int PE_MAX_IGRP_1X1 = (PE_MAX_CH >> 6);
 
 static const int PE_MAX_KERNEL_WEIGHT_PKTS = (PE_MAX_CH * PE_MAX_IGRP_3X3) + PE_MAX_CH;
 static const int PE_MAX_BLOCK_WEIGHT_PKTS = PE_MAX_KERNEL_WEIGHT_PKTS * 4;
@@ -72,20 +72,49 @@ struct PEBlockCfg {
     int post_split_a_ch;
 };
 
+inline bool pe_is_pack_aligned(int ch) {
+    return (ch & (PE_CH_PACK - 1)) == 0;
+}
+
+inline int pe_pack_index(int ch) {
+    return ch >> 6;
+}
+
+inline int pe_pack_lane(int ch) {
+    return ch & (PE_CH_PACK - 1);
+}
+
+inline int pe_mod3_nonneg(int v) {
+    int m = v;
+    if (m >= 48) m -= 48;
+    if (m >= 24) m -= 24;
+    if (m >= 12) m -= 12;
+    if (m >= 6) m -= 6;
+    if (m >= 3) m -= 3;
+    return m;
+}
+
 inline int pe_packs_per_pixel(int ch) {
-    return (ch + PE_CH_PACK - 1) / PE_CH_PACK;
+    return (ch + (PE_CH_PACK - 1)) >> 6;
 }
 
 inline int pe_in_groups_1x1(int in_ch) {
-    return (in_ch + PE_CH_PACK - 1) / PE_CH_PACK;
+    return (in_ch + (PE_CH_PACK - 1)) >> 6;
 }
 
 inline int pe_in_groups_3x3(int in_ch) {
-    return (in_ch + PE_IC_PAR_3X3 - 1) / PE_IC_PAR_3X3;
+    return (in_ch + (PE_IC_PAR_3X3 - 1)) >> 3;
 }
 
 inline int pe_out_dim(int in_dim, int kernel, int stride, int pad) {
-    return ((in_dim + 2 * pad - kernel) / stride) + 1;
+    const int numer = in_dim + (pad << 1) - kernel;
+    if (stride == 1) {
+        return numer + 1;
+    }
+    if (stride == 2) {
+        return (numer >> 1) + 1;
+    }
+    return 0;
 }
 
 inline int pe_weight_packets_for_kernel(const PEKernelCfg &cfg) {

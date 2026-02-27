@@ -82,6 +82,23 @@ inline bool pe_is_valid_post_route(pe_post_route_t route) {
            (route == PE_POST_CONCAT);
 }
 
+inline bool pe_div_exact_nonneg(int num, int den, int &q) {
+    if (num < 0 || den <= 0) {
+        return false;
+    }
+
+    q = 0;
+    int rem = num;
+    while (rem >= den) {
+        rem -= den;
+        q++;
+        if (q > (PE_MAX_CH * 2)) {
+            return false;
+        }
+    }
+    return rem == 0;
+}
+
 inline bool pe_validate_kernel_cfg(const PEKernelCfg &cfg) {
     if (!pe_is_valid_op(cfg.op)) {
         return false;
@@ -99,7 +116,7 @@ inline bool pe_validate_kernel_cfg(const PEKernelCfg &cfg) {
         return false;
     }
 
-    if ((cfg.in_ch % PE_CH_PACK) != 0 || (cfg.out_ch % PE_CH_PACK) != 0) {
+    if (!pe_is_pack_aligned(cfg.in_ch) || !pe_is_pack_aligned(cfg.out_ch)) {
         return false;
     }
 
@@ -168,11 +185,15 @@ inline bool pe_validate_block_cfg(const PEBlockCfg &cfg) {
                 return false;
             }
             const int total_in = cfg.pe0.in_ch + cfg.pe2.in_ch;
-            const int split_mul = total_in * cfg.split_num;
-            if ((split_mul % cfg.split_den) != 0) {
+            const long long split_mul_ll = (long long)total_in * (long long)cfg.split_num;
+            if (split_mul_ll > 0x7fffffffLL) {
                 return false;
             }
-            const int split_a = split_mul / cfg.split_den;
+            const int split_mul = (int)split_mul_ll;
+            int split_a = 0;
+            if (!pe_div_exact_nonneg(split_mul, cfg.split_den, split_a)) {
+                return false;
+            }
             if (split_a != cfg.pe0.in_ch) {
                 return false;
             }
@@ -214,7 +235,7 @@ inline bool pe_validate_block_cfg(const PEBlockCfg &cfg) {
         if (cfg.post_split_a_ch <= 0 || cfg.post_split_a_ch >= route_out_ch) {
             return false;
         }
-        if ((cfg.post_split_a_ch % PE_CH_PACK) != 0) {
+        if (!pe_is_pack_aligned(cfg.post_split_a_ch)) {
             return false;
         }
     } else if (cfg.post_split_a_ch != 0) {

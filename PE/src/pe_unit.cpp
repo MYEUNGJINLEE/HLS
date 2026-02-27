@@ -49,14 +49,14 @@ pe_act_t PEUnit::read_linebuf_ch(
         return 0;
     }
 
-    const int pack_idx = ch / PE_CH_PACK;
-    const int lane = ch % PE_CH_PACK;
+    const int pack_idx = pe_pack_index(ch);
+    const int lane = pe_pack_lane(ch);
 
     if (pack_idx >= in_packs) {
         return 0;
     }
 
-    const pe_packed_act_t &pkt = line_buf[src_r % 3][src_c][pack_idx];
+    const pe_packed_act_t &pkt = line_buf[pe_mod3_nonneg(src_r)][src_c][pack_idx];
     return unpack_lane(pkt, lane);
 }
 
@@ -178,7 +178,7 @@ bool PEUnit::exec_conv1x1(
                 in_pixel[p] = input_stream.read();
             }
 
-            if ((in_r % cfg.stride) != 0 || (in_c % cfg.stride) != 0) {
+            if (cfg.stride == 2 && (((in_r & 1) != 0) || ((in_c & 1) != 0))) {
                 continue;
             }
 
@@ -209,8 +209,8 @@ bool PEUnit::exec_conv1x1(
                 }
 
                 pe_act_t out_v = apply_bn_relu(acc, bn_shift[oc], bn_bias[oc], cfg.relu);
-                const int out_pack = oc / PE_CH_PACK;
-                const int out_lane = oc % PE_CH_PACK;
+                const int out_pack = pe_pack_index(oc);
+                const int out_lane = pe_pack_lane(oc);
                 pack_lane(out_pixel[out_pack], out_lane, out_v);
             }
 
@@ -244,7 +244,7 @@ bool PEUnit::exec_conv3x3(
         if (in_row < cfg.in_h) {
             for (int c = 0; c < cfg.in_w; c++) {
                 for (int p = 0; p < in_packs; p++) {
-                    line_buf[in_row % 3][c][p] = input_stream.read();
+                    line_buf[pe_mod3_nonneg(in_row)][c][p] = input_stream.read();
                 }
             }
             in_row++;
@@ -301,8 +301,8 @@ bool PEUnit::exec_conv3x3(
                 }
 
                 pe_act_t out_v = apply_bn_relu(acc, bn_shift[oc], bn_bias[oc], cfg.relu);
-                const int out_pack = oc / PE_CH_PACK;
-                const int out_lane = oc % PE_CH_PACK;
+                const int out_pack = pe_pack_index(oc);
+                const int out_lane = pe_pack_lane(oc);
                 pack_lane(out_pixel[out_pack], out_lane, out_v);
             }
 
@@ -337,7 +337,7 @@ bool PEUnit::exec_dw3x3(
         if (in_row < cfg.in_h) {
             for (int c = 0; c < cfg.in_w; c++) {
                 for (int p = 0; p < in_packs; p++) {
-                    line_buf[in_row % 3][c][p] = input_stream.read();
+                    line_buf[pe_mod3_nonneg(in_row)][c][p] = input_stream.read();
                 }
             }
             in_row++;
@@ -384,8 +384,8 @@ bool PEUnit::exec_dw3x3(
                 }
 
                 pe_act_t out_v = apply_bn_relu(acc, bn_shift[oc], bn_bias[oc], cfg.relu);
-                const int out_pack = oc / PE_CH_PACK;
-                const int out_lane = oc % PE_CH_PACK;
+                const int out_pack = pe_pack_index(oc);
+                const int out_lane = pe_pack_lane(oc);
                 pack_lane(out_pixel[out_pack], out_lane, out_v);
             }
 
